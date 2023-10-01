@@ -517,10 +517,11 @@ class Repository(
                 while (rs.next()) {
                     l.add(
                         TransactionMatcher(
-                            rs.getString("id"),
-                            rs.getString("name"),
-                            objectMapper.readValue(rs.getString("filter_list")),
-                            objectMapper.readValue(rs.getString("target")),
+                            id = rs.getString("id"),
+                            ledgerId = rs.getString("ledger_id"),
+                            name = rs.getString("name"),
+                            filters = objectMapper.readValue(rs.getString("filter_list")),
+                            target = objectMapper.readValue(rs.getString("target")),
                         )
                     )
                 }
@@ -543,12 +544,13 @@ class Repository(
         if (updated) {
             changelog.add(connection, userId, ChangeLogEventType.matcherUpdated, matcher)
         } else {
-            connection.prepareStatement("INSERT INTO bank_transaction_matchers (id, name,filter_list, target) VALUES (?,?,?,?)")
+            connection.prepareStatement("INSERT INTO bank_transaction_matchers (id, ledger_id, name,filter_list, target) VALUES (?,?,?,?,?)")
                 .use { preparedStatement ->
                     preparedStatement.setString(1, matcher.id)
-                    preparedStatement.setString(2, matcher.name)
-                    preparedStatement.setString(3, objectMapper.writeValueAsString(matcher.filters))
-                    preparedStatement.setString(4, objectMapper.writeValueAsString(matcher.target))
+                    preparedStatement.setString(2, matcher.ledgerId)
+                    preparedStatement.setString(3, matcher.name)
+                    preparedStatement.setString(4, objectMapper.writeValueAsString(matcher.filters))
+                    preparedStatement.setString(5, objectMapper.writeValueAsString(matcher.target))
                     check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
                 }
             changelog.add(connection, userId, ChangeLogEventType.matcherAdded, matcher)

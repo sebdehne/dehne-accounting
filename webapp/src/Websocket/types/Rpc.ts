@@ -1,6 +1,9 @@
 import {Subscribe, Unsubscribe} from "./Subscription";
+import {ExecuteMatcherRequest, GetMatchCandidatesRequest, TransactionMatcher} from "./transactionMatcher";
 
-export type RequestType = "subscribe" | "unsubscribe" | 'importBankTransactions';
+export type RequestType = "subscribe" | "unsubscribe" | 'importBankTransactions' | 'getMatchCandidates' |
+    'addNewMatcher' |
+    'executeMatcher';
 
 export type RpcRequest = {
     type: RequestType;
@@ -8,6 +11,9 @@ export type RpcRequest = {
     unsubscribe?: Unsubscribe;
 
     importBankTransactionsRequest?: ImportBankTransactionsRequest;
+    addNewMatcherRequest?: TransactionMatcher;
+    getMatchCandidatesRequest?: GetMatchCandidatesRequest;
+    executeMatcherRequest?: ExecuteMatcherRequest;
 }
 
 export type RpcResponse = {
@@ -15,6 +21,8 @@ export type RpcResponse = {
     subscriptionRemoved?: boolean;
 
     importBankTransactionsResult?: ImportBankTransactionsResult;
+    getMatchCandidatesResult?: TransactionMatcher[];
+    error?: string;
 }
 
 export type ImportBankTransactionsRequest = {
@@ -28,7 +36,6 @@ export type ImportBankTransactionsRequest = {
 export type ImportBankTransactionsResult = {
     imported: number;
     skipped: number;
-    error?: string;
 }
 
 export type DuplicationHandlerType = 'sameDateAndAmount' | 'sameDateAmountAndDescription'

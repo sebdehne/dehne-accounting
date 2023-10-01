@@ -52,9 +52,23 @@ data class BookingRule(
 
 data class TransactionMatcher(
     val id: String,
+    val ledgerId: String,
     val name: String,
     val filters: List<TransactionMatcherFilter>,
     val target: TransactionMatcherTarget,
 )
 
 
+data class GetMatchCandidatesRequest(
+    val ledgerId: String,
+    val bankAccountId: String,
+    val transactionId: Long,
+)
+
+data class ExecuteMatcherRequest(
+    val userId: String,
+    val ledgerId: String,
+    val bankAccountId: String,
+    val transactionId: Long,
+    val matcherId: String,
+)

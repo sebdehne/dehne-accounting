@@ -1,6 +1,7 @@
 package com.dehnes.accounting
 
 import com.dehnes.accounting.api.ReadService
+import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.database.Changelog
 import com.dehnes.accounting.database.Repository
@@ -51,11 +52,13 @@ class Configuration {
         val rapportService = RapportService(repository, categoryService, datasource)
         val readService = ReadService(bookingReadService, bankService, executorService, userService, rapportService)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
+        val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
 
         beans[ObjectMapper::class] = objectMapper
         beans[ReadService::class] = readService
         beans[UserService::class] = userService
         beans[BankTransactionImportService::class] = bankTransactionImportService
+        beans[TransactionMatchingService::class] = transactionMatchingService
     }
 
     inline fun <reified T> getBeanNull(): T? {

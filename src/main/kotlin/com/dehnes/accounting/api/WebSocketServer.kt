@@ -2,6 +2,7 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.RequestType.*
+import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.services.UserService
@@ -11,6 +12,7 @@ import jakarta.websocket.CloseReason
 import jakarta.websocket.Endpoint
 import jakarta.websocket.EndpointConfig
 import jakarta.websocket.Session
+import mu.KLogger
 import mu.KotlinLogging
 import java.io.ByteArrayInputStream
 import java.io.Closeable
@@ -24,6 +26,7 @@ class WebSocketServer : Endpoint() {
     private val objectMapper = configuration.getBean<ObjectMapper>()
     private val userService = configuration.getBean<UserService>()
     private val readService = configuration.getBean<ReadService>()
+    private val transactionMatchingService = configuration.getBean<TransactionMatchingService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
     private val logger = KotlinLogging.logger { }
     private val subscriptions = mutableMapOf<String, Subscription>()
@@ -67,9 +70,7 @@ class WebSocketServer : Endpoint() {
 
                 logger.info { "$instanceId Added subscription id=$subscriptionId" }
 
-                RpcResponse(
-                    subscriptionCreated = true
-                )
+                RpcResponse(subscriptionCreated = true)
             }
 
             unsubscribe -> {
@@ -83,16 +84,63 @@ class WebSocketServer : Endpoint() {
                 val request = rpcRequest.importBankTransactionsRequest!!
                 val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
 
-                val result = bankTransactionImportService.doImport(
+                val (result, errorMsg) = logAndGetError(logger) {
+                    bankTransactionImportService.doImport(
+                        userByEmail.id,
+                        request.ledgerId,
+                        request.bankAccountId,
+                        ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
+                        request.filename,
+                        request.duplicationHandlerType.duplicationHandler
+                    )
+                }
+
+                RpcResponse(importBankTransactionsResult = result, error = errorMsg)
+            }
+
+            addNewMatcher -> {
+                val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
+
+                val (_, errorMsg) = logAndGetError(logger) {
+                    transactionMatchingService.addNewMatcher(
+                        userByEmail.id,
+                        rpcRequest.addNewMatcherRequest!!
+                    )
+                }
+
+                RpcResponse(error = errorMsg)
+            }
+
+            getMatchCandidates -> {
+                val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
+
+                val getMatchCandidatesRequest = rpcRequest.getMatchCandidatesRequest!!
+
+                val result = transactionMatchingService.getMatchCandidates(
                     userByEmail.id,
-                    request.ledgerId,
-                    request.bankAccountId,
-                    ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
-                    request.filename,
-                    request.duplicationHandlerType.duplicationHandler
+                    getMatchCandidatesRequest.ledgerId,
+                    getMatchCandidatesRequest.bankAccountId,
+                    getMatchCandidatesRequest.transactionId,
                 )
 
-                RpcResponse(importBankTransactionsResult = result)
+                RpcResponse(getMatchCandidatesResult = result)
+            }
+
+            executeMatcher -> {
+                val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
+                val matcherRequest = rpcRequest.executeMatcherRequest!!
+
+                val (_, error) = logAndGetError(logger) {
+                    transactionMatchingService.executeMatch(
+                        userByEmail.id,
+                        matcherRequest.ledgerId,
+                        matcherRequest.bankAccountId,
+                        matcherRequest.transactionId,
+                        matcherRequest.matcherId,
+                    )
+                }
+
+                RpcResponse(error = error)
             }
         }
 
@@ -107,8 +155,6 @@ class WebSocketServer : Endpoint() {
                 )
             )
         )
-
-
     }
 
     inner class Subscription(
@@ -138,3 +184,9 @@ class WebSocketServer : Endpoint() {
 
 }
 
+fun <T> logAndGetError(logger: KLogger, fn: () -> T) = try {
+    fn() to null
+} catch (e: Throwable) {
+    logger.warn(e) { "" }
+    null to e.localizedMessage
+}

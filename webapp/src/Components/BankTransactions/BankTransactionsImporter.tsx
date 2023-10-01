@@ -26,6 +26,7 @@ export const BankTransactionsImporter = () => {
     const [bankAccount, setBankAccount] = useState<BankAccountView>()
     const [selectedFile, setSelectedFile] = useState<File>();
     const [importResult, setImportResult] = useState<ImportBankTransactionsResult>();
+    const [importError, setImportError] = useState<string |undefined>(undefined);
     const [ignoreDescriptionDuringImport, setIgnoreDescriptionDuringImport] = useState(false);
 
     useEffect(() => {
@@ -61,7 +62,10 @@ export const BankTransactionsImporter = () => {
                         bankAccountId,
                         ledgerId,
                     }
-                }).then(resp => setImportResult(resp.importBankTransactionsResult!))
+                }).then(resp => {
+                    setImportResult(resp.importBankTransactionsResult);
+                    setImportError(resp.error);
+                })
             }
             fr.readAsArrayBuffer(selectedFile!);
         }
@@ -95,8 +99,8 @@ export const BankTransactionsImporter = () => {
                 />
                 <Button onClick={() => importNow()}>Import</Button>
             </div>}
-            {importResult?.error && <div>Error: {importResult.error}</div>}
-            {!importResult?.error && <div>
+            {importError && <div>Error: {importError}</div>}
+            {!importError && <div>
                 <div>Imported: {importResult?.imported}</div>
                 <div>Skipped: {importResult?.skipped}</div>
             </div>}

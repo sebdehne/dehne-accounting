@@ -13,6 +13,7 @@ import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {LedgerMain} from "./Components/LedgerMain/LedgerMain";
 import {BankTransactions} from "./Components/BankTransactions/BankTransactions";
 import {BankTransactionsImporter} from "./Components/BankTransactions/BankTransactionsImporter";
+import {TransactionMatching} from "./Components/TransactionMatching/TransactionMatching";
 
 
 const root = ReactDOM.createRoot(
@@ -28,6 +29,7 @@ root.render(
                     <Route path="/ledger/:ledgerId" element={<LedgerMain/>}/>
                     <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId" element={<BankTransactions/>}/>
                     <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/import" element={<BankTransactionsImporter/>}/>
+                    <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/match/:transactionId" element={<TransactionMatching/>}/>
                 </Routes>
             </BrowserRouter>
         </ThemeProvider>

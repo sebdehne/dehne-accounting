@@ -140,8 +140,10 @@ create table bank_transaction_matchers
     name        text not null,
     filter_list text not null,
     target      text not null,
+    ledger_id   text not null,
 
-    primary key (id)
+    primary key (id),
+    foreign key (ledger_id) references ledger (id)
 );
 
 insert into user (id, name, description, user_email, active, is_admin)

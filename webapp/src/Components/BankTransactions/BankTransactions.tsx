@@ -11,6 +11,8 @@ import {BankAccountTransactionView} from "../../Websocket/types/banktransactions
 import './BankTransactions.css'
 import {Amount} from "../Amount";
 import CheckIcon from '@mui/icons-material/Check';
+import IconButton from "@mui/material/IconButton";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 
 export const BankTransactions = () => {
     const {ledgerId, bankAccountId} = useParams();
@@ -59,21 +61,31 @@ export const BankTransactions = () => {
                 backUrl={'/ledger/' + ledgerId}
             />
 
-            <Button onClick={() => navigate('/ledger/' + ledgerId + '/bankaccount/' + bankAccountId + '/import')}>Import</Button>
+            <Button
+                onClick={() => navigate('/ledger/' + ledgerId + '/bankaccount/' + bankAccountId + '/import')}>Import</Button>
 
             <MonthPeriodSelector period={period} setPeriod={setPeriod}/>
 
             {(transactions?.length ?? 0) > 0 && <ul className="Transactions">
                 {transactions?.map(t => (<li className="Transaction" key={t.id}>
                     <div className="TransactionSummary">
-                        <div style={{marginRight: '10px', color: '#a2a2a2', width: '70px'}}>{formatLocatDayMonth(moment(t.datetime))}</div>
+                        <div style={{
+                            marginRight: '10px',
+                            color: '#a2a2a2',
+                            width: '70px'
+                        }}>{formatLocatDayMonth(moment(t.datetime))}</div>
                         <div>{t.description}</div>
                     </div>
                     <div className="TransactionAmounts">
-                        <Amount amountInCents={t.amount} />
-                        <div style={{color: '#a2a2a2', marginLeft: '8px'}}><Amount amountInCents={t.balance} /></div>
+                        <Amount amountInCents={t.amount}/>
+                        <div style={{color: '#a2a2a2', marginLeft: '8px'}}><Amount amountInCents={t.balance}/></div>
                         {t.matched && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
-                        {!t.matched && <div style={{width: '24px', height: '30px'}}></div>}
+                        {!t.matched && <div style={{width: '24px', height: '30px'}}>
+                            <IconButton
+                                onClick={() => navigate('/ledger/' + ledgerId + '/bankaccount/' + bankAccountId + '/match/' + t.id)}>
+                                <ArrowRightIcon fontSize="inherit"/>
+                            </IconButton>
+                        </div>}
                     </div>
                 </li>))}
             </ul>}

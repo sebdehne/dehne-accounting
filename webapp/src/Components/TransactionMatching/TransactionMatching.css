@@ -1,0 +1,13 @@
+
+
+.Candidates {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.Candidate {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}

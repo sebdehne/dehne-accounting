@@ -22,76 +22,71 @@ class BankTransactionImportService(
         data: InputStream,
         filename: String,
         duplicationHandler: DuplicationHandler,
-    ): ImportResult = try {
-        dataSource.writeTx { conn ->
+    ) = dataSource.writeTx { conn ->
 
-            val ledgerDto = bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == ledgerId }
-                ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
+        val ledgerDto = bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == ledgerId }
+            ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
 
-            val bankAccount =
-                repository.getAllBankAccountsForLedger(conn, ledgerDto.id).firstOrNull { it.id == bankAccountId }
-                    ?: error("No such bank account $bankAccountId")
+        val bankAccount =
+            repository.getAllBankAccountsForLedger(conn, ledgerDto.id).firstOrNull { it.id == bankAccountId }
+                ?: error("No such bank account $bankAccountId")
 
-            val bankDto = repository.getAllBanks(conn).firstOrNull { it.id == bankAccount.bankId }
-                ?: error("No such bank ${bankAccount.bankId}")
+        val bankDto = repository.getAllBanks(conn).firstOrNull { it.id == bankAccount.bankId }
+            ?: error("No such bank ${bankAccount.bankId}")
 
-            val importer = bankDto.transactionImportFunction?.let {
-                SupportedImporters.valueOf(it)
-            }?.klazz ?: error("No importer configured for bank ${bankDto.id}")
+        val importer = bankDto.transactionImportFunction?.let {
+            SupportedImporters.valueOf(it)
+        }?.klazz ?: error("No importer configured for bank ${bankDto.id}")
 
-            val importInstance = importer.java.constructors.first().newInstance() as Importer
+        val importInstance = importer.java.constructors.first().newInstance() as Importer
 
-            var overlapping = true
-            var skipped = 0L
-            var imported = 0L
+        var overlapping = true
+        var skipped = 0L
+        var imported = 0L
 
-            importInstance.import(
-                data,
-                filename
-            ) { record ->
+        importInstance.import(
+            data,
+            filename
+        ) { record ->
 
-                if (overlapping) {
-                    val existingRecords = repository.getBankTransactions(
-                        connection = conn,
-                        bankAccountId = bankAccountId,
-                        limit = Int.MAX_VALUE,
-                        BankTxDateRangeFilter(
-                            record.datetime,
-                            record.datetime.plusDays(1)
-                        )
-                    ).filter { duplicationHandler(it, record) }
-
-                    if (existingRecords.isNotEmpty()) {
-                        skipped++
-                        return@import
-                    } else {
-                        overlapping = false
-                    }
-                }
-
-                repository.addBankTransaction(
-                    conn,
-                    userId,
-                    BankTransactionAdd(
-                        record.description,
-                        bankAccount.ledgerId,
-                        bankAccount.bankId,
-                        bankAccount.id,
+            if (overlapping) {
+                val existingRecords = repository.getBankTransactions(
+                    connection = conn,
+                    bankAccountId = bankAccountId,
+                    limit = Int.MAX_VALUE,
+                    BankTxDateRangeFilter(
                         record.datetime,
-                        record.amountInCents,
+                        record.datetime.plusDays(1)
                     )
-                )
-                imported++
+                ).filter { duplicationHandler(it, record) }
+
+                if (existingRecords.isNotEmpty()) {
+                    skipped++
+                    return@import
+                } else {
+                    overlapping = false
+                }
             }
 
-            ImportResult(
-                imported,
-                skipped,
-                null,
+            repository.addBankTransaction(
+                conn,
+                userId,
+                BankTransactionAdd(
+                    record.description,
+                    bankAccount.ledgerId,
+                    bankAccount.bankId,
+                    bankAccount.id,
+                    record.datetime,
+                    record.amountInCents,
+                )
             )
+            imported++
         }
-    } catch (e: Throwable) {
-        ImportResult(0, 0, e.localizedMessage)
+
+        ImportResult(
+            imported,
+            skipped,
+        )
     }
 
 }
@@ -100,7 +95,6 @@ class BankTransactionImportService(
 data class ImportResult(
     val imported: Long,
     val skipped: Long,
-    val error: String?,
 )
 
 typealias DuplicationHandler = (existing: BankTransaction, record: BankTransactionImportRecord) -> Boolean

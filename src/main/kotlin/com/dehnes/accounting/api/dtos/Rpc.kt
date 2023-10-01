@@ -9,6 +9,9 @@ enum class RequestType {
     unsubscribe,
 
     importBankTransactions,
+    getMatchCandidates,
+    addNewMatcher,
+    executeMatcher,
 }
 
 data class RpcRequest(
@@ -16,6 +19,9 @@ data class RpcRequest(
     val subscribe: Subscribe?,
     val unsubscribe: Unsubscribe?,
     val importBankTransactionsRequest: ImportBankTransactionsRequest?,
+    val addNewMatcherRequest: TransactionMatcher?,
+    val getMatchCandidatesRequest: GetMatchCandidatesRequest?,
+    val executeMatcherRequest: ExecuteMatcherRequest?,
 )
 
 data class RpcResponse(
@@ -23,6 +29,8 @@ data class RpcResponse(
     val subscriptionRemoved: Boolean? = null,
 
     val importBankTransactionsResult: ImportResult? = null,
+    val getMatchCandidatesResult: List<TransactionMatcher>? = null,
+    val error: String? = null,
 )
 
 data class ImportBankTransactionsRequest(
