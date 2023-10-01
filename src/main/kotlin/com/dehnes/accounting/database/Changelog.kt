@@ -61,9 +61,10 @@ enum class ChangeLogEventType {
     categoryAdded,
     categoryUpdated,
     categoryRemoved,
-    categoryMatcherAdded,
-    categoryMatcherUpdated,
-    categoryMatcherRemoved,
+
+    matcherAdded,
+    matcherUpdated,
+    matcherRemoved,
 
     bankTransactionRemoveLast,
     bankTransactionAdded,

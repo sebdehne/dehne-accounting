@@ -43,10 +43,10 @@ class Configuration {
         SchemaHandler.initSchema(datasource)
 
         val changelog = Changelog(objectMapper)
-        val repository = Repository(changelog)
+        val repository = Repository(changelog, objectMapper)
         val categoryService = CategoryService(repository)
         val userService = UserService(datasource)
-        val bookingReadService = BookingReadService(repository, categoryService, datasource, userService)
+        val bookingReadService = BookingReadService(repository, datasource, userService)
         val bankService = BankService(bookingReadService, repository, datasource)
         val rapportService = RapportService(repository, categoryService, datasource)
         val readService = ReadService(bookingReadService, bankService, executorService, userService, rapportService)

@@ -57,6 +57,7 @@ create table bank_account
     account_number                text    not null,
     open_date                     date    not null,
     close_date                    date,
+    category_id                   text    not null,
     open_balance                  integer not null,
     transactions_counter          integer not null,
     transactions_counter_unbooked integer not null,
@@ -66,8 +67,6 @@ create table bank_account
     foreign key (ledger_id) references ledger (id)
 );
 
-
-
 create table category
 (
     id                 text not null,
@@ -76,17 +75,6 @@ create table category
     parent_category_id text,
     primary key (id),
     foreign key (parent_category_id) references category (id)
-);
-
-create table category_matcher
-(
-    id          text not null,
-    type        text not null, -- text, regex
-    pattern     text not null,
-    description text,
-    category_id text not null,
-    primary key (id),
-    foreign key (category_id) references category (id)
 );
 
 create table changelog
@@ -144,6 +132,16 @@ create table bank_transaction
     foreign key (ledger_id) references ledger (id),
     foreign key (bank_account_id) references bank_account (id),
     foreign key (matched_ledger_id, matched_booking_id, matched_booking_record_id) references booking_record (ledger_id, booking_id, id)
+);
+
+create table bank_transaction_matchers
+(
+    id          text not null,
+    name        text not null,
+    filter_list text not null,
+    target      text not null,
+
+    primary key (id)
 );
 
 insert into user (id, name, description, user_email, active, is_admin)

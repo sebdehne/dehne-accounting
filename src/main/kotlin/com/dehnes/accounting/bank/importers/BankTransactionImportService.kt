@@ -25,7 +25,7 @@ class BankTransactionImportService(
     ): ImportResult = try {
         dataSource.writeTx { conn ->
 
-            val ledgerDto = bookingReadService.listLedgers(conn, userId).firstOrNull { it.id == ledgerId }
+            val ledgerDto = bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == ledgerId }
                 ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
 
             val bankAccount =

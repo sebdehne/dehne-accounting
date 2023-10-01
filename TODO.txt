@@ -1,2 +1,18 @@
 - make Bookings
 -- new payees?
+
+
+Book bank transcations Wizard:
+- run automatch on server to find parties
+- run automatch on server to find target categories
+- manual party search -> same pattern?
+- manual target category search
+- create new category
+
+
+- kmyMoney import via GUI
+
+
+Transaction -> Matcher screen
+- find matches
+- create new matcher

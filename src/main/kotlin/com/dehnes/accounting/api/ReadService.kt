@@ -56,7 +56,7 @@ class ReadService(
     fun handleRequest(userId: String, readRequest: ReadRequest): ReadResponse = when (readRequest.type) {
         userInfo -> ReadResponse(userView = UserView.fromUser(userService.getUserById(userId)!!))
 
-        getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId))
+        getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, false))
 
         getBankAccounts -> ReadResponse(
             bankAccounts = bankService.getAllAccountsFor(

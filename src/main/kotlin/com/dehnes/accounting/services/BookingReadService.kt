@@ -2,8 +2,6 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.LedgerView
 import com.dehnes.accounting.database.BookingRecordView
-import com.dehnes.accounting.database.BookingView
-import com.dehnes.accounting.database.NextAfterIdFilter
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
 import java.sql.Connection
@@ -12,18 +10,17 @@ import kotlin.math.sign
 
 class BookingReadService(
     private val repository: Repository,
-    private val categoryService: CategoryService,
     private val dataSource: DataSource,
     private val userService: UserService,
 ) {
 
-    fun listLedgers(userId: String): List<LedgerView> {
+    fun listLedgers(userId: String, write: Boolean): List<LedgerView> {
         return dataSource.readTx {
-            listLedgers(it, userId)
+            listLedgers(it, userId, write)
         }
     }
 
-    fun listLedgers(connection: Connection, userId: String): List<LedgerView> {
+    fun listLedgers(connection: Connection, userId: String, write: Boolean): List<LedgerView> {
         val user = userService.getUserById(connection, userId) ?: error("Unknown userId=$userId")
         if (!user.isActive) return emptyList()
 
@@ -39,29 +36,7 @@ class BookingReadService(
                 l.bookingsCounter,
                 a.accessLevel
             )
-        }.filter { user.isAdmin || it.accessLevel.canRead() }
-    }
-
-    fun listBookings(
-        connection: Connection,
-        ledgerId: String,
-        userId: String,
-        offset: Long?,
-        size: Int = 100
-    ): List<BookingView> {
-        check(size >= 0)
-        check(offset == null || offset >= 0)
-
-        val ledgerDto = listLedgers(connection, userId).firstOrNull { it.id == ledgerId }
-            ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
-
-        return repository.getBookings(
-            connection,
-            categoryService.get(connection),
-            ledgerDto.id,
-            size,
-            offset?.let { NextAfterIdFilter(it) }
-        )
+        }.filter { user.isAdmin || it.accessLevel.hasAccess(write) }
     }
 
 }

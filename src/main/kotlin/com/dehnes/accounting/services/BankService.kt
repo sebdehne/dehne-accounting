@@ -24,8 +24,9 @@ class BankService(
     ): List<BankAccountTransactionView> {
 
         return dataSource.readTx { conn ->
-            val ledgerDto = bookingReadService.listLedgers(conn, userId).firstOrNull { it.id == ledgerId }
-                ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
+            val ledgerDto =
+                bookingReadService.listLedgers(conn, userId, write = false).firstOrNull { it.id == ledgerId }
+                    ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
 
             if (!repository.getAllBankAccountsForLedger(conn, ledgerDto.id).any { it.id == bankAccountId }) {
                 error("User $userId does not have access to this bankAccount")
@@ -63,7 +64,7 @@ class BankService(
     }
 
     fun getAccountsWithSummary(connection: Connection, userId: String, ledgerId: String): List<BankAccountDto> {
-        val ledgerDto = bookingReadService.listLedgers(connection, userId).firstOrNull { it.id == ledgerId }
+        val ledgerDto = bookingReadService.listLedgers(connection, userId, write = false).firstOrNull { it.id == ledgerId }
             ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
 
         return repository.getAllBankAccountsForLedger(connection, ledgerDto.id)

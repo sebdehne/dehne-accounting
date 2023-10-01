@@ -394,6 +394,7 @@ class KMyMoneyImporter(
                             bAccount.number ?: "unknown",
                             bAccount.opened!!,
                             if (bAccount.closed) LocalDate.now() else null,
+                            idMapping[bAccount.id]!!,
                             0,
                             0,
                             0,

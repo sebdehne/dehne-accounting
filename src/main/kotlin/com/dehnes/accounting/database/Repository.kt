@@ -1,10 +1,15 @@
 package com.dehnes.accounting.database
 
+import com.dehnes.accounting.api.dtos.TransactionMatcher
+import com.dehnes.accounting.api.dtos.TransactionMatcherFilter
+import com.dehnes.accounting.api.dtos.TransactionMatcherFilterType
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.services.BookingType
 import com.dehnes.accounting.services.Categories
 import com.dehnes.accounting.utils.SqlUtils
 import com.dehnes.smarthome.utils.toLong
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.Date
 import java.sql.ResultSet
@@ -14,6 +19,7 @@ import java.time.LocalDate
 
 class Repository(
     private val changelog: Changelog,
+    private val objectMapper: ObjectMapper,
 ) {
 
     /*
@@ -241,6 +247,7 @@ class Repository(
         rs.getString("account_number"),
         rs.getDate("open_date").toLocalDate(),
         rs.getDate("close_date")?.toLocalDate(),
+        rs.getString("category_id"),
         rs.getLong("open_balance"),
         rs.getLong("transactions_counter"),
         rs.getLong("transactions_counter_unbooked"),
@@ -333,11 +340,12 @@ class Repository(
                 account_number, 
                 open_date, 
                 close_date, 
+                category_id, 
                 open_balance,
                 transactions_counter,
                 transactions_counter_unbooked,
                 current_balance
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
         """.trimIndent()
         )
             .use { preparedStatement ->
@@ -349,10 +357,11 @@ class Repository(
                 preparedStatement.setString(6, bankAccount.accountNumber)
                 preparedStatement.setDate(7, Date.valueOf(bankAccount.openDate))
                 preparedStatement.setDate(8, bankAccount.closeDate?.let { Date.valueOf(it) })
-                preparedStatement.setLong(9, bankAccount.openBalance)
-                preparedStatement.setLong(10, 0)
+                preparedStatement.setString(9, bankAccount.categoryId)
+                preparedStatement.setLong(10, bankAccount.openBalance)
                 preparedStatement.setLong(11, 0)
-                preparedStatement.setLong(12, bankAccount.openBalance)
+                preparedStatement.setLong(12, 0)
+                preparedStatement.setLong(13, bankAccount.openBalance)
                 check(preparedStatement.executeUpdate() == 1) { "Could not insert" }
             }
 
@@ -447,26 +456,6 @@ class Repository(
             }
         }
 
-    fun getAllCategoryMatchers(connection: Connection, categoryId: String): List<CategoryMatcherDto> =
-        connection.prepareStatement("SELECT * FROM category_matcher WHERE category_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, categoryId)
-            preparedStatement.executeQuery().use { rs ->
-                val l = mutableListOf<CategoryMatcherDto>()
-                while (rs.next()) {
-                    l.add(
-                        CategoryMatcherDto(
-                            rs.getString("id"),
-                            rs.getString("category_id"),
-                            rs.getString("type").let { CategoryMatcherType.valueOf(it) },
-                            rs.getString("pattern"),
-                            rs.getString("description"),
-                        )
-                    )
-                }
-                l
-            }
-        }
-
     fun addOrReplaceCategory(connection: Connection, userId: String, category: CategoryDto) {
         val updated =
             connection.prepareStatement("UPDATE category SET name=?, description=?,parent_category_id=? WHERE id=?")
@@ -518,45 +507,60 @@ class Repository(
         }
     }
 
-    fun removeCategoryMatcher(connection: Connection, userId: String, categoryMatcherId: String) {
-        val deleted = connection.prepareStatement("DELETE FROM category_matcher WHERE id=?").use { preparedStatement ->
-            preparedStatement.setString(1, categoryMatcherId)
-            preparedStatement.executeUpdate() == 0
-        }
-        if (deleted) {
-            changelog.add(
-                connection,
-                userId,
-                ChangeLogEventType.categoryMatcherRemoved,
-                mapOf("id" to categoryMatcherId)
-            )
+    /*
+     * Transaction matchers
+     */
+    fun getAllMatchers(connection: Connection): List<TransactionMatcher> {
+        return connection.prepareStatement("SELECT * FROM bank_transaction_matchers").use { preparedStatement ->
+            preparedStatement.executeQuery().use { rs ->
+                val l = mutableListOf<TransactionMatcher>()
+                while (rs.next()) {
+                    l.add(
+                        TransactionMatcher(
+                            rs.getString("id"),
+                            rs.getString("name"),
+                            objectMapper.readValue(rs.getString("filter_list")),
+                            objectMapper.readValue(rs.getString("target")),
+                        )
+                    )
+                }
+                l
+            }
         }
     }
 
-    fun addOrReplaceCategoryMatcher(connection: Connection, userId: String, categoryMatcherDto: CategoryMatcherDto) {
+    fun addOrReplaceMatcher(connection: Connection, userId: String, matcher: TransactionMatcher) {
         val updated =
-            connection.prepareStatement("UPDATE category_matcher SET type=?, pattern=?,description=? WHERE id=?")
+            connection.prepareStatement("UPDATE bank_transaction_matchers SET name=?,filter_list=?, target=? WHERE id=?")
                 .use { preparedStatement ->
-                    preparedStatement.setString(1, categoryMatcherDto.type.name)
-                    preparedStatement.setString(2, categoryMatcherDto.pattern)
-                    preparedStatement.setString(3, categoryMatcherDto.description)
-                    preparedStatement.setString(4, categoryMatcherDto.id)
+                    preparedStatement.setString(1, matcher.name)
+                    preparedStatement.setString(2, objectMapper.writeValueAsString(matcher.filters))
+                    preparedStatement.setString(3, objectMapper.writeValueAsString(matcher.target))
+                    preparedStatement.setString(4, matcher.id)
                     preparedStatement.executeUpdate() == 1
                 }
 
         if (updated) {
-            changelog.add(connection, userId, ChangeLogEventType.categoryMatcherUpdated, categoryMatcherDto)
+            changelog.add(connection, userId, ChangeLogEventType.matcherUpdated, matcher)
         } else {
-            connection.prepareStatement("INSERT INTO category_matcher (id, type, pattern, description,category_id) VALUES (?,?,?,?,?)")
+            connection.prepareStatement("INSERT INTO bank_transaction_matchers (id, name,filter_list, target) VALUES (?,?,?,?)")
                 .use { preparedStatement ->
-                    preparedStatement.setString(1, categoryMatcherDto.id)
-                    preparedStatement.setString(2, categoryMatcherDto.type.name)
-                    preparedStatement.setString(3, categoryMatcherDto.description)
-                    preparedStatement.setString(4, categoryMatcherDto.categoryId)
+                    preparedStatement.setString(1, matcher.id)
+                    preparedStatement.setString(2, matcher.name)
+                    preparedStatement.setString(3, objectMapper.writeValueAsString(matcher.filters))
+                    preparedStatement.setString(4, objectMapper.writeValueAsString(matcher.target))
                     check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
                 }
-            changelog.add(connection, userId, ChangeLogEventType.categoryMatcherAdded, categoryMatcherDto)
+            changelog.add(connection, userId, ChangeLogEventType.matcherAdded, matcher)
         }
+    }
+
+    fun removeMatcher(connection: Connection, userId: String, matcherId: String) {
+        connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, matcherId)
+            check(preparedStatement.executeUpdate() == 1)
+        }
+        changelog.add(connection, userId, ChangeLogEventType.matcherRemoved, mapOf("id" to matcherId))
     }
 
     /*
@@ -988,13 +992,24 @@ enum class AccessLevel {
     none,
     ;
 
-    fun canRead() = when (this) {
-        admin,
-        legderOwner,
-        legderReadWrite,
-        legderRead -> true
+    fun hasAccess(write: Boolean) = if (write) {
+        when (this) {
+            admin,
+            legderOwner,
+            legderReadWrite -> true
 
-        none -> false
+            legderRead,
+            none -> false
+        }
+    } else {
+        when (this) {
+            admin,
+            legderOwner,
+            legderReadWrite,
+            legderRead -> true
+
+            none -> false
+        }
     }
 }
 
@@ -1030,6 +1045,7 @@ data class BankAccountDto(
     val accountNumber: String,
     val openDate: LocalDate,
     val closeDate: LocalDate?,
+    val categoryId: String,
     val openBalance: Long,
     val transactionsCounter: Long,
     val transactionsCounterUnbooked: Long,
