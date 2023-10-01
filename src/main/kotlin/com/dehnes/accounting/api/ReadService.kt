@@ -9,6 +9,7 @@ import com.dehnes.accounting.rapports.RapportRequest
 import com.dehnes.accounting.rapports.RapportService
 import com.dehnes.accounting.services.BankService
 import com.dehnes.accounting.services.BookingReadService
+import com.dehnes.accounting.services.CategoryService
 import com.dehnes.accounting.services.UserService
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
@@ -21,6 +22,7 @@ class ReadService(
     private val executorService: ExecutorService,
     private val userService: UserService,
     private val rapportService: RapportService,
+    private val categoryService: CategoryService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -58,6 +60,10 @@ class ReadService(
 
         getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, false))
 
+        allCategories -> ReadResponse(categories = categoryService.get().asList.map {
+            CategoryView(it.id, it.name, it.description, it.parentCategoryId)
+        })
+
         getBankAccounts -> ReadResponse(
             bankAccounts = bankService.getAllAccountsFor(
                 userId,
@@ -73,6 +79,18 @@ class ReadService(
                     readRequest.ledgerId!!,
                     request.bankAccountId,
                     BankTxDateRangeFilter(request.from, request.toExcluding)
+                )
+            )
+        }
+
+        getBankTransaction -> {
+            val bankTransactionRequest = readRequest.bankTransactionRequest!!
+            ReadResponse(
+                bankTransaction = bankService.getTransactions(
+                    userId,
+                    bankTransactionRequest.ledgerId,
+                    bankTransactionRequest.bankAccountId,
+                    bankTransactionRequest.transactionId
                 )
             )
         }

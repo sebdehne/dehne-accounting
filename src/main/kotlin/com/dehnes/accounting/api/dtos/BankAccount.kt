@@ -35,6 +35,12 @@ data class BankTransactionsRequest(
     val toExcluding: Instant,
 )
 
+data class BankTransactionRequest(
+    val ledgerId: String,
+    val bankAccountId: String,
+    val transactionId: Long,
+)
+
 data class BankAccountTransactionView(
     val id: Long,
     val description: String?,

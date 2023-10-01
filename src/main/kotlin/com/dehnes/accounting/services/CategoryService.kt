@@ -2,12 +2,17 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.Repository
+import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.domain.InformationElement
 import java.sql.Connection
+import javax.sql.DataSource
 
 class CategoryService(
     private val repository: Repository,
+    private val dataSource: DataSource,
 ) {
+
+    fun get() = dataSource.readTx { conn -> get(conn) }
 
     fun get(connection: Connection): Categories {
         val list = repository.getAllCategories(connection)

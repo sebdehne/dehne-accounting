@@ -26,7 +26,10 @@ enum class ReadRequestType(
     getBankAccounts(bankAdded, bankUpdated, bankRemoved, bankAccountAdded, bankAccountUpdated, bankAccountRemoved),
 
     ledgerRapport(bookingAdded, bookingRemoved),
-    getBankTransactions(bankTransactionAdded, bankTransactionRemoveLast)
+    getBankTransactions(bankTransactionAdded, bankTransactionRemoveLast),
+    getBankTransaction(bankTransactionAdded, bankTransactionRemoveLast),
+
+    allCategories(categoryAdded, categoryUpdated, categoryRemoved),
     ;
 
     val events = listensOn.toList()
@@ -37,6 +40,7 @@ data class ReadRequest(
     val ledgerId: String? = null,
     val ledgerRapportRequest: LedgerRapportRequest? = null,
     val bankTransactionsRequest: BankTransactionsRequest? = null,
+    val bankTransactionRequest: BankTransactionRequest? = null,
 )
 
 data class ReadResponse(
@@ -45,4 +49,6 @@ data class ReadResponse(
     val bankAccounts: List<BankAccountView>? = null,
     val ledgerRapport: List<LedgerRapportNode>? = null,
     val bankTransactions: List<BankAccountTransactionView>? = null,
+    val bankTransaction: BankAccountTransactionView? = null,
+    val categories: List<CategoryView>? = null,
 )

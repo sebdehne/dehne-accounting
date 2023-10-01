@@ -30,8 +30,7 @@ enum class TransactionMatcherTargetType {
 
 data class TransactionMatcherTarget(
     val type: TransactionMatcherTargetType,
-    val bankTransferReceivedFromAccountName: String? = null,
-    val bankTransferSentToAccountName: String? = null,
+    val transferCategoryId: String?,
     val multipleCategoriesBooking: MultipleCategoriesBookingWrapper? = null,
 )
 

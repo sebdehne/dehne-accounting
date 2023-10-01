@@ -1,8 +1,9 @@
 import {LedgerView} from "./ledgers";
 import {UserView} from "./user";
-import {BankAccountView} from "./bankaccount";
+import {BankAccountView, BankTransactionRequest} from "./bankaccount";
 import {LedgerRapportNode, LedgerRapportRequest} from "./ledger_rapport";
 import {BankAccountTransactionView, BankTransactionsRequest} from "./banktransactions";
+import {CategoryView} from "./categories";
 
 
 export type Subscribe = {
@@ -19,13 +20,14 @@ export type Notify = {
     readResponse: ReadResponse;
 }
 
-export type ReadRequestType = "userInfo" | "getLedgers" | "getBankAccounts" | 'ledgerRapport' | 'getBankTransactions';
+export type ReadRequestType = "userInfo" | "getLedgers" | "getBankAccounts" | 'ledgerRapport' | 'getBankTransactions' | 'getBankTransaction' | 'allCategories';
 
 export type ReadRequest = {
     type: ReadRequestType;
     ledgerId?: string;
     ledgerRapportRequest?: LedgerRapportRequest;
     bankTransactionsRequest?: BankTransactionsRequest;
+    bankTransactionRequest?: BankTransactionRequest;
 }
 
 export type ReadResponse = {
@@ -34,5 +36,7 @@ export type ReadResponse = {
     bankAccounts?: BankAccountView[];
     ledgerRapport?: LedgerRapportNode[];
     bankTransactions?: BankAccountTransactionView[];
+    bankTransaction?: BankAccountTransactionView;
+    categories?: CategoryView[];
 }
 

@@ -13,8 +13,7 @@ export type TransactionMatcherTargetType = 'multipleCategoriesBooking' | 'bankTr
 
 export type TransactionMatcherTarget = {
     type: TransactionMatcherTargetType;
-    bankTransferReceivedFromAccountName?: string;
-    bankTransferSentToAccountName?: string;
+    transferCategoryId?: string;
     multipleCategoriesBooking?: MultipleCategoriesBookingWrapper;
 }
 

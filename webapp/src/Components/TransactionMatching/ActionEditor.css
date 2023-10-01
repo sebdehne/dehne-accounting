@@ -1,0 +1,17 @@
+
+
+.BookingRules {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.BookingRule {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.BookingRuleSummary {
+    display: flex;
+    flex-direction: column;
+}

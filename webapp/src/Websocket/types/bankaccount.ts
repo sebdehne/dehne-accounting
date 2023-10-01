@@ -13,3 +13,8 @@ export interface BankAccountView extends InformationElement {
     currentBalance: number;
 }
 
+export type BankTransactionRequest = {
+    ledgerId: string;
+    bankAccountId: string;
+    transactionId: number;
+}

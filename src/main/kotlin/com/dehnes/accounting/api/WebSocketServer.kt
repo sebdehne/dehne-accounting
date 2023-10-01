@@ -47,6 +47,7 @@ class WebSocketServer : Endpoint() {
 
     fun onWebSocketText(argSession: Session, argMessage: String) {
         val userEmail = (argSession.userProperties["userEmail"] as String?) ?: error("user missing")
+        val user = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
 
         val websocketMessage: WebsocketMessage = objectMapper.readValue(argMessage)
 
@@ -62,8 +63,7 @@ class WebSocketServer : Endpoint() {
 
                 synchronized(subscriptions) {
                     subscriptions[subscriptionId]?.close()
-                    val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
-                    val sub = Subscription(subscriptionId, argSession, userByEmail.id, subscribe.readRequest)
+                    val sub = Subscription(subscriptionId, argSession, user.id, subscribe.readRequest)
                     subscriptions[subscriptionId] = sub
                     readService.addSubscription(sub)
                 }
@@ -82,11 +82,10 @@ class WebSocketServer : Endpoint() {
 
             importBankTransactions -> {
                 val request = rpcRequest.importBankTransactionsRequest!!
-                val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
 
                 val (result, errorMsg) = logAndGetError(logger) {
                     bankTransactionImportService.doImport(
-                        userByEmail.id,
+                        user.id,
                         request.ledgerId,
                         request.bankAccountId,
                         ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
@@ -99,11 +98,9 @@ class WebSocketServer : Endpoint() {
             }
 
             addNewMatcher -> {
-                val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
-
                 val (_, errorMsg) = logAndGetError(logger) {
                     transactionMatchingService.addNewMatcher(
-                        userByEmail.id,
+                        user.id,
                         rpcRequest.addNewMatcherRequest!!
                     )
                 }
@@ -112,12 +109,10 @@ class WebSocketServer : Endpoint() {
             }
 
             getMatchCandidates -> {
-                val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
-
                 val getMatchCandidatesRequest = rpcRequest.getMatchCandidatesRequest!!
 
                 val result = transactionMatchingService.getMatchCandidates(
-                    userByEmail.id,
+                    user.id,
                     getMatchCandidatesRequest.ledgerId,
                     getMatchCandidatesRequest.bankAccountId,
                     getMatchCandidatesRequest.transactionId,
@@ -127,12 +122,11 @@ class WebSocketServer : Endpoint() {
             }
 
             executeMatcher -> {
-                val userByEmail = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
                 val matcherRequest = rpcRequest.executeMatcherRequest!!
 
                 val (_, error) = logAndGetError(logger) {
                     transactionMatchingService.executeMatch(
-                        userByEmail.id,
+                        user.id,
                         matcherRequest.ledgerId,
                         matcherRequest.bankAccountId,
                         matcherRequest.transactionId,
