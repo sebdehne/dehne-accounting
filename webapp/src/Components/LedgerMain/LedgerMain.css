@@ -1,0 +1,78 @@
+
+.BankAccountList {
+    padding-left: 0;
+}
+
+.BakAccountSummary {
+    display: flex;
+    flex-direction: row;
+    background: #333333;
+    margin-bottom: 15px;
+    padding: 5px 20px 5px 15px;
+    list-style-type: none;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.BakAccountSummaryInfo {
+    display: flex;
+    flex-direction: column;
+    list-style-type: none;
+}
+
+.BakAccountSummaryAmount {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.BankName {
+    font-size: 0.7em;
+}
+
+.AccountNumber {
+    font-size: 0.7em;
+}
+
+.BankAccountName {
+    margin-right: 10px;
+}
+
+.BankAccountUnbookedTx {
+    font-size: 0.8em;
+}
+
+.LedgerRapportPeriodSelector {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    font-size: 1.4em;
+}
+
+.LedgerRapportNodes {
+    list-style-type: none;
+    padding-left: 10px;
+}
+
+.LedgerRapportNode {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.LedgerRapportNodeSummary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.LedgerRapportNodeRecords {
+    list-style-type: none;
+    padding: 5px;
+}
+
+.LedgerRapportNodeRecord {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}

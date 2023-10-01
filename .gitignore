@@ -1,0 +1,13 @@
+.idea/
+smarthome-server.iml
+target/
+testdir/
+
+node_modules/
+logs/
+storage.properties
+properties.json
+webapp/build
+sql.db
+*.iml
+InitialImportFromKMyMoney.kt
