@@ -1,11 +1,14 @@
-import React, {Dispatch, SetStateAction, useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {formatIso, monthDelta, startOfCurrentMonth} from "./formatting";
+import WebsocketClient from "../Websocket/websocketClient";
+import JSONObjectMerge from "json-object-merge";
 
+type ContextType = {
+    userState: UserStateFrontendState,
+    setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => void
+}
 
-const UserStateProviderContext = React.createContext(({
-    userState: {} as UserStateFrontendState,
-    setUserState: {} as Dispatch<SetStateAction<UserStateFrontendState>>,
-}));
+const UserStateProviderContext = React.createContext({} as ContextType);
 
 export type UserStateProviderProps = {
     children?: React.ReactNode;
@@ -14,8 +17,27 @@ export type UserStateProviderProps = {
 export const UserStateProvider = ({children, value = createDefault()}: UserStateProviderProps) => {
     const [userState, setUserState] = useState(value);
 
+    useEffect(() => {
+        const subId = WebsocketClient.subscribe({type: 'userState'},
+            notify => setUserState(
+                createDefault(notify.readResponse.userState!.frontendState)
+            )
+        )
+        return () => WebsocketClient.unsubscribe(subId);
+    }, [setUserState]);
+
+    const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
+        const updated = fn(userState);
+        WebsocketClient.rpc({
+            type: "setUserState",
+            userState: {
+                frontendState: updated
+            }
+        })
+    }
+
     return (
-        <UserStateProviderContext.Provider value={{userState, setUserState}}>
+        <UserStateProviderContext.Provider value={{userState, setUserState: updateState}}>
             {children}
         </UserStateProviderContext.Provider>
     );
@@ -29,9 +51,9 @@ export const useUserState = () => {
     return context;
 };
 
-const createDefault = (): UserStateFrontendState => {
+const createDefault = (input: any = {}): UserStateFrontendState => {
 
-    return ({
+    const myDefault: UserStateFrontendState = {
         bankTransactionsState: {
             currentPeriod: {
                 type: "month",
@@ -46,7 +68,13 @@ const createDefault = (): UserStateFrontendState => {
                 endDateTime: formatIso(monthDelta(startOfCurrentMonth(), 1))
             }
         }
-    })
+    };
+
+    return JSONObjectMerge(myDefault, input) as UserStateFrontendState;
+}
+
+export type UserState = {
+    frontendState: UserStateFrontendState;
 }
 
 export type UserStateFrontendState = {

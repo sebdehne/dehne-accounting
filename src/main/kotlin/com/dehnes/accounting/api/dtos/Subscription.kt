@@ -31,7 +31,7 @@ enum class ReadRequestType(
 
     allCategories(categoryAdded, categoryUpdated, categoryRemoved),
 
-    userState(userStateUpdated)
+    userState(userStateUpdated),
     ;
 
     val events = listensOn.toList()

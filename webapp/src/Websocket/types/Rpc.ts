@@ -1,9 +1,15 @@
 import {Subscribe, Unsubscribe} from "./Subscription";
 import {ExecuteMatcherRequest, GetMatchCandidatesRequest, TransactionMatcher} from "./transactionMatcher";
+import {UserState} from "../../utils/userstate";
 
-export type RequestType = "subscribe" | "unsubscribe" | 'importBankTransactions' | 'getMatchCandidates' |
-    'addNewMatcher' |
-    'executeMatcher';
+export type RequestType = "subscribe"
+    | "unsubscribe"
+    | 'importBankTransactions'
+    | 'getMatchCandidates'
+    | 'addNewMatcher'
+    | 'executeMatcher'
+    | 'setUserState'
+    ;
 
 export type RpcRequest = {
     type: RequestType;
@@ -14,6 +20,7 @@ export type RpcRequest = {
     addNewMatcherRequest?: TransactionMatcher;
     getMatchCandidatesRequest?: GetMatchCandidatesRequest;
     executeMatcherRequest?: ExecuteMatcherRequest;
+    userState?: UserState;
 }
 
 export type RpcResponse = {

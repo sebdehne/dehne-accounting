@@ -59,7 +59,7 @@ class WebSocketServer : Endpoint() {
 
         val rpcRequest = websocketMessage.rpcRequest!!
         val response: RpcResponse = when (rpcRequest.type) {
-            subscribe -> {
+            subscribe -> readService.doWithNotifies {
                 val subscribe = rpcRequest.subscribe!!
                 val subscriptionId = subscribe.subscriptionId
 
@@ -82,12 +82,12 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(subscriptionRemoved = true)
             }
 
-            setUserState -> {
+            setUserState -> readService.doWithNotifies {
                 userStateService.setUserState(user.id, rpcRequest.userState!!)
                 RpcResponse()
             }
 
-            importBankTransactions -> {
+            importBankTransactions -> readService.doWithNotifies {
                 val request = rpcRequest.importBankTransactionsRequest!!
 
                 val (result, errorMsg) = logAndGetError(logger) {
@@ -104,7 +104,7 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(importBankTransactionsResult = result, error = errorMsg)
             }
 
-            addNewMatcher -> {
+            addNewMatcher -> readService.doWithNotifies {
                 val (_, errorMsg) = logAndGetError(logger) {
                     transactionMatchingService.addNewMatcher(
                         user.id,
@@ -128,7 +128,7 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(getMatchCandidatesResult = result)
             }
 
-            executeMatcher -> {
+            executeMatcher -> readService.doWithNotifies {
                 val matcherRequest = rpcRequest.executeMatcherRequest!!
 
                 val (_, error) = logAndGetError(logger) {

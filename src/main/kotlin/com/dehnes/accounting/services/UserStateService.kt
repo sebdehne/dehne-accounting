@@ -16,9 +16,8 @@ class UserStateService(
     }
 
     fun setUserState(userId: String, userState: UserState) {
-        check(userId == userState.userId)
         dataSource.writeTx { conn ->
-            repository.setUserState(conn, userState)
+            repository.setUserState(conn, userId, userState)
         }
     }
 

@@ -992,33 +992,32 @@ class Repository(
             preparedStatement.executeQuery().use { rs ->
                 if (rs.next()) {
                     UserState(
-                        userId,
                         objectMapper.readValue(rs.getString("frontend_state"))
                     )
-                } else UserState(userId, emptyMap())
+                } else UserState(emptyMap())
             }
         }
 
-    fun setUserState(connection: Connection, userState: UserState) {
+    fun setUserState(connection: Connection, userId: String, userState: UserState) {
         val updated = connection.prepareStatement("UPDATE user_state SET frontend_state = ? WHERE user_id = ?")
             .use { preparedStatement ->
                 preparedStatement.setString(1, objectMapper.writeValueAsString(userState.frontendState))
-                preparedStatement.setString(2, userState.userId)
+                preparedStatement.setString(2, userId)
                 preparedStatement.executeUpdate() > 0
             }
         if (!updated) {
             connection.prepareStatement("INSERT INTO user_state (user_id, frontend_state) VALUES (?,?)")
                 .use { preparedStatement ->
-                    preparedStatement.setString(1, userState.userId)
+                    preparedStatement.setString(1, userId)
                     preparedStatement.setString(2, objectMapper.writeValueAsString(userState.frontendState))
                     check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
                 }
         }
         changelog.add(
             connection,
-            userState.userId,
+            userId,
             ChangeLogEventType.userStateUpdated,
-            mapOf("userId" to userState.userId)
+            mapOf("userId" to userId)
         )
     }
 }

@@ -4,6 +4,7 @@ import {BankAccountView, BankTransactionRequest} from "./bankaccount";
 import {LedgerRapportNode, LedgerRapportRequest} from "./ledger_rapport";
 import {BankAccountTransactionView, BankTransactionsRequest} from "./banktransactions";
 import {CategoryView} from "./categories";
+import {UserState} from "../../utils/userstate";
 
 
 export type Subscribe = {
@@ -20,7 +21,15 @@ export type Notify = {
     readResponse: ReadResponse;
 }
 
-export type ReadRequestType = "userInfo" | "getLedgers" | "getBankAccounts" | 'ledgerRapport' | 'getBankTransactions' | 'getBankTransaction' | 'allCategories';
+export type ReadRequestType = "userInfo"
+    | "getLedgers"
+    | "getBankAccounts"
+    | 'ledgerRapport'
+    | 'getBankTransactions'
+    | 'getBankTransaction'
+    | 'allCategories'
+    | 'userState'
+    ;
 
 export type ReadRequest = {
     type: ReadRequestType;
@@ -38,5 +47,6 @@ export type ReadResponse = {
     bankTransactions?: BankAccountTransactionView[];
     bankTransaction?: BankAccountTransactionView;
     categories?: CategoryView[];
+    userState?: UserState;
 }
 

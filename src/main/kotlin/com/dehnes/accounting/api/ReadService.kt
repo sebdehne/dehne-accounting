@@ -4,17 +4,15 @@ import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType
-import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.rapports.RapportLeaf
 import com.dehnes.accounting.rapports.RapportRequest
 import com.dehnes.accounting.rapports.RapportService
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
-import org.w3c.dom.ls.LSResourceResolver
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
-import javax.sql.DataSource
 
 class ReadService(
     private val bookingReadService: BookingReadService,
@@ -30,11 +28,24 @@ class ReadService(
 
     private val listeners = ConcurrentHashMap<String, WebSocketServer.Subscription>()
 
+    private val threadLocalChangeLog = ThreadLocal<Queue<ChangeEvent>>()
+
+    fun  <T> doWithNotifies(fn: () -> T): T {
+        threadLocalChangeLog.set(LinkedList())
+        val result: T?
+        try {
+            result = fn()
+        } finally {
+            threadLocalChangeLog.get().forEach(::sendOutNotifies)
+            threadLocalChangeLog.remove()
+        }
+
+        return result!!
+    }
+
     fun addSubscription(sub: WebSocketServer.Subscription) {
         listeners[sub.subscriptionId] = sub
-        executorService.submit(wrap(logger) {
-            onChangelogEvent(null, sub.subscriptionId)
-        })
+        onChangelogEvent(null, sub.subscriptionId)
     }
 
     fun removeSubscription(subId: String) {
@@ -42,18 +53,24 @@ class ReadService(
     }
 
     fun onChangelogEvent(changeLogEventType: ChangeLogEventType?, subId: String? = null) {
-        listeners.values
-            .filter { subId == null || it.subscriptionId == subId }
-            .filter { changeLogEventType == null || changeLogEventType in it.readRequest.type.events }
-            .forEach { sub ->
-                try {
-                    sub.onEvent(
-                        Notify(sub.subscriptionId, handleRequest(sub.userId, sub.readRequest))
-                    )
-                } catch (e: Throwable) {
-                    logger.error(e) { "" }
+        threadLocalChangeLog.get()?.add(ChangeEvent(changeLogEventType, subId))
+    }
+
+    private fun sendOutNotifies(changeEvent: ChangeEvent) {
+        executorService.submit(wrap(logger) {
+            listeners.values
+                .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
+                .filter { changeEvent.changeLogEventType == null || changeEvent.changeLogEventType in it.readRequest.type.events }
+                .forEach { sub ->
+                    try {
+                        sub.onEvent(
+                            Notify(sub.subscriptionId, handleRequest(sub.userId, sub.readRequest))
+                        )
+                    } catch (e: Throwable) {
+                        logger.error(e) { "" }
+                    }
                 }
-            }
+        })
     }
 
     fun handleRequest(userId: String, readRequest: ReadRequest): ReadResponse = when (readRequest.type) {
@@ -138,3 +155,8 @@ class ReadService(
     }
 
 }
+
+data class ChangeEvent(
+    val changeLogEventType: ChangeLogEventType?,
+    val subId: String?,
+)
