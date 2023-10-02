@@ -5,6 +5,7 @@ import {LedgerRapportNode, LedgerRapportRequest} from "./ledger_rapport";
 import {BankAccountTransactionView, BankTransactionsRequest} from "./banktransactions";
 import {CategoryView} from "./categories";
 import {UserState} from "../../utils/userstate";
+import {GetMatchersRequest, GetMatchersResponse} from "./transactionMatcher";
 
 
 export type Subscribe = {
@@ -29,6 +30,7 @@ export type ReadRequestType = "userInfo"
     | 'getBankTransaction'
     | 'allCategories'
     | 'userState'
+    | 'getMatchers'
     ;
 
 export type ReadRequest = {
@@ -37,6 +39,7 @@ export type ReadRequest = {
     ledgerRapportRequest?: LedgerRapportRequest;
     bankTransactionsRequest?: BankTransactionsRequest;
     bankTransactionRequest?: BankTransactionRequest;
+    getMatchersRequest?: GetMatchersRequest;
 }
 
 export type ReadResponse = {
@@ -48,5 +51,6 @@ export type ReadResponse = {
     bankTransaction?: BankAccountTransactionView;
     categories?: CategoryView[];
     userState?: UserState;
+    getMatchersResponse?: GetMatchersResponse;
 }
 

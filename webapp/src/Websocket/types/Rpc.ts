@@ -1,12 +1,12 @@
 import {Subscribe, Unsubscribe} from "./Subscription";
-import {ExecuteMatcherRequest, GetMatchCandidatesRequest, TransactionMatcher} from "./transactionMatcher";
+import {ExecuteMatcherRequest, TransactionMatcher} from "./transactionMatcher";
 import {UserState} from "../../utils/userstate";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
     | 'importBankTransactions'
-    | 'getMatchCandidates'
-    | 'addNewMatcher'
+    | 'addOrReplaceMatcher'
+    | 'deleteMatcher'
     | 'executeMatcher'
     | 'setUserState'
     ;
@@ -16,11 +16,12 @@ export type RpcRequest = {
     subscribe?: Subscribe;
     unsubscribe?: Unsubscribe;
 
+    ledgerId?: string;
     importBankTransactionsRequest?: ImportBankTransactionsRequest;
-    addNewMatcherRequest?: TransactionMatcher;
-    getMatchCandidatesRequest?: GetMatchCandidatesRequest;
+    addOrReplaceMatcherRequest?: TransactionMatcher;
     executeMatcherRequest?: ExecuteMatcherRequest;
     userState?: UserState;
+    deleteMatcherId?: string;
 }
 
 export type RpcResponse = {

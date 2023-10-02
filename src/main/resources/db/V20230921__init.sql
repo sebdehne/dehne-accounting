@@ -136,11 +136,12 @@ create table bank_transaction
 
 create table bank_transaction_matchers
 (
-    id          text not null,
-    name        text not null,
-    filter_list text not null,
-    target      text not null,
-    ledger_id   text not null,
+    id          text      not null,
+    name        text      not null,
+    filter_list text      not null,
+    target      text      not null,
+    ledger_id   text      not null,
+    last_used   timestamp not null,
 
     primary key (id),
     foreign key (ledger_id) references ledger (id)

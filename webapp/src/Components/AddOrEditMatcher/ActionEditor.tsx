@@ -10,20 +10,17 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import IconButton from "@mui/material/IconButton";
 import {removeItemWithSlice} from "../../utils/utils";
-import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
+import {FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import {CategorySearchBox, SearchableCategory} from "../CategorySearchBox/CategorySearchBox";
+import "./ActionEditor.css";
 
 
 export type ActionEditorProps = {
-    transaction: BankAccountTransactionView;
     matcher: TransactionMatcher;
     setMatcher: React.Dispatch<React.SetStateAction<TransactionMatcher>>;
 }
 
-export const ActionEditor = ({transaction, matcher, setMatcher}: ActionEditorProps) => {
-    const [transferCategoryId, setTransferCategoryId] = useState(matcher.target.transferCategoryId);
-
-
+export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
     const setRules = useCallback((isCredit: boolean) => (r: BookingRule[]) => {
         setMatcher(prevState => ({
             ...prevState,
@@ -57,14 +54,23 @@ export const ActionEditor = ({transaction, matcher, setMatcher}: ActionEditorPro
                 }))}
             >
                 <MenuItem value={'multipleCategoriesBooking'}>multipleCategoriesBooking</MenuItem>
-                <MenuItem value={'bankTransferReceived'}>bankTransferReceived</MenuItem>
-                <MenuItem value={'bankTransferSent'}>bankTransferSent</MenuItem>
+                <MenuItem value={'bankTransfer'}>bankTransfer</MenuItem>
             </Select>
         </FormControl>
 
         {matcher.target.type === "multipleCategoriesBooking" && <div>
             <BookingRulesEditor title={'credit'} rules={matcher.target.multipleCategoriesBooking?.creditRules ?? []} setRules={setRules(true)}/>
             <BookingRulesEditor title={'debit'} rules={matcher.target.multipleCategoriesBooking?.debitRules ?? []} setRules={setRules(false)}/>
+        </div>}
+        {matcher.target.type === "bankTransfer" && <div>
+            <CategorySearchBox includeIntermediate={true} onSelectedCategoryId={category => setMatcher(prevState => ({
+                ...prevState,
+                target: {
+                    ...prevState.target,
+                    transferCategory: category,
+                    transferCategoryId: category.category.id
+                }
+            }))}/>
         </div>}
     </div>);
 }
@@ -97,8 +103,8 @@ const BookingRulesEditor = ({title, rules, setRules}: BookingRulesEditorProps) =
             {rules.map((r, index) => (<li key={index} className="BookingRule">
                 <div className="BookingRuleSummary">
                     <div>Type: {r.type}</div>
-                    <div>category: {r.categoryId}</div>
-                    <div>Amount: {r.amountInCents}</div>
+                    <div>category: {r.category.category.name}</div>
+                    {!!r.amountInCents && <div>Amount: {r.amountInCents}</div>}
                 </div>
                 <IconButton size="large" onClick={() => removeRule(index)}><DeleteIcon fontSize="inherit"/></IconButton>
             </li>))}
@@ -113,12 +119,22 @@ const BookingRulesEditor = ({title, rules, setRules}: BookingRulesEditorProps) =
                     id="demo-simple-select-helper"
                     value={type}
                     label="Type"
-                    onChange={(event, child) => setType(event.target.value as BookingRuleType)}
+                    onChange={(event, child) => {
+                        setType(event.target.value as BookingRuleType);
+                        setAmountInCents('');
+                    }}
                 >
                     <MenuItem value={'categoryBookingRemaining'}>categoryBookingRemaining</MenuItem>
                     <MenuItem value={'categoryBookingFixedAmount'}>categoryBookingFixedAmount</MenuItem>
                 </Select>
             </FormControl>
+            {type === "categoryBookingFixedAmount" && <FormControl sx={{m: 1, width: '100%'}}>
+                <TextField
+                    value={amountInCents}
+                    label="Amount"
+                    onChange={event => setAmountInCents(event.target.value ?? '')}
+                />
+            </FormControl>}
             <CategorySearchBox includeIntermediate={true} onSelectedCategoryId={category => setCategory(category)}/>
             <IconButton size="large" onClick={() => addRule()}><AddIcon fontSize="inherit"/></IconButton>
         </div>

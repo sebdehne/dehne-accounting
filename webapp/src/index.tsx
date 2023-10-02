@@ -13,8 +13,9 @@ import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {LedgerMain} from "./Components/LedgerMain/LedgerMain";
 import {BankTransactions} from "./Components/BankTransactions/BankTransactions";
 import {BankTransactionsImporter} from "./Components/BankTransactions/BankTransactionsImporter";
-import {TransactionMatching} from "./Components/TransactionMatching/TransactionMatching";
+import {BookTransaction} from "./Components/TransactionMatching/BookTransaction";
 import {UserStateProvider} from "./utils/userstate";
+import {AddOrEditMatcher} from "./Components/AddOrEditMatcher/AddOrEditMatcher";
 
 
 const root = ReactDOM.createRoot(
@@ -28,12 +29,12 @@ root.render(
                 <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
                     <Routes>
                         <Route path="/" element={<App/>}/>
-                        <Route path="/ledger/:ledgerId" element={<LedgerMain/>}/>
-                        <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId" element={<BankTransactions/>}/>
-                        <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/import"
+                        <Route path="/ledger" element={<LedgerMain/>}/>
+                        <Route path="/bankaccount" element={<BankTransactions/>}/>
+                        <Route path="/bankaccount/import"
                                element={<BankTransactionsImporter/>}/>
-                        <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/match/:transactionId"
-                               element={<TransactionMatching/>}/>
+                        <Route path="/book/transaction" element={<BookTransaction/>}/>
+                        <Route path="/matcher" element={<AddOrEditMatcher/>}/>
                     </Routes>
                 </BrowserRouter>
             </ThemeProvider>

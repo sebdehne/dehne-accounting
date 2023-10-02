@@ -104,28 +104,24 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(importBankTransactionsResult = result, error = errorMsg)
             }
 
-            addNewMatcher -> readService.doWithNotifies {
+            addOrReplaceMatcher -> readService.doWithNotifies {
                 val (_, errorMsg) = logAndGetError(logger) {
-                    transactionMatchingService.addNewMatcher(
+                    transactionMatchingService.addOrReplaceMatcher(
                         user.id,
-                        rpcRequest.addNewMatcherRequest!!
+                        rpcRequest.addOrReplaceMatcherRequest!!
                     )
                 }
 
                 RpcResponse(error = errorMsg)
             }
 
-            getMatchCandidates -> {
-                val getMatchCandidatesRequest = rpcRequest.getMatchCandidatesRequest!!
-
-                val result = transactionMatchingService.getMatchCandidates(
-                    user.id,
-                    getMatchCandidatesRequest.ledgerId,
-                    getMatchCandidatesRequest.bankAccountId,
-                    getMatchCandidatesRequest.transactionId,
+            deleteMatcher -> {
+                transactionMatchingService.deleteMatcher(
+                    userId = user.id,
+                    ledgerId = rpcRequest.ledgerId!!,
+                    matcherId = rpcRequest.deleteMatcherId!!
                 )
-
-                RpcResponse(getMatchCandidatesResult = result)
+                RpcResponse()
             }
 
             executeMatcher -> readService.doWithNotifies {
@@ -138,6 +134,7 @@ class WebSocketServer : Endpoint() {
                         matcherRequest.bankAccountId,
                         matcherRequest.transactionId,
                         matcherRequest.matcherId,
+                        matcherRequest.memoText?.ifBlank { null },
                     )
                 }
 

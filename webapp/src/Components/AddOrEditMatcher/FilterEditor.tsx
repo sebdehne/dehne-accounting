@@ -13,16 +13,17 @@ import {BankAccountTransactionView} from "../../Websocket/types/banktransactions
 import AddIcon from '@mui/icons-material/Add';
 
 export type FilterEditorProps = {
-    transaction: BankAccountTransactionView;
+    description?: string;
     matcher: TransactionMatcher;
     setMatcher: React.Dispatch<React.SetStateAction<TransactionMatcher>>;
 }
-export const FilterEditor = ({matcher, setMatcher, transaction}: FilterEditorProps) => {
+export const FilterEditor = ({matcher, setMatcher, description}: FilterEditorProps) => {
 
     const [filterType, setFilterType] = useState<TransactionMatcherFilterType>("exact");
-    const [pattern, setPattern] = useState(transaction.description);
+    const [pattern, setPattern] = useState(description);
     const [fromAmount, setFromAmount] = useState('');
     const [toAmount, setToAmount] = useState('');
+    const [bankAccountName, setBankAccountName] = useState('');
 
     const addFilter = useCallback((f: TransactionMatcherFilter) => {
         setMatcher(prevState => ({
@@ -40,6 +41,10 @@ export const FilterEditor = ({matcher, setMatcher, transaction}: FilterEditorPro
         }))
     }, [setMatcher]);
 
+    const needsPattern = (type: TransactionMatcherFilterType) => ['startsWith', 'endsWith', 'exact', 'contains'].includes(type)
+    const needsAmounts = (type: TransactionMatcherFilterType) => ['amountBetween'].includes(type)
+    const needsBankAccountName = (type: TransactionMatcherFilterType) => ['ifAccountName'].includes(type)
+
     return (
         <div>
 
@@ -47,9 +52,10 @@ export const FilterEditor = ({matcher, setMatcher, transaction}: FilterEditorPro
                 {matcher.filters.map((f, index) => (<li key={index} className="Filter">
                     <div className="FilterSummary">
                         <div>Type: {f.type}</div>
-                        {f.type !== "amountBetween" && <div>Pattern: {f.pattern}</div>}
-                        {f.type == "amountBetween" && <div>From: {f.fromAmount}</div>}
-                        {f.type == "amountBetween" && <div>From: {f.toAmount}</div>}
+                        {needsPattern(f.type) && <div>Pattern: {f.pattern}</div>}
+                        {needsAmounts(f.type) && <div>From: {f.fromAmount}</div>}
+                        {needsAmounts(f.type) && <div>From: {f.toAmount}</div>}
+                        {needsBankAccountName(f.type) && <div>Bank account: {f.bankAccountName}</div>}
                     </div>
                     <IconButton size="large" onClick={() => removeFilter(index)}>
                         <DeleteIcon fontSize="inherit"/></IconButton>
@@ -65,26 +71,33 @@ export const FilterEditor = ({matcher, setMatcher, transaction}: FilterEditorPro
                         id="demo-simple-select-helper"
                         value={filterType}
                         label="Filter type"
-                        onChange={(event, child) => setFilterType(event.target.value as TransactionMatcherFilterType)}
+                        onChange={(event) => setFilterType(event.target.value as TransactionMatcherFilterType)}
                     >
                         <MenuItem value={'startsWith'}>startsWith</MenuItem>
                         <MenuItem value={'endsWith'}>endsWith</MenuItem>
                         <MenuItem value={'exact'}>exact</MenuItem>
                         <MenuItem value={'contains'}>contains</MenuItem>
                         <MenuItem value={'amountBetween'}>amountBetween</MenuItem>
+                        <MenuItem value={'deposit'}>deposit</MenuItem>
+                        <MenuItem value={'withdrawal'}>withdrawal</MenuItem>
+                        <MenuItem value={'ifAccountName'}>ifAccountName</MenuItem>
                     </Select>
                 </FormControl>
-                {filterType !== "amountBetween" && <FormControl sx={{m: 1, minWidth: 300}}>
+                {needsPattern(filterType) && <FormControl sx={{m: 1, minWidth: 300}}>
                     <TextField value={pattern} label="Pattern"
                                onChange={event => setPattern(event.target.value ?? '')}/>
                 </FormControl>}
-                {filterType === "amountBetween" && <FormControl sx={{m: 1, minWidth: 300}}>
+                {needsAmounts(filterType) && <FormControl sx={{m: 1, minWidth: 300}}>
                     <TextField value={fromAmount} label="From amount"
                                onChange={event => setFromAmount(event.target.value ?? '')}/>
                 </FormControl>}
-                {filterType === "amountBetween" && <FormControl sx={{m: 1, minWidth: 300}}>
+                {needsAmounts(filterType) && <FormControl sx={{m: 1, minWidth: 300}}>
                     <TextField value={toAmount} label="To amount"
                                onChange={event => setToAmount(event.target.value ?? '')}/>
+                </FormControl>}
+                {needsBankAccountName(filterType) && <FormControl sx={{m: 1, minWidth: 300}}>
+                    <TextField value={bankAccountName} label="Bank account name"
+                               onChange={event => setBankAccountName(event.target.value ?? '')}/>
                 </FormControl>}
                 <FormControl>
                     <IconButton size="large" onClick={() => addFilter(
@@ -93,6 +106,7 @@ export const FilterEditor = ({matcher, setMatcher, transaction}: FilterEditorPro
                             pattern,
                             toAmount: parseInt(toAmount),
                             fromAmount: parseInt(fromAmount),
+                            bankAccountName,
                         }
                     )}><AddIcon fontSize="inherit"/></IconButton>
                 </FormControl>

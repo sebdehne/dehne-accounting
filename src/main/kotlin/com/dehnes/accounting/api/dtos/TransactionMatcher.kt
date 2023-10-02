@@ -1,18 +1,27 @@
 package com.dehnes.accounting.api.dtos
 
+import com.dehnes.accounting.database.BankAccountDto
 import com.dehnes.accounting.database.BankTransaction
+import java.time.Instant
 
 
 enum class TransactionMatcherFilterType(
-    val fn: (t: BankTransaction, f: TransactionMatcherFilter) -> Boolean
+    val fn: (ba: BankAccountDto, t: BankTransaction, f: TransactionMatcherFilter) -> Boolean
 ) {
-    startsWith({ t, f -> t.description?.startsWith(f.pattern!!) ?: false }),
-    endsWith({ t, f -> t.description?.endsWith(f.pattern!!) ?: false }),
-    exact({ t, f -> t.description == f.pattern!! }),
-    contains({ t, f -> t.description?.contains(f.pattern!!) ?: false }),
-    amountBetween({ t, f ->
+    startsWith({ba: BankAccountDto,  t, f -> t.description?.startsWith(f.pattern!!) ?: false }),
+    endsWith({ba: BankAccountDto,  t, f -> t.description?.endsWith(f.pattern!!) ?: false }),
+    exact({ba: BankAccountDto,  t, f -> t.description == f.pattern!! }),
+    contains({ ba: BankAccountDto, t, f -> t.description?.contains(f.pattern!!) ?: false }),
+    amountBetween({ba: BankAccountDto,  t, f ->
         t.amount in (f.fromAmount!!..f.toAmount!!)
     }),
+    deposit({ba: BankAccountDto,  t: BankTransaction, f: TransactionMatcherFilter ->
+        t.amount > 0
+    }),
+    withdrawal({ba: BankAccountDto,  t: BankTransaction, _: TransactionMatcherFilter ->
+        t.amount < 0
+    }),
+    ifAccountName({ba: BankAccountDto, t: BankTransaction, f: TransactionMatcherFilter -> ba.name == f.bankAccountName })
 }
 
 data class TransactionMatcherFilter(
@@ -20,12 +29,12 @@ data class TransactionMatcherFilter(
     val pattern: String? = null,
     val fromAmount: Long? = null,
     val toAmount: Long? = null,
+    val bankAccountName: String? = null,
 )
 
 enum class TransactionMatcherTargetType {
     multipleCategoriesBooking,
-    bankTransferReceived,
-    bankTransferSent,
+    bankTransfer,
 }
 
 data class TransactionMatcherTarget(
@@ -55,13 +64,23 @@ data class TransactionMatcher(
     val name: String,
     val filters: List<TransactionMatcherFilter>,
     val target: TransactionMatcherTarget,
+    val lastUsed: Instant,
 )
 
 
-data class GetMatchCandidatesRequest(
+data class GetMatchersRequest(
     val ledgerId: String,
+    val testMatchFor: TestMatchFor?,
+)
+
+data class TestMatchFor(
     val bankAccountId: String,
     val transactionId: Long,
+)
+
+data class GetMatchersResponse(
+    val machers: List<TransactionMatcher>,
+    val macherIdsWhichMatched: List<String>,
 )
 
 data class ExecuteMatcherRequest(
@@ -69,4 +88,5 @@ data class ExecuteMatcherRequest(
     val bankAccountId: String,
     val transactionId: Long,
     val matcherId: String,
+    val memoText: String?,
 )

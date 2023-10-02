@@ -5,6 +5,7 @@ import {Button, Container} from "@mui/material";
 import Header from "../Header";
 import {LedgerView} from "../../Websocket/types/ledgers";
 import WebsocketService, {useUser} from "../../Websocket/websocketClient";
+import {useUserState} from "../../utils/userstate";
 
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
 
     const {user} = useUser()
     const [ledgers, setLedgers] = useState<LedgerView[]>();
+    const {userState, setUserState} = useUserState();
 
     useEffect(() => {
         const subId = WebsocketService.subscribe(
@@ -23,9 +25,12 @@ function App() {
         return () => WebsocketService.unsubscribe(subId);
     }, [setLedgers]);
 
-    const relative = (path: string) => () => {
-        navigate(path);
-    };
+    const openLedger = (ledgerId: string) => {
+        setUserState(prev => ({
+            ...prev,
+            ledgerId
+        })).then(() => navigate('/ledger'))
+    }
 
     return (
         <Container maxWidth="sm" className="App">
@@ -43,7 +48,7 @@ function App() {
             >
                 {ledgers?.map(lv => (<div key={lv.id} style={{width: "80%"}}>
                     <Button variant="contained" color="primary"
-                            onClick={() => navigate('/ledger/' + lv.id)}>{lv.name}</Button>
+                            onClick={() => openLedger(lv.id)}>{lv.name}</Button>
                 </div>))}
 
             </div>

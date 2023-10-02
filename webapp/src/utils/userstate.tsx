@@ -5,7 +5,7 @@ import JSONObjectMerge from "json-object-merge";
 
 type ContextType = {
     userState: UserStateFrontendState,
-    setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => void
+    setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => Promise<void>
 }
 
 const UserStateProviderContext = React.createContext({} as ContextType);
@@ -28,12 +28,14 @@ export const UserStateProvider = ({children, value = createDefault()}: UserState
 
     const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
         const updated = fn(userState);
-        WebsocketClient.rpc({
-            type: "setUserState",
-            userState: {
-                frontendState: updated
-            }
-        })
+        return new Promise<void>(resolve => {
+            WebsocketClient.rpc({
+                type: "setUserState",
+                userState: {
+                    frontendState: updated
+                }
+            }).then(() => resolve())
+        });
     }
 
     return (
@@ -80,6 +82,11 @@ export type UserState = {
 export type UserStateFrontendState = {
     bankTransactionsState: BankTransactionsState;
     legderMainState: LegderMainState;
+    ledgerId?: string;
+    bankAccountId?: string;
+    transactionId?: number;
+    matcherId?: string;
+    backUrl?: string;
 }
 
 export type LegderMainState = {
@@ -89,6 +96,7 @@ export type LegderMainState = {
 export type BankTransactionsState = {
     currentPeriod: PeriodWindow;
 }
+
 
 
 export type PeriodWindowType = 'month' | 'betweenDates'

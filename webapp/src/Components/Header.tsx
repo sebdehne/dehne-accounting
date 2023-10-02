@@ -3,6 +3,7 @@ import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
 import {Button, CircularProgress} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import {useUserState} from "../utils/userstate";
 
 type HeaderProps = {
     title: string;
@@ -12,6 +13,7 @@ type HeaderProps = {
 
 const Header = ({title, backUrl, backName}: HeaderProps) => {
     const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
+    const {userState, setUserState} = useUserState();
     const navigate = useNavigate();
 
     useEffect(() =>
@@ -24,6 +26,17 @@ const Header = ({title, backUrl, backName}: HeaderProps) => {
         displayStatus = status;
     }
 
+    const canGoBack = !!userState.backUrl || !!backUrl;
+
+    const goBack = () => {
+        if (userState.backUrl) {
+            const bUrl = userState.backUrl;
+            setUserState(prev => ({...prev, backUrl: undefined})).then(() => navigate(bUrl));
+        } else if (backUrl) {
+            navigate(backUrl);
+        }
+    }
+
     return <>
         <div style={{
             display: "flex",
@@ -31,11 +44,11 @@ const Header = ({title, backUrl, backName}: HeaderProps) => {
             justifyContent: "space-between"
         }
         }>
-            {backUrl &&
-                <Button color="primary" variant="contained" onClick={() => navigate(backUrl)}><ArrowBackIcon/>{backName}
+            {canGoBack &&
+                <Button color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>{backName}
                 </Button>
             }
-            {!backUrl && <span>&nbsp;</span>}
+            {!canGoBack && <span>&nbsp;</span>}
             {status === ConnectionStatus.connectedAndWorking &&
                 <CircularProgress color="primary"/>
             }

@@ -1,31 +1,38 @@
 package com.dehnes.accounting.bank.importers
 
-import com.dehnes.accounting.database.*
-import com.dehnes.accounting.database.Transactions.writeTx
-import com.dehnes.accounting.datasourceSetup
-import com.dehnes.accounting.objectMapper
 import com.dehnes.accounting.utils.CsvParser.parseLine
 import com.dehnes.smarthome.utils.DateTimeUtils.zoneId
-import mu.KotlinLogging
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.sql.Connection
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+
 class DanskeBankCsvExportImporter : Importer {
 
-    private val expectedHeaders = listOf(
-        "Dato",
-        "Tekst",
-        "Beløp",
-        "Saldo",
-        "Status",
-        "Avstemt",
+    private val supportedFormats: List<List<String>> = listOf(
+        listOf(
+            "Dato",
+            "Tekst",
+            "Beløp",
+            "Saldo",
+            "Status",
+            "Avstemt",
+        ),
+        listOf(
+            "Dato",
+            "Kategori",
+            "Underkategori",
+            "Tekst",
+            "Beløp",
+            "Saldo",
+            "Status",
+            "Avstemt",
+        )
     )
+
 
     private val datoFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
@@ -35,25 +42,30 @@ class DanskeBankCsvExportImporter : Importer {
         onNewRecord: (record: BankTransactionImportRecord) -> Unit
     ) {
 
-
         BufferedReader(InputStreamReader(dataSource, StandardCharsets.ISO_8859_1)).use { reader ->
             val headerLine = reader.readLine().parseLine()
-            check(headerLine == expectedHeaders) { "Unsupported headers detected: $headerLine" }
+
+            val supportedFormat = supportedFormats
+                .firstOrNull { it == headerLine } ?: error("Unsupported headers detected: $headerLine")
+
+            val getValue = { line: List<String>, field: String ->
+                line[supportedFormat.indexOf(field)]
+            }
 
             while (true) {
                 val line = reader.readLine() ?: break
                 val parts = line.parseLine()
 
 
-                val date = LocalDate.parse(parts[0], datoFormat)
-                val text = parts[1]
-                val status = parts[4]
+                val date = LocalDate.parse(getValue(parts, "Dato"), datoFormat)
+                val text = getValue(parts, "Tekst")
+                val status = getValue(parts, "Status")
 
                 if (status != "Utført") continue
 
-                val amount = parts[2].parseAmount()
-                val saldo = parts[3].parseAmount()
-                val avstemt = parts[5] == "Ja"
+                val amount = getValue(parts, "Beløp").parseAmount()
+                val saldo = getValue(parts, "Saldo").parseAmount()
+                val avstemt = getValue(parts, "Avstemt") == "Ja"
 
                 if (avstemt) continue
 

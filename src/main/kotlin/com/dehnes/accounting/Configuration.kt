@@ -48,9 +48,18 @@ class Configuration {
         val bankService = BankService(bookingReadService, repository, datasource)
         val rapportService = RapportService(repository, categoryService, datasource)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
-        val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
+        val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService, categoryService)
         val userStateService = UserStateService(datasource, repository)
-        val readService = ReadService(bookingReadService, bankService, executorService, userService, rapportService, categoryService, userStateService)
+        val readService = ReadService(
+            bookingReadService,
+            bankService,
+            executorService,
+            userService,
+            rapportService,
+            categoryService,
+            userStateService,
+            transactionMatchingService
+        )
 
 
         beans[ObjectMapper::class] = objectMapper

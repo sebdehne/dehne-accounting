@@ -1,7 +1,8 @@
-- support transfers
+Bug:
+- booking rules fixed amount...?
 
-- list/search matchers which do not match
-
-- ability to edit/extend those
+Bookings UI
+- remove booking
 
 - create new category
+- filter editor - search bank accounts

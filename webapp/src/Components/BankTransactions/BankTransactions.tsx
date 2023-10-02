@@ -1,4 +1,4 @@
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import Header from "../Header";
 import {Button, Container} from "@mui/material";
 import React, {useEffect, useState} from "react";
@@ -16,21 +16,22 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import {useUserState} from "../../utils/userstate";
 
 export const BankTransactions = () => {
-    const {ledgerId, bankAccountId} = useParams();
+    const {userState, setUserState} = useUserState();
     const [bankAccount, setBankAccount] = useState<BankAccountView>()
     const [transactions, setTransactions] = useState<BankAccountTransactionView[]>();
 
-    const {userState, setUserState} = useUserState();
-
     useEffect(() => {
-        const subId = WebsocketClient
-            .subscribe(
-                {type: "getBankAccounts", ledgerId},
-                notify => setBankAccount(notify.readResponse.bankAccounts?.find(b => b.id === bankAccountId))
-            );
+        if (userState.ledgerId && userState.bankAccountId) {
+            const subId = WebsocketClient
+                .subscribe(
+                    {type: "getBankAccounts", ledgerId: userState.ledgerId},
+                    notify => setBankAccount(notify.readResponse.bankAccounts?.find(b => b.id === userState.bankAccountId))
+                );
 
-        return () => WebsocketClient.unsubscribe(subId);
-    }, [bankAccountId, ledgerId]);
+            return () => WebsocketClient.unsubscribe(subId);
+        }
+
+    }, [userState]);
 
     useEffect(() => {
         if (!bankAccount) return () => {
@@ -39,7 +40,9 @@ export const BankTransactions = () => {
         const subId = WebsocketClient
             .subscribe(
                 {
-                    type: "getBankTransactions", ledgerId, bankTransactionsRequest: {
+                    type: "getBankTransactions",
+                    ledgerId: userState.ledgerId,
+                    bankTransactionsRequest: {
                         from: userState.bankTransactionsState.currentPeriod.startDateTime,
                         toExcluding: userState.bankTransactionsState.currentPeriod.endDateTime,
                         bankAccountId: bankAccount.id
@@ -49,20 +52,27 @@ export const BankTransactions = () => {
             );
 
         return () => WebsocketClient.unsubscribe(subId);
-    }, [bankAccountId, ledgerId, userState, bankAccount]);
+    }, [userState, userState, bankAccount]);
 
     const navigate = useNavigate();
+
+    const bookTransaction = (transactionId: number) => {
+        setUserState(prev => ({
+            ...prev,
+            transactionId
+        })).then(() => navigate('/book/transaction'))
+    }
 
     return (
         <Container maxWidth="sm" className="App">
             <Header
                 title={bankAccount?.name ?? "Bank account: ..."}
                 backName={"Back"}
-                backUrl={'/ledger/' + ledgerId}
+                backUrl={'/ledger'}
             />
 
             <Button
-                onClick={() => navigate('/ledger/' + ledgerId + '/bankaccount/' + bankAccountId + '/import')}>Import</Button>
+                onClick={() => navigate('/bankaccount/import')}>Import</Button>
 
             <PeriodSelector periodLocationInUserState={['bankTransactionsState', 'currentPeriod']}/>
 
@@ -82,7 +92,7 @@ export const BankTransactions = () => {
                         {t.matched && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
                         {!t.matched && <div style={{width: '24px', height: '30px'}}>
                             <IconButton
-                                onClick={() => navigate('/ledger/' + ledgerId + '/bankaccount/' + bankAccountId + '/match/' + t.id)}>
+                                onClick={() => bookTransaction(t.id)}>
                                 <ArrowRightIcon fontSize="inherit"/>
                             </IconButton>
                         </div>}

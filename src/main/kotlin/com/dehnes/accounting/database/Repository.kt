@@ -509,8 +509,9 @@ class Repository(
     /*
      * Transaction matchers
      */
-    fun getAllMatchers(connection: Connection): List<TransactionMatcher> {
-        return connection.prepareStatement("SELECT * FROM bank_transaction_matchers").use { preparedStatement ->
+    fun getAllMatchers(connection: Connection, ledgerId: String): List<TransactionMatcher> {
+        return connection.prepareStatement("SELECT * FROM bank_transaction_matchers where ledger_id = ? order by last_used desc").use { preparedStatement ->
+            preparedStatement.setString(1, ledgerId)
             preparedStatement.executeQuery().use { rs ->
                 val l = mutableListOf<TransactionMatcher>()
                 while (rs.next()) {
@@ -521,11 +522,20 @@ class Repository(
                             name = rs.getString("name"),
                             filters = objectMapper.readValue(rs.getString("filter_list")),
                             target = objectMapper.readValue(rs.getString("target")),
+                            lastUsed = rs.getTimestamp("last_used").toInstant(),
                         )
                     )
                 }
                 l
             }
+        }
+    }
+
+    fun matchUsed(connection: Connection, matcherId: String) {
+        connection.prepareStatement("UPDATE bank_transaction_matchers SET last_used = ? WHERE id = ?").use { preparedStatement ->
+            preparedStatement.setTimestamp(1, Timestamp.from(Instant.now()))
+            preparedStatement.setString(2, matcherId)
+            check(preparedStatement.executeUpdate() == 1)
         }
     }
 
@@ -543,13 +553,14 @@ class Repository(
         if (updated) {
             changelog.add(connection, userId, ChangeLogEventType.matcherUpdated, matcher)
         } else {
-            connection.prepareStatement("INSERT INTO bank_transaction_matchers (id, ledger_id, name,filter_list, target) VALUES (?,?,?,?,?)")
+            connection.prepareStatement("INSERT INTO bank_transaction_matchers (id, ledger_id, name,filter_list, target, last_used) VALUES (?,?,?,?,?,?)")
                 .use { preparedStatement ->
                     preparedStatement.setString(1, matcher.id)
                     preparedStatement.setString(2, matcher.ledgerId)
                     preparedStatement.setString(3, matcher.name)
                     preparedStatement.setString(4, objectMapper.writeValueAsString(matcher.filters))
                     preparedStatement.setString(5, objectMapper.writeValueAsString(matcher.target))
+                    preparedStatement.setTimestamp(6, Timestamp.from(Instant.now()))
                     check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
                 }
             changelog.add(connection, userId, ChangeLogEventType.matcherAdded, matcher)
@@ -557,11 +568,13 @@ class Repository(
     }
 
     fun removeMatcher(connection: Connection, userId: String, matcherId: String) {
-        connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
+        val removed = connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
             preparedStatement.setString(1, matcherId)
-            check(preparedStatement.executeUpdate() == 1)
+            preparedStatement.executeUpdate() == 1
         }
-        changelog.add(connection, userId, ChangeLogEventType.matcherRemoved, mapOf("id" to matcherId))
+        if (removed) {
+            changelog.add(connection, userId, ChangeLogEventType.matcherRemoved, mapOf("id" to matcherId))
+        }
     }
 
     /*
@@ -748,7 +761,7 @@ class Repository(
         decreaseUnbookedCounter(connection, userId, bankAccountId)
     }
 
-    private fun findMatchedTransactions(
+    fun findMatchedTransactions(
         connection: Connection,
         ledgerId: String,
         bookingId: Long,
@@ -928,7 +941,7 @@ class Repository(
                     r.bookingRecordId,
                     r.bookingRecordDescription,
                     categories.getDto(r.categoryId),
-                    r.amountInCents
+                    r.amountInCents,
                 )
             }
             BookingView(

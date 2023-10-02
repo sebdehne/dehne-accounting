@@ -1,4 +1,4 @@
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import React, {useEffect, useMemo, useState} from "react";
 import {LedgerView} from "../../Websocket/types/ledgers";
 import WebsocketService from "../../Websocket/websocketClient";
@@ -17,21 +17,21 @@ import {PeriodSelector} from "../PeriodSelectors/PeriodSelector";
 import {useUserState} from "../../utils/userstate";
 
 export const LedgerMain = () => {
-    const {ledgerId} = useParams()
+    const {userState, setUserState} = useUserState();
     const [ledger, setLedger] = useState<LedgerView>();
 
     useEffect(() => {
-        if (ledgerId) {
+        if (userState.ledgerId) {
             const subId = WebsocketService.subscribe(
                 {type: "getLedgers"},
-                n => setLedger(n.readResponse.ledgers?.find(l => l.id === ledgerId))
+                n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
             );
 
             return () => WebsocketService.unsubscribe(subId);
         } else {
             return;
         }
-    }, [setLedger, ledgerId]);
+    }, [setLedger, userState]);
 
 
     return (
@@ -55,8 +55,16 @@ type BankAccountsProps = {
 const BankAccounts = ({ledger}: BankAccountsProps) => {
     const [accounts, setAccounts] = useState<BankAccountView[]>();
     const [showHidden, setShowHidden] = useState(false);
-
+    const {setUserState} = useUserState();
     let navigate = useNavigate();
+
+    const openBankAccount = (bankAccountId: string) => {
+        setUserState(prev => ({
+            ...prev,
+            bankAccountId
+        })).then(() => navigate('/bankaccount'));
+    }
+
 
     useEffect(() => {
         const subId = WebsocketService.subscribe({
@@ -70,7 +78,7 @@ const BankAccounts = ({ledger}: BankAccountsProps) => {
         <ul className="BankAccountList">
             {accounts?.filter(ba => showHidden || !ba.closed)?.map(a => (
                 <li className="BakAccountSummary" key={a.id}
-                    onClick={() => navigate('/ledger/' + ledger.id + '/bankaccount/' + a.id)}>
+                    onClick={() => openBankAccount(a.id)}>
                     <div className="BakAccountSummaryInfo">
                         <div className="BankName">{a.bank.name}</div>
                         <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>

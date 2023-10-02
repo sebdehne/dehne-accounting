@@ -2,6 +2,7 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
+import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType
 import com.dehnes.accounting.rapports.RapportLeaf
@@ -22,6 +23,7 @@ class ReadService(
     private val rapportService: RapportService,
     private val categoryService: CategoryService,
     private val userStateService: UserStateService,
+    private val transactionMatchingService: TransactionMatchingService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -151,6 +153,18 @@ class ReadService(
             }
 
             ReadResponse(ledgerRapport = rapport.map { mapLeaf(it) })
+        }
+
+        getMatchers -> {
+
+            val matchersRequest = readRequest.getMatchersRequest!!
+            val r = transactionMatchingService.getMatchers(
+                userId,
+                matchersRequest.ledgerId,
+                matchersRequest.testMatchFor
+            )
+
+            ReadResponse(getMatchersResponse = r)
         }
     }
 

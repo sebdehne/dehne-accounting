@@ -32,6 +32,8 @@ enum class ReadRequestType(
     allCategories(categoryAdded, categoryUpdated, categoryRemoved),
 
     userState(userStateUpdated),
+
+    getMatchers(matcherAdded, matcherUpdated, matcherRemoved),
     ;
 
     val events = listensOn.toList()
@@ -43,6 +45,7 @@ data class ReadRequest(
     val ledgerRapportRequest: LedgerRapportRequest? = null,
     val bankTransactionsRequest: BankTransactionsRequest? = null,
     val bankTransactionRequest: BankTransactionRequest? = null,
+    val getMatchersRequest: GetMatchersRequest? = null,
 )
 
 data class ReadResponse(
@@ -54,4 +57,5 @@ data class ReadResponse(
     val bankTransaction: BankAccountTransactionView? = null,
     val categories: List<CategoryView>? = null,
     val userState: UserState? = null,
+    val getMatchersResponse: GetMatchersResponse?=null,
 )
