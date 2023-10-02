@@ -146,6 +146,14 @@ create table bank_transaction_matchers
     foreign key (ledger_id) references ledger (id)
 );
 
+create table user_state
+(
+    user_id        text not null,
+    frontend_state text not null,
+
+    primary key (user_id)
+);
+
 insert into user (id, name, description, user_email, active, is_admin)
 VALUES ('dbf21a6c-16e2-4689-be24-1766777a70da',
         'Sebastian Dehne',

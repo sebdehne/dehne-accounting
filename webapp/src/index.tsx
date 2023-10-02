@@ -14,6 +14,7 @@ import {LedgerMain} from "./Components/LedgerMain/LedgerMain";
 import {BankTransactions} from "./Components/BankTransactions/BankTransactions";
 import {BankTransactionsImporter} from "./Components/BankTransactions/BankTransactionsImporter";
 import {TransactionMatching} from "./Components/TransactionMatching/TransactionMatching";
+import {UserStateProvider} from "./utils/userstate";
 
 
 const root = ReactDOM.createRoot(
@@ -21,18 +22,22 @@ const root = ReactDOM.createRoot(
 );
 root.render(
     <React.StrictMode>
-        <ThemeProvider theme={theme}>
-            <CssBaseline/>
-            <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
-                <Routes>
-                    <Route path="/" element={<App/>}/>
-                    <Route path="/ledger/:ledgerId" element={<LedgerMain/>}/>
-                    <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId" element={<BankTransactions/>}/>
-                    <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/import" element={<BankTransactionsImporter/>}/>
-                    <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/match/:transactionId" element={<TransactionMatching/>}/>
-                </Routes>
-            </BrowserRouter>
-        </ThemeProvider>
+        <UserStateProvider>
+            <ThemeProvider theme={theme}>
+                <CssBaseline/>
+                <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
+                    <Routes>
+                        <Route path="/" element={<App/>}/>
+                        <Route path="/ledger/:ledgerId" element={<LedgerMain/>}/>
+                        <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId" element={<BankTransactions/>}/>
+                        <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/import"
+                               element={<BankTransactionsImporter/>}/>
+                        <Route path="/ledger/:ledgerId/bankaccount/:bankAccountId/match/:transactionId"
+                               element={<TransactionMatching/>}/>
+                    </Routes>
+                </BrowserRouter>
+            </ThemeProvider>
+        </UserStateProvider>
     </React.StrictMode>
 );
 

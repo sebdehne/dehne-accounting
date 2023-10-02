@@ -4,17 +4,17 @@ import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType
+import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.rapports.RapportLeaf
 import com.dehnes.accounting.rapports.RapportRequest
 import com.dehnes.accounting.rapports.RapportService
-import com.dehnes.accounting.services.BankService
-import com.dehnes.accounting.services.BookingReadService
-import com.dehnes.accounting.services.CategoryService
-import com.dehnes.accounting.services.UserService
+import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
+import org.w3c.dom.ls.LSResourceResolver
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
+import javax.sql.DataSource
 
 class ReadService(
     private val bookingReadService: BookingReadService,
@@ -23,6 +23,7 @@ class ReadService(
     private val userService: UserService,
     private val rapportService: RapportService,
     private val categoryService: CategoryService,
+    private val userStateService: UserStateService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -57,6 +58,8 @@ class ReadService(
 
     fun handleRequest(userId: String, readRequest: ReadRequest): ReadResponse = when (readRequest.type) {
         userInfo -> ReadResponse(userView = UserView.fromUser(userService.getUserById(userId)!!))
+
+        userState -> ReadResponse(userState = userStateService.getUserState(userId))
 
         getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, false))
 

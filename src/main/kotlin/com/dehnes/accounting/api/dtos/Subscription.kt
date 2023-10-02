@@ -30,6 +30,8 @@ enum class ReadRequestType(
     getBankTransaction(bankTransactionAdded, bankTransactionRemoveLast),
 
     allCategories(categoryAdded, categoryUpdated, categoryRemoved),
+
+    userState(userStateUpdated)
     ;
 
     val events = listensOn.toList()
@@ -51,4 +53,5 @@ data class ReadResponse(
     val bankTransactions: List<BankAccountTransactionView>? = null,
     val bankTransaction: BankAccountTransactionView? = null,
     val categories: List<CategoryView>? = null,
+    val userState: UserState? = null,
 )

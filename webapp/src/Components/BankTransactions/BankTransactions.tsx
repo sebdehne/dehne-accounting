@@ -5,23 +5,22 @@ import React, {useEffect, useState} from "react";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {BankAccountView} from "../../Websocket/types/bankaccount";
 import moment from "moment/moment";
-import {formatIso, formatLocatDayMonth, monthDelta, startOfCurrentMonth} from "../../utils/formatting";
-import {MonthPeriodSelector} from "../PeriodSelectors/MonthPeriodSelector";
+import {formatLocatDayMonth} from "../../utils/formatting";
+import {PeriodSelector} from "../PeriodSelectors/PeriodSelector";
 import {BankAccountTransactionView} from "../../Websocket/types/banktransactions";
 import './BankTransactions.css'
 import {Amount} from "../Amount";
 import CheckIcon from '@mui/icons-material/Check';
 import IconButton from "@mui/material/IconButton";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import {useUserState} from "../../utils/userstate";
 
 export const BankTransactions = () => {
     const {ledgerId, bankAccountId} = useParams();
     const [bankAccount, setBankAccount] = useState<BankAccountView>()
-    const [period, setPeriod] = useState<moment.Moment[]>([
-        startOfCurrentMonth(),
-        monthDelta(startOfCurrentMonth(), 1)
-    ]);
     const [transactions, setTransactions] = useState<BankAccountTransactionView[]>();
+
+    const {userState, setUserState} = useUserState();
 
     useEffect(() => {
         const subId = WebsocketClient
@@ -36,12 +35,13 @@ export const BankTransactions = () => {
     useEffect(() => {
         if (!bankAccount) return () => {
         };
+
         const subId = WebsocketClient
             .subscribe(
                 {
                     type: "getBankTransactions", ledgerId, bankTransactionsRequest: {
-                        from: formatIso(period[0]),
-                        toExcluding: formatIso(period[1]),
+                        from: userState.bankTransactionsState.currentPeriod.startDateTime,
+                        toExcluding: userState.bankTransactionsState.currentPeriod.endDateTime,
                         bankAccountId: bankAccount.id
                     }
                 },
@@ -49,7 +49,7 @@ export const BankTransactions = () => {
             );
 
         return () => WebsocketClient.unsubscribe(subId);
-    }, [bankAccountId, ledgerId, period]);
+    }, [bankAccountId, ledgerId, userState, bankAccount]);
 
     const navigate = useNavigate();
 
@@ -64,7 +64,7 @@ export const BankTransactions = () => {
             <Button
                 onClick={() => navigate('/ledger/' + ledgerId + '/bankaccount/' + bankAccountId + '/import')}>Import</Button>
 
-            <MonthPeriodSelector period={period} setPeriod={setPeriod}/>
+            <PeriodSelector periodLocationInUserState={['bankTransactionsState', 'currentPeriod']}/>
 
             {(transactions?.length ?? 0) > 0 && <ul className="Transactions">
                 {transactions?.map(t => (<li className="Transaction" key={t.id}>

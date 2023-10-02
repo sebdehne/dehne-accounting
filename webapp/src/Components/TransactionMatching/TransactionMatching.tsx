@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import Header from "../Header";
 import React, {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {TransactionMatcher} from "../../Websocket/types/transactionMatcher";
 import WebsocketClient from "../../Websocket/websocketClient";
 import './TransactionMatching.css'
@@ -23,28 +23,16 @@ import moment from "moment";
 import {v4 as uuidv4} from 'uuid';
 import {FilterEditor} from "./FilterEditor";
 import {ActionEditor} from "./ActionEditor";
+import {NameEditor} from "./NameEditor";
 
 export const TransactionMatching = () => {
     const {ledgerId, bankAccountId, transactionId} = useParams();
-    const [candidates, setCandidates] = useState<TransactionMatcher[]>([]);
-    const [showCandidates, setShowCandidates] = useState(false);
+    const [showCandidates, setShowCandidates] = useState(true);
     const [transaction, setTransaction] = useState<BankAccountTransactionView>();
-
+    const [candidatesCount, setCandidatesCount] = useState(0);
 
     useEffect(() => {
         if (ledgerId && bankAccountId && transactionId) {
-            WebsocketClient.rpc({
-                type: "getMatchCandidates",
-                getMatchCandidatesRequest: {
-                    transactionId: parseInt(transactionId),
-                    ledgerId,
-                    bankAccountId,
-                }
-            }).then(resp => {
-                setCandidates(resp.getMatchCandidatesResult!);
-                setShowCandidates(resp.getMatchCandidatesResult!.length > 0);
-            });
-
             const subId = WebsocketClient.subscribe(
                 {
                     type: "getBankTransaction",
@@ -61,10 +49,16 @@ export const TransactionMatching = () => {
         }
     }, [ledgerId, bankAccountId, transactionId, setShowCandidates]);
 
+    const navigate = useNavigate();
+
 
     return (
         <Container maxWidth="sm" className="App">
-            <Header title="Matching"/>
+            <Header
+                title="Matching"
+                backUrl={'/ledger/' + ledgerId + '/bankaccount/' + bankAccountId}
+                backName={"Back"}
+            />
 
             {transaction && <div>
                 <div>{formatLocatDayMonth(moment(transaction.datetime))}</div>
@@ -75,16 +69,26 @@ export const TransactionMatching = () => {
             <div style={{display: "flex", flexDirection: "row", justifyContent: 'space-around'}}>
                 <ButtonGroup variant="contained" aria-label="outlined primary button group">
                     <Button variant={!showCandidates ? 'outlined' : 'contained'}
-                            onClick={() => setShowCandidates(true)}>Match candidates ({candidates?.length})</Button>
+                            onClick={() => setShowCandidates(true)}>Match candidates ({candidatesCount})</Button>
                     <Button variant={showCandidates ? 'outlined' : 'contained'}
                             onClick={() => setShowCandidates(false)}>Add matcher</Button>
                 </ButtonGroup>
             </div>
 
 
-            {transaction && ledgerId && <div>
-                {showCandidates && <CandidatesComponent candidates={candidates}/>}
-                {!showCandidates && <AddMatchComponent bankTransaction={transaction} ledgerId={ledgerId}/>}
+            {transaction && ledgerId && bankAccountId && <div>
+                {showCandidates && <CandidatesComponent
+                    setCandidatesCount={c => {
+                        setCandidatesCount(c);
+                        setShowCandidates(c > 0);
+                    }}
+                    transactionId={transaction.id}
+                    ledgerId={ledgerId}
+                    bankAccountId={bankAccountId}
+                    onDone={() => navigate('/ledger/' + ledgerId + '/bankaccount/' + bankAccountId)}
+                />}
+                {!showCandidates && <AddMatchComponent bankTransaction={transaction} ledgerId={ledgerId}
+                                                       onDone={() => setShowCandidates(true)}/>}
             </div>}
 
         </Container>
@@ -94,30 +98,22 @@ export const TransactionMatching = () => {
 
 const steps = [
     {
-        label: 'Select filter',
-        description: `For each ad campaign that you create, you can control how much
-              you're willing to spend on clicks and conversions, which networks
-              and geographical locations you want your ads to show on, and more.`,
+        label: 'Select filter'
     },
     {
         label: 'Create action',
-        description:
-            'An ad group contains one or more ads which target a shared set of keywords.',
     },
     {
         label: 'Set name',
-        description: `Try out different ad text to see what brings in the most customers,
-              and learn how to enhance your ads using features like ad extensions.
-              If you run into any problems with your ads, find out how to tell if
-              they're running and how to resolve approval issues.`,
     },
 ];
 
 type AddMatchComponentProps = {
     bankTransaction: BankAccountTransactionView;
     ledgerId: string;
+    onDone: () => void;
 }
-const AddMatchComponent = ({bankTransaction, ledgerId}: AddMatchComponentProps) => {
+const AddMatchComponent = ({bankTransaction, ledgerId, onDone}: AddMatchComponentProps) => {
     const [activeStep, setActiveStep] = React.useState(0);
     const [matcher, setMatcher] = useState<TransactionMatcher>({
         name: "",
@@ -142,7 +138,12 @@ const AddMatchComponent = ({bankTransaction, ledgerId}: AddMatchComponentProps) 
     const handleBack = () => setActiveStep((prevActiveStep) => prevActiveStep - 1);
     const handleReset = () => setActiveStep(0);
 
-    // TODO name editor
+    const submit = () => {
+        WebsocketClient.rpc({
+            type: "addNewMatcher",
+            addNewMatcherRequest: matcher
+        }).then(() => onDone())
+    };
 
     return (
         <div>
@@ -161,7 +162,8 @@ const AddMatchComponent = ({bankTransaction, ledgerId}: AddMatchComponentProps) 
                                 <FilterEditor matcher={matcher} setMatcher={setMatcher} transaction={bankTransaction}/>}
                             {index === 1 &&
                                 <ActionEditor matcher={matcher} setMatcher={setMatcher} transaction={bankTransaction}/>}
-                            {index > 1 && <Typography>{step.description}</Typography>}
+                            {index === 2 &&
+                                <NameEditor matcher={matcher} setMatcher={setMatcher}/>}
                             <Box sx={{mb: 2}}>
                                 <div>
                                     <Button variant="contained" onClick={handleNext}
@@ -177,7 +179,8 @@ const AddMatchComponent = ({bankTransaction, ledgerId}: AddMatchComponentProps) 
             </Stepper>
             {activeStep === steps.length && (
                 <Paper square elevation={0} sx={{p: 3}}>
-                    <Button variant="contained" onClick={handleNext} sx={{mt: 1, mr: 1}}>Submit</Button>
+                    <Button variant="contained" onClick={submit} sx={{mt: 1, mr: 1}}>Submit</Button>
+                    <Button onClick={handleBack} sx={{mt: 1, mr: 1}}> Back </Button>
                     <Button onClick={handleReset} sx={{mt: 1, mr: 1}}> Reset </Button>
                 </Paper>
             )}
@@ -187,16 +190,54 @@ const AddMatchComponent = ({bankTransaction, ledgerId}: AddMatchComponentProps) 
 
 
 type CandidatesComponentProps = {
-    candidates: TransactionMatcher[]
+    setCandidatesCount: (c: number) => void;
+    ledgerId: string;
+    bankAccountId: string;
+    transactionId: number;
+    onDone: () => void;
 }
-const CandidatesComponent = ({candidates}: CandidatesComponentProps) => {
+const CandidatesComponent = ({
+                                 setCandidatesCount,
+                                 ledgerId,
+                                 bankAccountId,
+                                 transactionId,
+                                 onDone
+                             }: CandidatesComponentProps) => {
+
+    const [candidates, setCandidates] = useState<TransactionMatcher[]>([]);
+
+    useEffect(() => {
+        WebsocketClient.rpc({
+            type: "getMatchCandidates",
+            getMatchCandidatesRequest: {
+                transactionId: transactionId,
+                ledgerId,
+                bankAccountId,
+            }
+        }).then(resp => {
+            setCandidates(resp.getMatchCandidatesResult!);
+            setCandidatesCount(resp.getMatchCandidatesResult!.length);
+        });
+    }, [ledgerId, bankAccountId, transactionId, setCandidates, setCandidatesCount]);
+
+    const bookNow = (c: TransactionMatcher) => {
+        WebsocketClient.rpc({
+            type: "executeMatcher",
+            executeMatcherRequest: {
+                matcherId: c.id,
+                transactionId,
+                ledgerId,
+                bankAccountId,
+            }
+        }).then(onDone)
+    }
 
     return (
         <ul className="Candidates">
             {candidates.map(c => (<li key={c.id}>
                 <div className="Candidate">
                     <div>{c.name}</div>
-                    <div><Button>Book now</Button></div>
+                    <div><Button onClick={() => bookNow(c)}>Book now</Button></div>
                 </div>
             </li>))}
         </ul>

@@ -12,6 +12,8 @@ enum class RequestType {
     getMatchCandidates,
     addNewMatcher,
     executeMatcher,
+
+    setUserState,
 }
 
 data class RpcRequest(
@@ -22,6 +24,7 @@ data class RpcRequest(
     val addNewMatcherRequest: TransactionMatcher?,
     val getMatchCandidatesRequest: GetMatchCandidatesRequest?,
     val executeMatcherRequest: ExecuteMatcherRequest?,
+    val userState: UserState?,
 )
 
 data class RpcResponse(

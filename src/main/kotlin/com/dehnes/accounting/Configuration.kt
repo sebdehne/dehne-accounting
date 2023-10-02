@@ -7,10 +7,7 @@ import com.dehnes.accounting.database.Changelog
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.SchemaHandler
 import com.dehnes.accounting.rapports.RapportService
-import com.dehnes.accounting.services.BankService
-import com.dehnes.accounting.services.BookingReadService
-import com.dehnes.accounting.services.CategoryService
-import com.dehnes.accounting.services.UserService
+import com.dehnes.accounting.services.*
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -50,15 +47,18 @@ class Configuration {
         val bookingReadService = BookingReadService(repository, datasource, userService)
         val bankService = BankService(bookingReadService, repository, datasource)
         val rapportService = RapportService(repository, categoryService, datasource)
-        val readService = ReadService(bookingReadService, bankService, executorService, userService, rapportService, categoryService)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
         val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
+        val userStateService = UserStateService(datasource, repository)
+        val readService = ReadService(bookingReadService, bankService, executorService, userService, rapportService, categoryService, userStateService)
+
 
         beans[ObjectMapper::class] = objectMapper
         beans[ReadService::class] = readService
         beans[UserService::class] = userService
         beans[BankTransactionImportService::class] = bankTransactionImportService
         beans[TransactionMatchingService::class] = transactionMatchingService
+        beans[UserStateService::class] = userStateService
     }
 
     inline fun <reified T> getBeanNull(): T? {

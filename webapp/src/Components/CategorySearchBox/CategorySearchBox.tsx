@@ -6,11 +6,10 @@ import {Autocomplete, TextField} from "@mui/material";
 
 export type CategorySearchBoxProps = {
     includeIntermediate: boolean;
-    onSelectedCategoryId: (categoryId: string) => void;
+    onSelectedCategoryId: (category: SearchableCategory) => void;
 }
 
 export const CategorySearchBox = ({includeIntermediate, onSelectedCategoryId}: CategorySearchBoxProps) => {
-    const [tree, setTree] = useState<CategoryTree[]>([]);
     const [searchList, setSearchList] = useState<SearchableCategory[]>([]);
 
     useEffect(() => {
@@ -18,7 +17,6 @@ export const CategorySearchBox = ({includeIntermediate, onSelectedCategoryId}: C
             {type: "allCategories"},
             notify => {
                 const tree = buildTree(notify.readResponse.categories!);
-                setTree(tree);
                 setSearchList(buildSearchList(tree, includeIntermediate));
             }
         )
@@ -29,7 +27,7 @@ export const CategorySearchBox = ({includeIntermediate, onSelectedCategoryId}: C
     return (<div>
         <Autocomplete
             freeSolo
-            onChange={(_, value) => onSelectedCategoryId((value as SearchableCategory).category.id)}
+            onChange={(_, value) => onSelectedCategoryId((value as SearchableCategory))}
             disableClearable
             options={searchList}
             getOptionLabel={(option) => (option as SearchableCategory).parentsString + ' -> ' + (option as SearchableCategory).category.name}
@@ -47,7 +45,7 @@ export const CategorySearchBox = ({includeIntermediate, onSelectedCategoryId}: C
     </div>);
 }
 
-type SearchableCategory = {
+export type SearchableCategory = {
     category: CategoryTree;
     parentsString: string;
 }

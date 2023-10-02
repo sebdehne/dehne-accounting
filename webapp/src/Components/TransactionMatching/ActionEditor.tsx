@@ -2,8 +2,8 @@ import {BankAccountTransactionView} from "../../Websocket/types/banktransactions
 import {
     BookingRule,
     BookingRuleType,
-    TransactionMatcher, TransactionMatcherFilter,
-    TransactionMatcherFilterType, TransactionMatcherTargetType
+    TransactionMatcher,
+    TransactionMatcherTargetType
 } from "../../Websocket/types/transactionMatcher";
 import React, {useCallback, useState} from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -11,7 +11,7 @@ import AddIcon from "@mui/icons-material/Add";
 import IconButton from "@mui/material/IconButton";
 import {removeItemWithSlice} from "../../utils/utils";
 import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
-import {CategorySearchBox} from "../CategorySearchBox/CategorySearchBox";
+import {CategorySearchBox, SearchableCategory} from "../CategorySearchBox/CategorySearchBox";
 
 
 export type ActionEditorProps = {
@@ -77,7 +77,7 @@ type BookingRulesEditorProps = {
 const BookingRulesEditor = ({title, rules, setRules}: BookingRulesEditorProps) => {
 
     const [type, setType] = useState<BookingRuleType>("categoryBookingRemaining");
-    const [categoryId, setCategoryId] = useState('');
+    const [category, setCategory] = useState<SearchableCategory>();
     const [amountInCents, setAmountInCents] = useState('');
 
     const removeRule = useCallback((index: number) => {
@@ -85,9 +85,10 @@ const BookingRulesEditor = ({title, rules, setRules}: BookingRulesEditorProps) =
     }, [setRules]);
     const addRule = useCallback(() => setRules([...rules, {
         type,
-        categoryId,
+        category: category!,
+        categoryId: category!.category.id,
         amountInCents: parseInt(amountInCents),
-    }]), [setRules, type, categoryId, amountInCents]);
+    }]), [setRules, type, category, amountInCents]);
 
     return (<div>
         <h4>{title} rules</h4>
@@ -118,7 +119,7 @@ const BookingRulesEditor = ({title, rules, setRules}: BookingRulesEditorProps) =
                     <MenuItem value={'categoryBookingFixedAmount'}>categoryBookingFixedAmount</MenuItem>
                 </Select>
             </FormControl>
-            <CategorySearchBox includeIntermediate={true} onSelectedCategoryId={categoryId1 => setCategoryId(categoryId1)}/>
+            <CategorySearchBox includeIntermediate={true} onSelectedCategoryId={category => setCategory(category)}/>
             <IconButton size="large" onClick={() => addRule()}><AddIcon fontSize="inherit"/></IconButton>
         </div>
     </div>)

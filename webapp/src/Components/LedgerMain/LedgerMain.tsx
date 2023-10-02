@@ -10,10 +10,11 @@ import {Amount} from "../Amount";
 import {LedgerRapportBookingRecord, LedgerRapportNode} from "../../Websocket/types/ledger_rapport";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
-import {formatIso, formatLocatDayMonth, monthDelta, startOfCurrentMonth} from "../../utils/formatting";
+import {formatLocatDayMonth} from "../../utils/formatting";
 import IconButton from '@mui/material/IconButton';
 import moment from "moment";
-import {MonthPeriodSelector} from "../PeriodSelectors/MonthPeriodSelector";
+import {PeriodSelector} from "../PeriodSelectors/PeriodSelector";
+import {useUserState} from "../../utils/userstate";
 
 export const LedgerMain = () => {
     const {ledgerId} = useParams()
@@ -98,26 +99,23 @@ type LedgerRapportProps = {
 }
 const LedgerRapport = ({ledger}: LedgerRapportProps) => {
     const [ledgerRapport, setLedgerRapport] = useState<LedgerRapportNode[]>([]);
-    const [period, setPeriod] = useState<moment.Moment[]>([
-        startOfCurrentMonth(),
-        monthDelta(startOfCurrentMonth(), 1)
-    ]);
+    const {userState, setUserState} = useUserState();
 
     useEffect(() => {
         const subId = WebsocketService.subscribe({
             type: "ledgerRapport",
             ledgerId: ledger.id,
             ledgerRapportRequest: {
-                from: formatIso(period[0]),
-                toExcluding: formatIso(period[1]),
+                from: userState.legderMainState.currentPeriod.startDateTime,
+                toExcluding: userState.legderMainState.currentPeriod.endDateTime,
             }
         }, n => setLedgerRapport(n.readResponse.ledgerRapport!))
         return () => WebsocketService.unsubscribe(subId);
-    }, [ledger, period]);
+    }, [ledger, userState]);
 
 
     return (<div>
-        <MonthPeriodSelector period={period} setPeriod={setPeriod}/>
+        <PeriodSelector periodLocationInUserState={['legderMainState', 'currentPeriod']}/>
         <ul className="LedgerRapportNodes">
             {ledgerRapport.map(n => (
                 <li key={n.accountName}>

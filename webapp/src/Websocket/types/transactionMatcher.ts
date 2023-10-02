@@ -1,3 +1,4 @@
+import {SearchableCategory} from "../../Components/CategorySearchBox/CategorySearchBox";
 
 
 export type TransactionMatcherFilterType = 'startsWith' | 'endsWith' | 'exact' | 'contains' | 'amountBetween'
@@ -28,6 +29,9 @@ export type BookingRule = {
     type: BookingRuleType;
     categoryId: string;
     amountInCents?: number;
+
+    // internal field
+    category: SearchableCategory;
 }
 
 export type TransactionMatcher = {
@@ -45,7 +49,6 @@ export type GetMatchCandidatesRequest = {
 }
 
 export type ExecuteMatcherRequest = {
-    userId: string;
     ledgerId: string;
     bankAccountId: string;
     transactionId: number;

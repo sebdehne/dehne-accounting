@@ -72,6 +72,7 @@ enum class ChangeLogEventType {
     bookingAdded,
     bookingRemoved,
 
+    userStateUpdated,
 
 }
 

@@ -6,6 +6,7 @@ import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.services.UserService
+import com.dehnes.accounting.services.UserStateService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.websocket.CloseReason
@@ -26,6 +27,7 @@ class WebSocketServer : Endpoint() {
     private val objectMapper = configuration.getBean<ObjectMapper>()
     private val userService = configuration.getBean<UserService>()
     private val readService = configuration.getBean<ReadService>()
+    private val userStateService = configuration.getBean<UserStateService>()
     private val transactionMatchingService = configuration.getBean<TransactionMatchingService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
     private val logger = KotlinLogging.logger { }
@@ -78,6 +80,11 @@ class WebSocketServer : Endpoint() {
                 subscriptions.remove(subscriptionId)?.close()
                 logger.info { "$instanceId Removed subscription id=$subscriptionId" }
                 RpcResponse(subscriptionRemoved = true)
+            }
+
+            setUserState -> {
+                userStateService.setUserState(user.id, rpcRequest.userState!!)
+                RpcResponse()
             }
 
             importBankTransactions -> {

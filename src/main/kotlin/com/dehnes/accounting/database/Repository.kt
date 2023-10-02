@@ -1,8 +1,7 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.dtos.TransactionMatcher
-import com.dehnes.accounting.api.dtos.TransactionMatcherFilter
-import com.dehnes.accounting.api.dtos.TransactionMatcherFilterType
+import com.dehnes.accounting.api.dtos.UserState
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.services.BookingType
 import com.dehnes.accounting.services.Categories
@@ -984,6 +983,44 @@ class Repository(
         )
     }
 
+    /*
+     * User state
+     */
+    fun getUserState(connection: Connection, userId: String) = connection
+        .prepareStatement("SELECT * FROM user_state where user_id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, userId)
+            preparedStatement.executeQuery().use { rs ->
+                if (rs.next()) {
+                    UserState(
+                        userId,
+                        objectMapper.readValue(rs.getString("frontend_state"))
+                    )
+                } else UserState(userId, emptyMap())
+            }
+        }
+
+    fun setUserState(connection: Connection, userState: UserState) {
+        val updated = connection.prepareStatement("UPDATE user_state SET frontend_state = ? WHERE user_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, objectMapper.writeValueAsString(userState.frontendState))
+                preparedStatement.setString(2, userState.userId)
+                preparedStatement.executeUpdate() > 0
+            }
+        if (!updated) {
+            connection.prepareStatement("INSERT INTO user_state (user_id, frontend_state) VALUES (?,?)")
+                .use { preparedStatement ->
+                    preparedStatement.setString(1, userState.userId)
+                    preparedStatement.setString(2, objectMapper.writeValueAsString(userState.frontendState))
+                    check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
+                }
+        }
+        changelog.add(
+            connection,
+            userState.userId,
+            ChangeLogEventType.userStateUpdated,
+            mapOf("userId" to userState.userId)
+        )
+    }
 }
 
 enum class AccessLevel {
