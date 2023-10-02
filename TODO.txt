@@ -1,8 +1,36 @@
-Bug:
-- booking rules fixed amount...?
+- matcher: filter editor - search bank accounts when transfer
 
-Bookings UI
-- remove booking
+Bookings:
+- list
+- remove
 
-- create new category
-- filter editor - search bank accounts
+Categories:
+- list
+- add
+- edit
+- merge (can also be used to delete unused ones)
+
+Bank Transactions:
+- remove last TX
+
+Bank accounts:
+- add
+- edit
+
+Users:
+- list
+- add
+- edit
+- remove
+
+==== lower priority ==== :
+
+Backups:
+- list
+- remove
+- take backup
+
+- kMyMoney import via GUI
+- Error screen when no user-header is detected
+- first time user screen, create admin-user
+

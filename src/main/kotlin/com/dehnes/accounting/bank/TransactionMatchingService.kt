@@ -54,15 +54,14 @@ class TransactionMatchingService(
                         ?: error("No such bankId ${t.bankAccountId}"))
 
                 val bankTransaction = repository.getBankTransaction(conn, bankAccountDto.id, t.transactionId)
-                check(bankTransaction.matchedLedgerId == null) { "transaction ${t.transactionId} already matched" }
 
-                allMatchers
-                    .filter { it.filters.all { it.type.fn(bankAccountDto, bankTransaction, it) } }
-                    .map { it.id }
+                if (bankTransaction.matchedLedgerId == null) {
+                    allMatchers
+                        .filter { it.filters.all { it.type.fn(bankAccountDto, bankTransaction, it) } }
+                        .map { it.id }
+                } else emptyList()
 
             } ?: emptyList()
-
-
 
             GetMatchersResponse(
                 allMatchers,
@@ -75,7 +74,7 @@ class TransactionMatchingService(
         userId: String,
         ledgerId: String,
         matcherId: String,
-     ) {
+    ) {
         dataSource.writeTx { conn ->
             bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == ledgerId }
                 ?: error("User $userId has not access to $ledgerId")

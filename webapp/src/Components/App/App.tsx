@@ -36,6 +36,7 @@ function App() {
         <Container maxWidth="sm" className="App">
             <Header
                 title="Dehne Accounting"
+                suppressHome={true}
             />
 
             {user && <h4>Welcome {user.name}</h4>}

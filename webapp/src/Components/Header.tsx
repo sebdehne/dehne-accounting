@@ -9,9 +9,10 @@ type HeaderProps = {
     title: string;
     backUrl?: string;
     backName?: string;
+    suppressHome?: boolean;
 }
 
-const Header = ({title, backUrl, backName}: HeaderProps) => {
+const Header = ({title, backUrl, backName, suppressHome = false}: HeaderProps) => {
     const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
     const {userState, setUserState} = useUserState();
     const navigate = useNavigate();
@@ -44,15 +45,23 @@ const Header = ({title, backUrl, backName}: HeaderProps) => {
             justifyContent: "space-between"
         }
         }>
-            {canGoBack &&
-                <Button color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>{backName}
-                </Button>
-            }
-            {!canGoBack && <span>&nbsp;</span>}
-            {status === ConnectionStatus.connectedAndWorking &&
-                <CircularProgress color="primary"/>
-            }
-            {displayStatus && <span>Server connection: {displayStatus}</span>}
+            <div style={{
+                display: "flex",
+                flexDirection: "row"
+            }}>
+                {!suppressHome && <Button style={{marginRight: '5px'}} color="primary" variant="contained"
+                                          onClick={() => navigate('/')}>Home</Button>
+                }
+                {canGoBack &&
+                    <Button color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>{backName}</Button>
+                }
+            </div>
+            <div>
+                {status === ConnectionStatus.connectedAndWorking &&
+                    <CircularProgress color="primary"/>
+                }
+                {displayStatus && <span>Server connection: {displayStatus}</span>}
+            </div>
 
         </div>
         <h2 style={{textAlign: "center"}}>{title}</h2>
