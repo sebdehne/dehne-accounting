@@ -13,6 +13,8 @@ enum class RequestType {
     deleteMatcher,
     executeMatcher,
 
+    removeBooking,
+
     setUserState,
 }
 
@@ -26,6 +28,7 @@ data class RpcRequest(
     val executeMatcherRequest: ExecuteMatcherRequest?,
     val userState: UserState?,
     val deleteMatcherId: String?,
+    val bookingId: Long?,
 )
 
 data class RpcResponse(

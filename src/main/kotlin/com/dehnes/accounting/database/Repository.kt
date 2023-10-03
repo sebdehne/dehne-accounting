@@ -1,5 +1,6 @@
 package com.dehnes.accounting.database
 
+import com.dehnes.accounting.api.dtos.CategoryView
 import com.dehnes.accounting.api.dtos.TransactionMatcher
 import com.dehnes.accounting.api.dtos.UserState
 import com.dehnes.accounting.domain.InformationElement
@@ -189,15 +190,6 @@ class Repository(
                 }
             changelog.add(connection, userId, ChangeLogEventType.legderAdded, ledger)
         }
-    }
-
-    fun setBookingsCounter(connection: Connection, userId: String, ledgerId: String, newCount: Long) {
-        connection.prepareStatement("UPDATE ledger SET bookings_counter = ? WHERE id = ?").use { preparedStatement ->
-            preparedStatement.setLong(1, newCount)
-            preparedStatement.setString(2, ledgerId)
-            check(preparedStatement.executeUpdate() == 1)
-        }
-        changelog.add(connection, userId, ChangeLogEventType.legderUpdated, mapOf("id" to ledgerId))
     }
 
     fun removeLedger(connection: Connection, userId: String, ledgerId: String) {
@@ -510,33 +502,35 @@ class Repository(
      * Transaction matchers
      */
     fun getAllMatchers(connection: Connection, ledgerId: String): List<TransactionMatcher> {
-        return connection.prepareStatement("SELECT * FROM bank_transaction_matchers where ledger_id = ? order by last_used desc").use { preparedStatement ->
-            preparedStatement.setString(1, ledgerId)
-            preparedStatement.executeQuery().use { rs ->
-                val l = mutableListOf<TransactionMatcher>()
-                while (rs.next()) {
-                    l.add(
-                        TransactionMatcher(
-                            id = rs.getString("id"),
-                            ledgerId = rs.getString("ledger_id"),
-                            name = rs.getString("name"),
-                            filters = objectMapper.readValue(rs.getString("filter_list")),
-                            target = objectMapper.readValue(rs.getString("target")),
-                            lastUsed = rs.getTimestamp("last_used").toInstant(),
+        return connection.prepareStatement("SELECT * FROM bank_transaction_matchers where ledger_id = ? order by last_used desc")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, ledgerId)
+                preparedStatement.executeQuery().use { rs ->
+                    val l = mutableListOf<TransactionMatcher>()
+                    while (rs.next()) {
+                        l.add(
+                            TransactionMatcher(
+                                id = rs.getString("id"),
+                                ledgerId = rs.getString("ledger_id"),
+                                name = rs.getString("name"),
+                                filters = objectMapper.readValue(rs.getString("filter_list")),
+                                target = objectMapper.readValue(rs.getString("target")),
+                                lastUsed = rs.getTimestamp("last_used").toInstant(),
+                            )
                         )
-                    )
+                    }
+                    l
                 }
-                l
             }
-        }
     }
 
     fun matchUsed(connection: Connection, matcherId: String) {
-        connection.prepareStatement("UPDATE bank_transaction_matchers SET last_used = ? WHERE id = ?").use { preparedStatement ->
-            preparedStatement.setTimestamp(1, Timestamp.from(Instant.now()))
-            preparedStatement.setString(2, matcherId)
-            check(preparedStatement.executeUpdate() == 1)
-        }
+        connection.prepareStatement("UPDATE bank_transaction_matchers SET last_used = ? WHERE id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setTimestamp(1, Timestamp.from(Instant.now()))
+                preparedStatement.setString(2, matcherId)
+                check(preparedStatement.executeUpdate() == 1)
+            }
     }
 
     fun addOrReplaceMatcher(connection: Connection, userId: String, matcher: TransactionMatcher) {
@@ -568,10 +562,11 @@ class Repository(
     }
 
     fun removeMatcher(connection: Connection, userId: String, matcherId: String) {
-        val removed = connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, matcherId)
-            preparedStatement.executeUpdate() == 1
-        }
+        val removed =
+            connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
+                preparedStatement.setString(1, matcherId)
+                preparedStatement.executeUpdate() == 1
+            }
         if (removed) {
             changelog.add(connection, userId, ChangeLogEventType.matcherRemoved, mapOf("id" to matcherId))
         }
@@ -864,15 +859,19 @@ class Repository(
             }
         }
 
-        setBookingsCounter(
-            connection = connection,
-            userId = userId,
-            ledgerId = ledger.id,
-            newCount = nextId
-        )
         changelog.add(connection, userId, ChangeLogEventType.bookingAdded, booking)
-    }
 
+        run {
+            connection.prepareStatement("UPDATE ledger SET bookings_counter = ? WHERE id = ?")
+                .use { preparedStatement ->
+                    preparedStatement.setLong(1, nextId)
+                    preparedStatement.setString(2, ledger.id)
+                    check(preparedStatement.executeUpdate() == 1)
+                }
+            changelog.add(connection, userId, ChangeLogEventType.legderUpdated, mapOf("id" to nextId))
+        }
+
+    }
 
     fun getBookings(
         connection: Connection,
@@ -906,7 +905,7 @@ class Repository(
                 booking_record br on b.id = br.booking_id AND b.ledger_id = br.ledger_id
             WHERE
                 b.ledger_id = ? AND $wheres
-            ORDER BY b.id, brId
+            ORDER BY b.datetime desc, b.id desc , brId
             LIMIT $limit
         """.trimIndent()
         ).use { preparedStatement ->
@@ -940,7 +939,7 @@ class Repository(
                     bId,
                     r.bookingRecordId,
                     r.bookingRecordDescription,
-                    categories.getDto(r.categoryId),
+                    categories.getView(r.categoryId),
                     r.amountInCents,
                 )
             }
@@ -982,12 +981,6 @@ class Repository(
             preparedStatement.executeUpdate()
         }
 
-        setBookingsCounter(
-            connection = connection,
-            userId = userId,
-            ledgerId = ledger.id,
-            newCount = ledger.bookingsCounter - 1
-        )
         changelog.add(
             connection, userId, ChangeLogEventType.bookingRemoved, mapOf(
                 "ledgerId" to ledgerId,
@@ -1183,7 +1176,7 @@ data class BookingRecordView(
     val bookingId: Long,
     val id: Long,
     val description: String?,
-    val category: CategoryDto,
+    val category: CategoryView,
     val amount: Long,
 )
 

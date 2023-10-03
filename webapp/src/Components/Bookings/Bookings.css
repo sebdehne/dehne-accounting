@@ -1,0 +1,33 @@
+
+.Bookings {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.Booking {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.BookingHeader {
+    display: flex;
+    flex-direction: row;
+}
+
+.BookingRecords {
+    list-style-type: none;
+}
+
+.BookingRecord {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.BookingRecordLeft {
+    display: flex;
+    flex-direction: row;
+}
+.BookingRecordRight {
+
+}

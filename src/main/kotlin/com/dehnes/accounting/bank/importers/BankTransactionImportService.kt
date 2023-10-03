@@ -24,11 +24,10 @@ class BankTransactionImportService(
         duplicationHandler: DuplicationHandler,
     ) = dataSource.writeTx { conn ->
 
-        val ledgerDto = bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == ledgerId }
-            ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
 
         val bankAccount =
-            repository.getAllBankAccountsForLedger(conn, ledgerDto.id).firstOrNull { it.id == bankAccountId }
+            repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == bankAccountId }
                 ?: error("No such bank account $bankAccountId")
 
         val bankDto = repository.getAllBanks(conn).firstOrNull { it.id == bankAccount.bankId }

@@ -1,5 +1,6 @@
 package com.dehnes.accounting.api.dtos
 
+import com.dehnes.accounting.database.BookingView
 import com.dehnes.accounting.database.ChangeLogEventType
 import com.dehnes.accounting.database.ChangeLogEventType.*
 
@@ -34,6 +35,9 @@ enum class ReadRequestType(
     userState(userStateUpdated),
 
     getMatchers(matcherAdded, matcherUpdated, matcherRemoved),
+
+    getBookings(bookingAdded, bookingRemoved),
+
     ;
 
     val events = listensOn.toList()
@@ -46,6 +50,7 @@ data class ReadRequest(
     val bankTransactionsRequest: BankTransactionsRequest? = null,
     val bankTransactionRequest: BankTransactionRequest? = null,
     val getMatchersRequest: GetMatchersRequest? = null,
+    val getBookingsRequest: GetBookingsRequest? = null,
 )
 
 data class ReadResponse(
@@ -57,5 +62,6 @@ data class ReadResponse(
     val bankTransaction: BankAccountTransactionView? = null,
     val categories: List<CategoryView>? = null,
     val userState: UserState? = null,
-    val getMatchersResponse: GetMatchersResponse?=null,
+    val getMatchersResponse: GetMatchersResponse? = null,
+    val getBookingsResponse: List<BookingView>? = null,
 )

@@ -28,8 +28,6 @@ export const LedgerMain = () => {
             );
 
             return () => WebsocketService.unsubscribe(subId);
-        } else {
-            return;
         }
     }, [setLedger, userState]);
 
@@ -127,8 +125,7 @@ const LedgerRapport = ({ledger}: LedgerRapportProps) => {
         <ul className="LedgerRapportNodes">
             {ledgerRapport.map(n => (
                 <li key={n.accountName}>
-                    <LedgerRapportSub node={n} level={1}
-                                      negateAmount={n.accountName === "Expense" || n.accountName === "Income"}/>
+                    <LedgerRapportSub node={n} level={1}/>
                 </li>
             ))}
         </ul>
@@ -138,9 +135,8 @@ const LedgerRapport = ({ledger}: LedgerRapportProps) => {
 type LedgerRapportSubProps = {
     node: LedgerRapportNode;
     level: number;
-    negateAmount: boolean;
 }
-const LedgerRapportSub = ({node, level, negateAmount}: LedgerRapportSubProps) => {
+const LedgerRapportSub = ({node, level, }: LedgerRapportSubProps) => {
     const [collapsed, setCollapsed] = useState(true);
 
     return (<div className="LedgerRapportNode">
@@ -150,17 +146,17 @@ const LedgerRapportSub = ({node, level, negateAmount}: LedgerRapportSubProps) =>
                 {!collapsed && <IconButton onClick={() => setCollapsed(!collapsed)}><ArrowDropDownIcon/></IconButton>}
                 {node.accountName}
             </div>
-            <div><Amount amountInCents={node.totalAmountInCents * (negateAmount ? -1 : 1)}/></div>
+            <div><Amount amountInCents={node.totalAmountInCents}/></div>
         </div>
         {!collapsed && (node.bookingRecords?.length ?? 0) > 0 && <ul className="LedgerRapportNodeRecords">
             {node.bookingRecords?.map(r => (
-                <LedgerRapportBookingRecordC key={r.bookingId + '-' + r.id} record={r} negateAmount={negateAmount}/>
+                <LedgerRapportBookingRecordC key={r.bookingId + '-' + r.id} record={r}/>
             ))}
         </ul>}
         {!collapsed && (node.children?.length ?? 0) > 0 && <ul className="LedgerRapportNodes">
             {node.children?.map(n => (
                 <li key={n.accountName}>
-                    <LedgerRapportSub node={n} level={1} negateAmount={negateAmount}/>
+                    <LedgerRapportSub node={n} level={1}/>
                 </li>
             ))}
         </ul>}
@@ -169,9 +165,8 @@ const LedgerRapportSub = ({node, level, negateAmount}: LedgerRapportSubProps) =>
 
 type LedgerRapportBookingRecordCProps = {
     record: LedgerRapportBookingRecord;
-    negateAmount: boolean;
 }
-const LedgerRapportBookingRecordC = ({record, negateAmount}: LedgerRapportBookingRecordCProps) => {
+const LedgerRapportBookingRecordC = ({record}: LedgerRapportBookingRecordCProps) => {
 
     const text = useMemo(() => {
 
@@ -188,6 +183,6 @@ const LedgerRapportBookingRecordC = ({record, negateAmount}: LedgerRapportBookin
             <div style={{marginRight: '10px', color: '#a2a2a2'}}>{formatLocatDayMonth(moment(record.datetime))}</div>
             <div>{text}</div>
         </div>
-        <Amount amountInCents={record.amountInCents * (negateAmount ? -1 : 1)}/>
+        <Amount amountInCents={record.amountInCents}/>
     </li>);
 }

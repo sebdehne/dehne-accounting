@@ -69,6 +69,13 @@ const createDefault = (input: any = {}): UserStateFrontendState => {
                 startDateTime: formatIso(startOfCurrentMonth()),
                 endDateTime: formatIso(monthDelta(startOfCurrentMonth(), 1))
             }
+        },
+        bookingsState: {
+            currentPeriod: {
+                type: "month",
+                startDateTime: formatIso(startOfCurrentMonth()),
+                endDateTime: formatIso(monthDelta(startOfCurrentMonth(), 1))
+            }
         }
     };
 
@@ -82,6 +89,7 @@ export type UserState = {
 export type UserStateFrontendState = {
     bankTransactionsState: BankTransactionsState;
     legderMainState: LegderMainState;
+    bookingsState: BookingsState;
     ledgerId?: string;
     bankAccountId?: string;
     transactionId?: number;
@@ -89,6 +97,9 @@ export type UserStateFrontendState = {
     backUrl?: string;
 }
 
+export type BookingsState = {
+    currentPeriod: PeriodWindow;
+}
 export type LegderMainState = {
     currentPeriod: PeriodWindow;
 }

@@ -253,7 +253,7 @@ class KMyMoneyImporter(
                                         transferOtherBankAccount != null -> idMapping[mainTx.accountId]!!
                                         else -> idMapping[mainTx.payeeId ?: defaultPayee.id]!!
                                     },
-                                    mainTx.amountInCents.toLong(),
+                                    mainTx.amountInCents.toLong() * -1,
                                     bAccount.id,
                                     bankTxId
                                 )
@@ -261,7 +261,7 @@ class KMyMoneyImporter(
                                 BookingRecordAdd(
                                     it.memo,
                                     idMapping[it.accountId]!!,
-                                    it.amountInCents.toLong(),
+                                    it.amountInCents.toLong()  * -1,
                                     null,
                                     null,
                                 )

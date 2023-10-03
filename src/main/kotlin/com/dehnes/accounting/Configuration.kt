@@ -44,7 +44,7 @@ class Configuration {
         val repository = Repository(changelog, objectMapper)
         val categoryService = CategoryService(repository, datasource)
         val userService = UserService(datasource)
-        val bookingReadService = BookingReadService(repository, datasource, userService)
+        val bookingReadService = BookingReadService(repository, datasource, userService, categoryService)
         val bankService = BankService(bookingReadService, repository, datasource)
         val rapportService = RapportService(repository, categoryService, datasource)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
@@ -60,6 +60,7 @@ class Configuration {
             userStateService,
             transactionMatchingService
         )
+        val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService)
 
 
         beans[ObjectMapper::class] = objectMapper
@@ -68,6 +69,7 @@ class Configuration {
         beans[BankTransactionImportService::class] = bankTransactionImportService
         beans[TransactionMatchingService::class] = transactionMatchingService
         beans[UserStateService::class] = userStateService
+        beans[BookingWriteService::class] = bookingWriteService
     }
 
     inline fun <reified T> getBeanNull(): T? {

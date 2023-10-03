@@ -2,6 +2,8 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.LedgerView
 import com.dehnes.accounting.database.BookingRecordView
+import com.dehnes.accounting.database.BookingView
+import com.dehnes.accounting.database.BookingsFilter
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
 import java.sql.Connection
@@ -12,13 +14,45 @@ class BookingReadService(
     private val repository: Repository,
     private val dataSource: DataSource,
     private val userService: UserService,
+    private val categoryService: CategoryService,
 ) {
+
+    fun getBookings(
+        userId: String,
+        ledgerId: String,
+        limit: Int,
+        vararg filters: BookingsFilter?,
+    ) = dataSource.readTx { conn ->
+
+        val ledger = getLedgerAuthorized(conn, userId, ledgerId, write = false)
+
+        repository.getBookings(
+            conn,
+            categoryService.get(conn),
+            ledger.id,
+            limit,
+            *filters
+        )
+    }
 
     fun listLedgers(userId: String, write: Boolean): List<LedgerView> {
         return dataSource.readTx {
             listLedgers(it, userId, write)
         }
     }
+
+    fun getLedgerAuthorized(
+        connection: Connection,
+        userId: String,
+        ledgerId: String,
+        write: Boolean,
+    ): LedgerView {
+        val ledger = listLedgers(connection, userId, write).firstOrNull { it.id == ledgerId }
+            ?: error("User $userId has not access to $ledgerId")
+
+        return ledger
+    }
+
 
     fun listLedgers(connection: Connection, userId: String, write: Boolean): List<LedgerView> {
         val user = userService.getUserById(connection, userId) ?: error("Unknown userId=$userId")

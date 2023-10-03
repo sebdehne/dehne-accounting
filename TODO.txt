@@ -1,8 +1,8 @@
 - matcher: filter editor - search bank accounts when transfer
 
 Bookings:
-- list
-- remove
+- remove - toggle edit mode first -> show deleteIconButton
+- are you sure dialog?
 
 Categories:
 - list

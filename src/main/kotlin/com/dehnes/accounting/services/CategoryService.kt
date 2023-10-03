@@ -1,5 +1,6 @@
 package com.dehnes.accounting.services
 
+import com.dehnes.accounting.api.dtos.CategoryView
 import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
@@ -75,7 +76,19 @@ data class Categories(
     val asList: List<CategoryDto>,
 ) {
 
-    fun getDto(categoryId: String) = asList.firstOrNull { it.id == categoryId } ?: error("No such category with id=$categoryId")
+    fun getDto(categoryId: String) =
+        asList.firstOrNull { it.id == categoryId } ?: error("No such category with id=$categoryId")
+
+    fun getView(categoryId: String) = asList
+        .firstOrNull { it.id == categoryId }
+        ?.let {
+            CategoryView(
+                it.id,
+                it.name,
+                it.description,
+                it.parentCategoryId
+            )
+        } ?: error("No such category with id=$categoryId")
 
     fun findRoot(categoryId: String): CategoryLeaf {
 

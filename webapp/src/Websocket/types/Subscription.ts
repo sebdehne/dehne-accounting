@@ -6,6 +6,7 @@ import {BankAccountTransactionView, BankTransactionsRequest} from "./banktransac
 import {CategoryView} from "./categories";
 import {UserState} from "../../utils/userstate";
 import {GetMatchersRequest, GetMatchersResponse} from "./transactionMatcher";
+import {BookingView, GetBookingsRequest} from "./bookings";
 
 
 export type Subscribe = {
@@ -31,6 +32,7 @@ export type ReadRequestType = "userInfo"
     | 'allCategories'
     | 'userState'
     | 'getMatchers'
+    | 'getBookings'
     ;
 
 export type ReadRequest = {
@@ -40,6 +42,7 @@ export type ReadRequest = {
     bankTransactionsRequest?: BankTransactionsRequest;
     bankTransactionRequest?: BankTransactionRequest;
     getMatchersRequest?: GetMatchersRequest;
+    getBookingsRequest?: GetBookingsRequest;
 }
 
 export type ReadResponse = {
@@ -52,5 +55,6 @@ export type ReadResponse = {
     categories?: CategoryView[];
     userState?: UserState;
     getMatchersResponse?: GetMatchersResponse;
+    getBookingsResponse?: BookingView[];
 }
 

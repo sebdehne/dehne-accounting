@@ -5,6 +5,7 @@ import com.dehnes.accounting.api.dtos.ReadRequestType.*
 import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType
+import com.dehnes.accounting.database.DateRangeFilter
 import com.dehnes.accounting.rapports.RapportLeaf
 import com.dehnes.accounting.rapports.RapportRequest
 import com.dehnes.accounting.rapports.RapportService
@@ -165,6 +166,20 @@ class ReadService(
             )
 
             ReadResponse(getMatchersResponse = r)
+        }
+
+        getBookings -> {
+            val bookingsRequest = readRequest.getBookingsRequest!!
+            val r = bookingReadService.getBookings(
+                userId,
+                readRequest.ledgerId!!,
+                bookingsRequest.limit ?: 1000,
+                DateRangeFilter(
+                    bookingsRequest.from,
+                    bookingsRequest.toExcluding
+                )
+            )
+            ReadResponse(getBookingsResponse = r)
         }
     }
 

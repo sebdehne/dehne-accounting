@@ -25,8 +25,7 @@ class TransactionMatchingService(
     ) {
 
         dataSource.writeTx { conn ->
-            bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == matcher.ledgerId }
-                ?: error("User $userId has not access to ${matcher.ledgerId}")
+            bookingReadService.getLedgerAuthorized(conn, userId, matcher.ledgerId, write = true)
 
             repository.addOrReplaceMatcher(
                 conn,
@@ -43,8 +42,7 @@ class TransactionMatchingService(
     ): GetMatchersResponse {
 
         return dataSource.readTx { conn ->
-            val ledger = bookingReadService.listLedgers(conn, userId, write = false).firstOrNull { it.id == ledgerId }
-                ?: error("User $userId has not access to $ledgerId")
+            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
 
             val allMatchers = repository.getAllMatchers(conn, ledgerId)
 
@@ -76,8 +74,7 @@ class TransactionMatchingService(
         matcherId: String,
     ) {
         dataSource.writeTx { conn ->
-            bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == ledgerId }
-                ?: error("User $userId has not access to $ledgerId")
+            bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
 
             repository.removeMatcher(conn, userId, matcherId)
         }
@@ -92,8 +89,8 @@ class TransactionMatchingService(
         memoText: String?,
     ) {
         dataSource.writeTx { conn ->
-            val ledger = bookingReadService.listLedgers(conn, userId, write = true).firstOrNull { it.id == ledgerId }
-                ?: error("User $userId has not access to $ledgerId")
+            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
+
             val bankAccountDto =
                 (repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == bankAccountId }
                     ?: error("No such bankId $bankAccountId"))
@@ -149,8 +146,8 @@ class TransactionMatchingService(
 
                 val wrapper = this.multipleCategoriesBooking!!
 
-                var remainingDebit = bankTransaction.amount * -1
-                var remainingCredit = bankTransaction.amount
+                var remainingDebit = bankTransaction.amount
+                var remainingCredit = bankTransaction.amount * -1
 
                 val debitRecords = wrapper.debitRules.map { bookingRule ->
                     createRecord(bookingRule, remainingDebit, memoText).apply {

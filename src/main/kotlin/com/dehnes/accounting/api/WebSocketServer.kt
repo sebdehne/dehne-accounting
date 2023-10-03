@@ -5,6 +5,7 @@ import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
+import com.dehnes.accounting.services.BookingWriteService
 import com.dehnes.accounting.services.UserService
 import com.dehnes.accounting.services.UserStateService
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -30,6 +31,7 @@ class WebSocketServer : Endpoint() {
     private val userStateService = configuration.getBean<UserStateService>()
     private val transactionMatchingService = configuration.getBean<TransactionMatchingService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
+    private val bookingWriteService = configuration.getBean<BookingWriteService>()
     private val logger = KotlinLogging.logger { }
     private val subscriptions = mutableMapOf<String, Subscription>()
 
@@ -139,6 +141,16 @@ class WebSocketServer : Endpoint() {
                 }
 
                 RpcResponse(error = error)
+            }
+
+            removeBooking -> {
+                bookingWriteService.removeLast(
+                    user.id,
+                    rpcRequest.ledgerId!!,
+                    rpcRequest.bookingId!!
+                )
+
+                RpcResponse()
             }
         }
 

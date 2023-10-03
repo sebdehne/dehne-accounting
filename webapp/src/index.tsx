@@ -16,6 +16,7 @@ import {BankTransactionsImporter} from "./Components/BankTransactions/BankTransa
 import {BookTransaction} from "./Components/TransactionMatching/BookTransaction";
 import {UserStateProvider} from "./utils/userstate";
 import {AddOrEditMatcher} from "./Components/AddOrEditMatcher/AddOrEditMatcher";
+import {Bookings} from "./Components/Bookings/Bookings";
 
 
 const root = ReactDOM.createRoot(
@@ -30,6 +31,7 @@ root.render(
                     <Routes>
                         <Route path="/" element={<App/>}/>
                         <Route path="/ledger" element={<LedgerMain/>}/>
+                        <Route path="/bookings" element={<Bookings/>}/>
                         <Route path="/bankaccount" element={<BankTransactions/>}/>
                         <Route path="/bankaccount/import"
                                element={<BankTransactionsImporter/>}/>

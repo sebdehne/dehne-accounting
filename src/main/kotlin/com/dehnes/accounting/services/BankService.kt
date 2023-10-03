@@ -22,11 +22,9 @@ class BankService(
         bankAccountId: String,
         transactionId: Long,
     ) = dataSource.readTx { conn ->
-        val ledgerDto =
-            bookingReadService.listLedgers(conn, userId, write = false).firstOrNull { it.id == ledgerId }
-                ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
 
-        if (!repository.getAllBankAccountsForLedger(conn, ledgerDto.id).any { it.id == bankAccountId }) {
+        if (!repository.getAllBankAccountsForLedger(conn, ledger.id).any { it.id == bankAccountId }) {
             error("User $userId does not have access to this bankAccount")
         }
 
@@ -49,11 +47,9 @@ class BankService(
     ): List<BankAccountTransactionView> {
 
         return dataSource.readTx { conn ->
-            val ledgerDto =
-                bookingReadService.listLedgers(conn, userId, write = false).firstOrNull { it.id == ledgerId }
-                    ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
+            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
 
-            if (!repository.getAllBankAccountsForLedger(conn, ledgerDto.id).any { it.id == bankAccountId }) {
+            if (!repository.getAllBankAccountsForLedger(conn, ledger.id).any { it.id == bankAccountId }) {
                 error("User $userId does not have access to this bankAccount")
             }
 
@@ -88,12 +84,10 @@ class BankService(
         }
     }
 
-    fun getAccountsWithSummary(connection: Connection, userId: String, ledgerId: String): List<BankAccountDto> {
-        val ledgerDto =
-            bookingReadService.listLedgers(connection, userId, write = false).firstOrNull { it.id == ledgerId }
-                ?: error("Could not access ledgerId=$ledgerId for userId=$userId")
+    fun getAccountsWithSummary(conn: Connection, userId: String, ledgerId: String): List<BankAccountDto> {
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
 
-        return repository.getAllBankAccountsForLedger(connection, ledgerDto.id)
+        return repository.getAllBankAccountsForLedger(conn, ledger.id)
     }
 
 }
