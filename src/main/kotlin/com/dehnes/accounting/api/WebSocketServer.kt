@@ -117,7 +117,7 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(error = errorMsg)
             }
 
-            deleteMatcher -> {
+            deleteMatcher -> readService.doWithNotifies {
                 transactionMatchingService.deleteMatcher(
                     userId = user.id,
                     ledgerId = rpcRequest.ledgerId!!,
@@ -143,7 +143,7 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(error = error)
             }
 
-            removeBooking -> {
+            removeBooking -> readService.doWithNotifies {
                 bookingWriteService.removeLast(
                     user.id,
                     rpcRequest.ledgerId!!,

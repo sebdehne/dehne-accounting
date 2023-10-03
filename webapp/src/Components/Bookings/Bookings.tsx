@@ -49,8 +49,6 @@ export const Bookings = () => {
         <Container maxWidth="sm" className="App">
             <Header
                 title={ledger?.name ?? ""}
-                backName={"Back"}
-                backUrl={'/ledger'}
             />
 
             <PeriodSelector periodLocationInUserState={['bookingsState', 'currentPeriod']}/>

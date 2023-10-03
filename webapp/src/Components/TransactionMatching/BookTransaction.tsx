@@ -44,8 +44,6 @@ export const BookTransaction = () => {
         <Container maxWidth="sm" className="App">
             <Header
                 title="Matching"
-                backUrl={'/bankaccount'}
-                backName={"Back"}
             />
 
             {transaction && <div>
@@ -86,7 +84,7 @@ const MatchersSelector = ({
     const [macherIdsWhichMatched, setMacherIdsWhichMatched] = useState<string[]>([]);
     const [memoText, setMemoText] = useState('');
     const [allMatchersFilter, setAllMatchersFilter] = useState('');
-    const {userState, setUserState} = useGlobalState();
+    const {setUserState} = useGlobalState();
 
     const candidates = (all: TransactionMatcher[], macherIdsWhichMatched: string[]) => all.filter(m => macherIdsWhichMatched.includes(m.id))
 
@@ -127,20 +125,11 @@ const MatchersSelector = ({
 
     let navigate = useNavigate();
 
-    const editMatcher = (matcherId: string) => {
+    const addOrEditMatcher = (matcherId: string | undefined) => {
         setUserState(prev => ({
             ...prev,
-            matcherId,
-            backUrl: '/book/transaction'
+            matcherId
         })).then(() => navigate('/matcher'))
-    }
-
-    const addNewMatcher = () => {
-        setUserState(prev => ({
-            ...prev,
-            matcherId: undefined,
-            backUrl: '/book/transaction'
-        })).then(() => navigate('/matcher'));
     }
 
     const deleteMatcher = (id: string) => {
@@ -181,7 +170,7 @@ const MatchersSelector = ({
                         onChange={event => setAllMatchersFilter(event.target.value ?? '')}
                     />
                 </FormControl>
-                <IconButton size="large" onClick={addNewMatcher}><AddIcon fontSize="inherit"/></IconButton>
+                <IconButton size="large" onClick={() => addOrEditMatcher(undefined)}><AddIcon fontSize="inherit"/></IconButton>
             </div>
 
             <ul className="AllMatchers">
@@ -191,7 +180,7 @@ const MatchersSelector = ({
                         <div className="Matcher">
                             <div>{m.name}</div>
                             <div>
-                                <IconButton size="large" onClick={() => editMatcher(m.id)}><EditIcon
+                                <IconButton size="large" onClick={() => addOrEditMatcher(m.id)}><EditIcon
                                     fontSize="inherit"/></IconButton>
                                 <IconButton size="large" onClick={() => deleteMatcher(m.id)}><DeleteIcon
                                     fontSize="inherit"/></IconButton>

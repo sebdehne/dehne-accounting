@@ -123,7 +123,6 @@ export type UserStateFrontendState = {
     bankAccountId?: string;
     transactionId?: number;
     matcherId?: string;
-    backUrl?: string;
 }
 
 export type BookingsState = {

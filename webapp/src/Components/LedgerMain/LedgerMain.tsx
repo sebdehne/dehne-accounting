@@ -36,8 +36,6 @@ export const LedgerMain = () => {
         <Container maxWidth="sm" className="App">
             <Header
                 title={ledger?.name ?? ""}
-                backName={"Back"}
-                backUrl={'/'}
             />
 
             {ledger && <BankAccounts ledger={ledger}/>}

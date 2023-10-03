@@ -3,18 +3,15 @@ import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
 import {Button, CircularProgress} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import {useGlobalState} from "../utils/userstate";
 
 type HeaderProps = {
     title: string;
-    backUrl?: string;
-    backName?: string;
     suppressHome?: boolean;
+    temporaryPage?: boolean;
 }
 
-const Header = ({title, backUrl, backName, suppressHome = false}: HeaderProps) => {
+const Header = ({title, suppressHome = false}: HeaderProps) => {
     const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
-    const {userState, setUserState} = useGlobalState();
     const navigate = useNavigate();
 
     useEffect(() =>
@@ -27,15 +24,8 @@ const Header = ({title, backUrl, backName, suppressHome = false}: HeaderProps) =
         displayStatus = status;
     }
 
-    const canGoBack = !!userState.backUrl || !!backUrl;
-
     const goBack = () => {
-        if (userState.backUrl) {
-            const bUrl = userState.backUrl;
-            setUserState(prev => ({...prev, backUrl: undefined})).then(() => navigate(bUrl));
-        } else if (backUrl) {
-            navigate(backUrl);
-        }
+        navigate(-1);
     }
 
     return <>
@@ -52,9 +42,7 @@ const Header = ({title, backUrl, backName, suppressHome = false}: HeaderProps) =
                 {!suppressHome && <Button style={{marginRight: '5px'}} color="primary" variant="contained"
                                           onClick={() => navigate('/')}>Home</Button>
                 }
-                {canGoBack &&
-                    <Button color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>{backName}</Button>
-                }
+                <Button color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>Back</Button>
             </div>
             <div>
                 {status === ConnectionStatus.connectedAndWorking &&

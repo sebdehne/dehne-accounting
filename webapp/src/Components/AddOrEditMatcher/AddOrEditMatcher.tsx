@@ -119,15 +119,13 @@ export const AddOrEditMatcher = () => {
                 ...prev,
                 matcherId: undefined
             })))
-            .then(() => navigate('/book/transaction'));
+            .then(() => navigate(-1));
     };
 
     return (
         <Container maxWidth="sm" className="App">
             <Header
                 title={(editMode ? "Edit " : "Add ") + matcher?.name}
-                backName={"Back"}
-                backUrl={'/ledger'}
             />
 
             {matcher && <div>

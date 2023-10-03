@@ -79,8 +79,6 @@ export const BankTransactionsImporter = () => {
         <Container maxWidth="sm" className="App">
             <Header
                 title={'Import  for: ' + bankAccount?.name ?? "..."}
-                backName={"Back"}
-                backUrl={'/bankaccount'}
             />
 
             <div>

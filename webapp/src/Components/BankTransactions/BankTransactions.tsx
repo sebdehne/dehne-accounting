@@ -67,8 +67,6 @@ export const BankTransactions = () => {
         <Container maxWidth="sm" className="App">
             <Header
                 title={bankAccount?.name ?? "Bank account: ..."}
-                backName={"Back"}
-                backUrl={'/ledger'}
             />
 
             <Button

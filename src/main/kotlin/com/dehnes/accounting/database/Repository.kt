@@ -562,14 +562,11 @@ class Repository(
     }
 
     fun removeMatcher(connection: Connection, userId: String, matcherId: String) {
-        val removed =
             connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
                 preparedStatement.setString(1, matcherId)
-                preparedStatement.executeUpdate() == 1
+                preparedStatement.executeUpdate()
             }
-        if (removed) {
-            changelog.add(connection, userId, ChangeLogEventType.matcherRemoved, mapOf("id" to matcherId))
-        }
+        changelog.add(connection, userId, ChangeLogEventType.matcherRemoved, mapOf("id" to matcherId))
     }
 
     /*
