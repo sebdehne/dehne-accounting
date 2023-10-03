@@ -14,7 +14,7 @@ import {LedgerMain} from "./Components/LedgerMain/LedgerMain";
 import {BankTransactions} from "./Components/BankTransactions/BankTransactions";
 import {BankTransactionsImporter} from "./Components/BankTransactions/BankTransactionsImporter";
 import {BookTransaction} from "./Components/TransactionMatching/BookTransaction";
-import {UserStateProvider} from "./utils/userstate";
+import {GlobalStateProvider} from "./utils/userstate";
 import {AddOrEditMatcher} from "./Components/AddOrEditMatcher/AddOrEditMatcher";
 import {Bookings} from "./Components/Bookings/Bookings";
 
@@ -24,7 +24,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
     <React.StrictMode>
-        <UserStateProvider>
+        <GlobalStateProvider>
             <ThemeProvider theme={theme}>
                 <CssBaseline/>
                 <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
@@ -40,7 +40,7 @@ root.render(
                     </Routes>
                 </BrowserRouter>
             </ThemeProvider>
-        </UserStateProvider>
+        </GlobalStateProvider>
     </React.StrictMode>
 );
 

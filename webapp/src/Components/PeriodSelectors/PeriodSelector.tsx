@@ -5,14 +5,14 @@ import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import './PeriodSelector.css'
 import moment from "moment";
-import {PeriodWindow, useUserState} from "../../utils/userstate";
+import {PeriodWindow, useGlobalState} from "../../utils/userstate";
 
 
 export type PeriodSelectorProps = {
     periodLocationInUserState: string[];
 }
 export const PeriodSelector = ({periodLocationInUserState}: PeriodSelectorProps) => {
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
 
     const period = useMemo(() => {
         let currentObj = userState as any;

@@ -78,8 +78,8 @@ export const FilterEditor = ({matcher, setMatcher, description}: FilterEditorPro
                         <MenuItem value={'exact'}>exact</MenuItem>
                         <MenuItem value={'contains'}>contains</MenuItem>
                         <MenuItem value={'amountBetween'}>amountBetween</MenuItem>
-                        <MenuItem value={'deposit'}>deposit</MenuItem>
-                        <MenuItem value={'withdrawal'}>withdrawal</MenuItem>
+                        <MenuItem value={'income'}>income</MenuItem>
+                        <MenuItem value={'payment'}>payment</MenuItem>
                         <MenuItem value={'ifAccountName'}>ifAccountName</MenuItem>
                     </Select>
                 </FormControl>

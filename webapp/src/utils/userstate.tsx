@@ -2,20 +2,34 @@ import React, {useContext, useEffect, useState} from 'react';
 import {formatIso, monthDelta, startOfCurrentMonth} from "./formatting";
 import WebsocketClient from "../Websocket/websocketClient";
 import JSONObjectMerge from "json-object-merge";
+import {CategoryView} from "../Websocket/types/categories";
+import {buildTree, CategoryTree} from "../Components/CategorySearchBox/CategoryTree";
 
 type ContextType = {
-    userState: UserStateFrontendState,
-    setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => Promise<void>
+    userState: UserStateFrontendState;
+    setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => Promise<void>;
+    categoriesAsList: CategoryView[];
+    categoriesAsTree: CategoryTree[];
 }
 
-const UserStateProviderContext = React.createContext({} as ContextType);
+const GlobalStateProviderContext = React.createContext({} as ContextType);
 
 export type UserStateProviderProps = {
     children?: React.ReactNode;
-    value?: UserStateFrontendState;
+    userStateInit?: UserStateFrontendState;
+    categoriesAsListInit?: CategoryView[];
+    categoriesAsTreeInit?: CategoryTree[];
 }
-export const UserStateProvider = ({children, value = createDefault()}: UserStateProviderProps) => {
-    const [userState, setUserState] = useState(value);
+export const GlobalStateProvider = ({
+                                        children,
+                                        userStateInit = createDefault(),
+                                        categoriesAsListInit = [],
+                                        categoriesAsTreeInit = [],
+                                    }: UserStateProviderProps,
+) => {
+    const [userState, setUserState] = useState(userStateInit);
+    const [categoriesAsList, setCategoriesAsList] = useState<CategoryView[]>(categoriesAsListInit);
+    const [categoriesAsTree, setCategoriesAsTree] = useState<CategoryTree[]>(categoriesAsTreeInit);
 
     useEffect(() => {
         const subId = WebsocketClient.subscribe({type: 'userState'},
@@ -25,6 +39,16 @@ export const UserStateProvider = ({children, value = createDefault()}: UserState
         )
         return () => WebsocketClient.unsubscribe(subId);
     }, [setUserState]);
+    useEffect(() => {
+        const subId = WebsocketClient.subscribe(
+            {type: "allCategories"},
+            notify => {
+                setCategoriesAsList(notify.readResponse.categories!);
+                setCategoriesAsTree(buildTree(notify.readResponse.categories!))
+            }
+        );
+        return () => WebsocketClient.unsubscribe(subId);
+    }, [setCategoriesAsList, setCategoriesAsTree]);
 
     const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
         const updated = fn(userState);
@@ -39,16 +63,21 @@ export const UserStateProvider = ({children, value = createDefault()}: UserState
     }
 
     return (
-        <UserStateProviderContext.Provider value={{userState, setUserState: updateState}}>
+        <GlobalStateProviderContext.Provider value={{
+            userState,
+            setUserState: updateState,
+            categoriesAsList,
+            categoriesAsTree
+        }}>
             {children}
-        </UserStateProviderContext.Provider>
+        </GlobalStateProviderContext.Provider>
     );
 };
 
-export const useUserState = () => {
-    const context = useContext(UserStateProviderContext);
+export const useGlobalState = () => {
+    const context = useContext(GlobalStateProviderContext);
     if (!context) {
-        throw new Error("useGlobalState must be used within a UserStateProviderContext");
+        throw new Error("useGlobalState must be used within a GlobalStateProviderContext");
     }
     return context;
 };
@@ -107,7 +136,6 @@ export type LegderMainState = {
 export type BankTransactionsState = {
     currentPeriod: PeriodWindow;
 }
-
 
 
 export type PeriodWindowType = 'month' | 'betweenDates'

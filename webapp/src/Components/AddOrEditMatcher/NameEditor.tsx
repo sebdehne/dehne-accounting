@@ -1,7 +1,7 @@
-import {BankAccountTransactionView} from "../../Websocket/types/banktransactions";
 import {TransactionMatcher} from "../../Websocket/types/transactionMatcher";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {TextField} from "@mui/material";
+import {useGlobalState} from "../../utils/userstate";
 
 
 export type NameEditorProps = {
@@ -9,11 +9,13 @@ export type NameEditorProps = {
     setMatcher: React.Dispatch<React.SetStateAction<TransactionMatcher>>;
 }
 export const NameEditor = ({matcher, setMatcher}: NameEditorProps) => {
+    const {categoriesAsList} = useGlobalState();
+
     useEffect(() => {
         let initialName = "";
-        if (matcher.target.type === "multipleCategoriesBooking") {
-            const firstRule = matcher.target.multipleCategoriesBooking!.creditRules[0];
-            initialName = firstRule.category.category.name
+        if (matcher.action.type === "paymentOrIncome") {
+            const firstRule = matcher.action.paymentOrIncomeConfig!;
+            initialName = categoriesAsList.find(c => c.id === firstRule.mainSide.categoryIdRemaining)?.name ?? ''
         }
 
         setMatcher(({

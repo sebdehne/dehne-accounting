@@ -13,10 +13,10 @@ import {Amount} from "../Amount";
 import CheckIcon from '@mui/icons-material/Check';
 import IconButton from "@mui/material/IconButton";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import {useUserState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 
 export const BankTransactions = () => {
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
     const [bankAccount, setBankAccount] = useState<BankAccountView>()
     const [transactions, setTransactions] = useState<BankAccountTransactionView[]>();
 

@@ -15,10 +15,10 @@ enum class TransactionMatcherFilterType(
     amountBetween({ba: BankAccountDto,  t, f ->
         t.amount in (f.fromAmount!!..f.toAmount!!)
     }),
-    deposit({ba: BankAccountDto,  t: BankTransaction, f: TransactionMatcherFilter ->
+    income({ba: BankAccountDto,  t: BankTransaction, f: TransactionMatcherFilter ->
         t.amount > 0
     }),
-    withdrawal({ba: BankAccountDto,  t: BankTransaction, _: TransactionMatcherFilter ->
+    payment({ba: BankAccountDto,  t: BankTransaction, _: TransactionMatcherFilter ->
         t.amount < 0
     }),
     ifAccountName({ba: BankAccountDto, t: BankTransaction, f: TransactionMatcherFilter -> ba.name == f.bankAccountName })
@@ -32,30 +32,25 @@ data class TransactionMatcherFilter(
     val bankAccountName: String? = null,
 )
 
-enum class TransactionMatcherTargetType {
-    multipleCategoriesBooking,
+enum class TransactionMatcherActionType {
+    paymentOrIncome,
     bankTransfer,
 }
 
-data class TransactionMatcherTarget(
-    val type: TransactionMatcherTargetType,
+data class TransactionMatcherAction(
+    val type: TransactionMatcherActionType,
     val transferCategoryId: String? = null,
-    val multipleCategoriesBooking: MultipleCategoriesBookingWrapper? = null,
+    val paymentOrIncomeConfig: PaymentOrIncomeConfig? = null,
 )
 
-data class MultipleCategoriesBookingWrapper(
-    val debitRules: List<BookingRule>,
-    val creditRules: List<BookingRule>,
+data class PaymentOrIncomeConfig(
+    val mainSide: BookingConfigurationForOneSide,
+    val negatedSide: BookingConfigurationForOneSide,
 )
 
-enum class BookingRuleType {
-    categoryBookingRemaining,
-    categoryBookingFixedAmount,
-}
-data class BookingRule(
-    val type: BookingRuleType,
-    val categoryId: String,
-    val amountInCents: Long? = null,
+data class BookingConfigurationForOneSide(
+    val categoryToFixedAmountMapping: Map<String, Long>,
+    val categoryIdRemaining: String,
 )
 
 data class TransactionMatcher(
@@ -63,7 +58,7 @@ data class TransactionMatcher(
     val ledgerId: String,
     val name: String,
     val filters: List<TransactionMatcherFilter>,
-    val target: TransactionMatcherTarget,
+    val action: TransactionMatcherAction,
     val lastUsed: Instant,
 )
 

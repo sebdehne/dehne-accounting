@@ -1,7 +1,7 @@
 import Header from "../Header";
 import {Container} from "@mui/material";
 import React, {useEffect, useState} from "react";
-import {useUserState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 import {LedgerView} from "../../Websocket/types/ledgers";
 import WebsocketService from "../../Websocket/websocketClient";
 import WebsocketClient from "../../Websocket/websocketClient";
@@ -13,7 +13,7 @@ import moment from "moment";
 import {Amount} from "../Amount";
 
 export const Bookings = () => {
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
     const [ledger, setLedger] = useState<LedgerView>();
     const [bookings, setBookings] = useState<BookingView[]>([]);
 

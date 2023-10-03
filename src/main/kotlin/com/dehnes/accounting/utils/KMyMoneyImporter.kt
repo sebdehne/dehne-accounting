@@ -230,8 +230,6 @@ class KMyMoneyImporter(
 
                     // ledger booking
                     if (alreadyBookedCandidate != null) {
-                        // find the other record which is not matched yet
-                        val r = alreadyBookedCandidate.records.first { it.category.id == idMapping[mainTx.accountId]!! }
                         repository.matchBankTransaction(
                             conn,
                             userId,
@@ -239,10 +237,9 @@ class KMyMoneyImporter(
                             bankTxId,
                             bAccount.ledgerId,
                             alreadyBookedCandidate.id,
-                            r.id
                         )
                     } else {
-                        repository.addBooking(conn, userId, BookingAdd(
+                        val bookingId = repository.addBooking(conn, userId, BookingAdd(
                             bAccount.ledgerId,
                             transferOtherBankAccount?.let { tx.id },
                             tx.postDate.atStartOfDay().atZone(zoneId).toInstant(),
@@ -254,21 +251,24 @@ class KMyMoneyImporter(
                                         else -> idMapping[mainTx.payeeId ?: defaultPayee.id]!!
                                     },
                                     mainTx.amountInCents.toLong() * -1,
-                                    bAccount.id,
-                                    bankTxId
                                 )
                             ) + targetAccounts.map {
                                 BookingRecordAdd(
                                     it.memo,
                                     idMapping[it.accountId]!!,
                                     it.amountInCents.toLong()  * -1,
-                                    null,
-                                    null,
                                 )
                             }
                         ))
+                        repository.matchBankTransaction(
+                            connection = conn,
+                            userId = userId,
+                            bankAccountId = bAccount.id,
+                            transactionId = bankTxId,
+                            ledgerId = bAccount.ledgerId,
+                            bookingId = bookingId
+                        )
                     }
-
                 }
             }
         }

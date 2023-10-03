@@ -1,28 +1,25 @@
-import {useEffect, useState} from "react";
-import {buildTree, CategoryTree} from "./CategoryTree";
-import WebsocketClient from "../../Websocket/websocketClient";
+import {useMemo} from "react";
+import {CategoryTree} from "./CategoryTree";
 import {Autocomplete, TextField} from "@mui/material";
+import {useGlobalState} from "../../utils/userstate";
 
 
 export type CategorySearchBoxProps = {
     includeIntermediate: boolean;
     onSelectedCategoryId: (category: SearchableCategory) => void;
+    title?: string;
 }
 
-export const CategorySearchBox = ({includeIntermediate, onSelectedCategoryId}: CategorySearchBoxProps) => {
-    const [searchList, setSearchList] = useState<SearchableCategory[]>([]);
-
-    useEffect(() => {
-        const subId = WebsocketClient.subscribe(
-            {type: "allCategories"},
-            notify => {
-                const tree = buildTree(notify.readResponse.categories!);
-                setSearchList(buildSearchList(tree, includeIntermediate));
-            }
-        )
-
-        return () => WebsocketClient.unsubscribe(subId);
-    }, [includeIntermediate]);
+export const CategorySearchBox = ({
+                                      includeIntermediate,
+                                      onSelectedCategoryId,
+                                      title = "Search category"
+                                  }: CategorySearchBoxProps) => {
+    const {categoriesAsTree} = useGlobalState();
+    const searchList = useMemo(() =>
+            buildSearchList(categoriesAsTree, includeIntermediate),
+        [categoriesAsTree, includeIntermediate]
+    );
 
     return (<div>
         <Autocomplete
@@ -34,7 +31,7 @@ export const CategorySearchBox = ({includeIntermediate, onSelectedCategoryId}: C
             renderInput={(params) => (
                 <TextField
                     {...params}
-                    label="Search category"
+                    label={title}
                     InputProps={{
                         ...params.InputProps,
                         type: 'search',

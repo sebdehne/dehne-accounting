@@ -1,17 +1,17 @@
 
 
-.BookingRules {
+.FixedAmountMapping {
     list-style-type: none;
     padding-left: 0;
 }
 
-.BookingRule {
+.FixedAmountMappingEntry {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
 }
 
-.BookingRuleSummary {
+.FixedAmountMappingEntrySummary {
     display: flex;
     flex-direction: column;
 }

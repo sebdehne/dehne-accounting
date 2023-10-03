@@ -6,7 +6,7 @@ import {Button, Checkbox, Container, FormControlLabel, styled} from "@mui/materi
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {arrayBufferToBase64} from "../../utils/formatting";
 import {ImportBankTransactionsResult} from "../../Websocket/types/Rpc";
-import {useUserState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -22,7 +22,7 @@ const VisuallyHiddenInput = styled('input')({
 
 
 export const BankTransactionsImporter = () => {
-    const {userState, } = useUserState();
+    const {userState, } = useGlobalState();
     const [bankAccount, setBankAccount] = useState<BankAccountView>()
     const [selectedFile, setSelectedFile] = useState<File>();
     const [importResult, setImportResult] = useState<ImportBankTransactionsResult>();

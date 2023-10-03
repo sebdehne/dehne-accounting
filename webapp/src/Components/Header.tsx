@@ -3,7 +3,7 @@ import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
 import {Button, CircularProgress} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import {useUserState} from "../utils/userstate";
+import {useGlobalState} from "../utils/userstate";
 
 type HeaderProps = {
     title: string;
@@ -14,7 +14,7 @@ type HeaderProps = {
 
 const Header = ({title, backUrl, backName, suppressHome = false}: HeaderProps) => {
     const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
     const navigate = useNavigate();
 
     useEffect(() =>

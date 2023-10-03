@@ -125,13 +125,12 @@ create table bank_transaction
 
     matched_ledger_id         text,
     matched_booking_id        text,
-    matched_booking_record_id text,
 
     primary key (bank_account_id, id),
     foreign key (bank_id) references bank (id),
     foreign key (ledger_id) references ledger (id),
     foreign key (bank_account_id) references bank_account (id),
-    foreign key (matched_ledger_id, matched_booking_id, matched_booking_record_id) references booking_record (ledger_id, booking_id, id)
+    foreign key (matched_ledger_id, matched_booking_id) references booking (ledger_id, id)
 );
 
 create table bank_transaction_matchers
@@ -139,7 +138,7 @@ create table bank_transaction_matchers
     id          text      not null,
     name        text      not null,
     filter_list text      not null,
-    target      text      not null,
+    action      text      not null,
     ledger_id   text      not null,
     last_used   timestamp not null,
 

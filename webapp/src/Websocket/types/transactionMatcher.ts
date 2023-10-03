@@ -6,8 +6,8 @@ export type TransactionMatcherFilterType = 'startsWith'
     | 'exact'
     | 'contains'
     | 'amountBetween'
-    | 'deposit'
-    | 'withdrawal'
+    | 'income'
+    | 'payment'
     | 'ifAccountName'
 ;
 
@@ -19,41 +19,33 @@ export type TransactionMatcherFilter = {
     bankAccountName?: string;
 }
 
-export type TransactionMatcherTargetType = 'multipleCategoriesBooking'
+export type TransactionMatcherActionType = 'paymentOrIncome'
     | 'bankTransfer'
 ;
 
-export type TransactionMatcherTarget = {
-    type: TransactionMatcherTargetType;
+export type TransactionMatcherAction = {
+    type: TransactionMatcherActionType;
     transferCategoryId?: string;
-    multipleCategoriesBooking?: MultipleCategoriesBookingWrapper;
-
-    // internal field
-    transferCategory?: SearchableCategory;
+    paymentOrIncomeConfig?: PaymentOrIncomeConfig;
 }
 
-export type MultipleCategoriesBookingWrapper = {
-    debitRules: BookingRule[];
-    creditRules: BookingRule[];
+export type PaymentOrIncomeConfig = {
+    mainSide: BookingConfigurationForOneSide;
+    negatedSide: BookingConfigurationForOneSide;
 }
 
-export type BookingRuleType = 'categoryBookingRemaining' |  'categoryBookingFixedAmount';
-
-export type BookingRule = {
-    type: BookingRuleType;
-    categoryId: string;
-    amountInCents?: number;
-
-    // internal field
-    category: SearchableCategory;
+export type BookingConfigurationForOneSide = {
+    categoryToFixedAmountMapping: {[K: string]: number};
+    categoryIdRemaining: string;
 }
+
 
 export type TransactionMatcher = {
     id: string;
     ledgerId: string;
     name: string;
     filters: TransactionMatcherFilter[];
-    target: TransactionMatcherTarget;
+    action: TransactionMatcherAction;
     lastUsed: string;
 }
 

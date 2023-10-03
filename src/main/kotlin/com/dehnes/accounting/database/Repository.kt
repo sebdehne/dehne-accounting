@@ -514,7 +514,7 @@ class Repository(
                                 ledgerId = rs.getString("ledger_id"),
                                 name = rs.getString("name"),
                                 filters = objectMapper.readValue(rs.getString("filter_list")),
-                                target = objectMapper.readValue(rs.getString("target")),
+                                action = objectMapper.readValue(rs.getString("action")),
                                 lastUsed = rs.getTimestamp("last_used").toInstant(),
                             )
                         )
@@ -535,11 +535,11 @@ class Repository(
 
     fun addOrReplaceMatcher(connection: Connection, userId: String, matcher: TransactionMatcher) {
         val updated =
-            connection.prepareStatement("UPDATE bank_transaction_matchers SET name=?,filter_list=?, target=? WHERE id=?")
+            connection.prepareStatement("UPDATE bank_transaction_matchers SET name=?,filter_list=?, action=? WHERE id=?")
                 .use { preparedStatement ->
                     preparedStatement.setString(1, matcher.name)
                     preparedStatement.setString(2, objectMapper.writeValueAsString(matcher.filters))
-                    preparedStatement.setString(3, objectMapper.writeValueAsString(matcher.target))
+                    preparedStatement.setString(3, objectMapper.writeValueAsString(matcher.action))
                     preparedStatement.setString(4, matcher.id)
                     preparedStatement.executeUpdate() == 1
                 }
@@ -547,13 +547,13 @@ class Repository(
         if (updated) {
             changelog.add(connection, userId, ChangeLogEventType.matcherUpdated, matcher)
         } else {
-            connection.prepareStatement("INSERT INTO bank_transaction_matchers (id, ledger_id, name,filter_list, target, last_used) VALUES (?,?,?,?,?,?)")
+            connection.prepareStatement("INSERT INTO bank_transaction_matchers (id, ledger_id, name,filter_list, action, last_used) VALUES (?,?,?,?,?,?)")
                 .use { preparedStatement ->
                     preparedStatement.setString(1, matcher.id)
                     preparedStatement.setString(2, matcher.ledgerId)
                     preparedStatement.setString(3, matcher.name)
                     preparedStatement.setString(4, objectMapper.writeValueAsString(matcher.filters))
-                    preparedStatement.setString(5, objectMapper.writeValueAsString(matcher.target))
+                    preparedStatement.setString(5, objectMapper.writeValueAsString(matcher.action))
                     preparedStatement.setTimestamp(6, Timestamp.from(Instant.now()))
                     check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
                 }
@@ -642,9 +642,6 @@ class Repository(
         rs.getLong("matched_booking_id").let {
             if (rs.wasNull()) null else it
         },
-        rs.getLong("matched_booking_record_id").let {
-            if (rs.wasNull()) null else it
-        },
     )
 
     fun removeLastBankTransaction(connection: Connection, userId: String, bankAccountId: String) {
@@ -693,9 +690,8 @@ class Repository(
                 amount, 
                 balance, 
                 matched_ledger_id,
-                matched_booking_id,
-                matched_booking_record_id
-             ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                matched_booking_id
+             ) VALUES (?,?,?,?,?,?,?,?,?,?)
         """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setLong(1, nextId)
@@ -708,7 +704,6 @@ class Repository(
             preparedStatement.setLong(8, newBalance)
             preparedStatement.setString(9, null)
             preparedStatement.setObject(10, null)
-            preparedStatement.setObject(11, null)
 
             check(preparedStatement.executeUpdate() == 1)
         }
@@ -733,23 +728,20 @@ class Repository(
         transactionId: Long,
         ledgerId: String,
         bookingId: Long,
-        bookingRecordId: Long
     ) {
         connection.prepareStatement(
             """
             UPDATE bank_transaction set 
                 matched_ledger_id =?, 
-                matched_booking_id = ?, 
-                matched_booking_record_id = ?
+                matched_booking_id = ? 
             WHERE 
                 bank_account_id = ? AND id = ?
         """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setString(1, ledgerId)
             preparedStatement.setLong(2, bookingId)
-            preparedStatement.setLong(3, bookingRecordId)
-            preparedStatement.setString(4, bankAccountId)
-            preparedStatement.setLong(5, transactionId)
+            preparedStatement.setString(3, bankAccountId)
+            preparedStatement.setLong(4, transactionId)
             check(preparedStatement.executeUpdate() == 1)
         }
 
@@ -783,8 +775,7 @@ class Repository(
             """
             UPDATE bank_transaction set 
                 matched_ledger_id = null, 
-                matched_booking_id = null, 
-                matched_booking_record_id = null
+                matched_booking_id = null
             WHERE 
                 bank_account_id = ? AND id = ?
         """.trimIndent()
@@ -800,7 +791,7 @@ class Repository(
     /*
      * Bookings
      */
-    fun addBooking(connection: Connection, userId: String, booking: BookingAdd) {
+    fun addBooking(connection: Connection, userId: String, booking: BookingAdd): Long {
         check(booking.records.isNotEmpty()) { "Cannot add booking without records" }
         check(booking.records.sumOf { it.amount } == 0L) { "Records to not accumulate to zero" }
 
@@ -845,18 +836,6 @@ class Repository(
                 preparedStatement.setLong(6, record.amount)
                 check(preparedStatement.executeUpdate() == 1)
             }
-
-            if (record.matchedBankAccountId != null) {
-                matchBankTransaction(
-                    connection = connection,
-                    userId = userId,
-                    bankAccountId = record.matchedBankAccountId,
-                    transactionId = record.matchedBankTransactionId!!,
-                    ledgerId = booking.ledgerId,
-                    bookingId = nextId,
-                    bookingRecordId = index.toLong()
-                )
-            }
         }
 
         changelog.add(connection, userId, ChangeLogEventType.bookingAdded, booking)
@@ -870,6 +849,8 @@ class Repository(
                 }
             changelog.add(connection, userId, ChangeLogEventType.legderUpdated, mapOf("id" to nextId))
         }
+
+        return nextId
 
     }
 
@@ -955,8 +936,6 @@ class Repository(
     }
 
     fun removeBooking(connection: Connection, userId: String, ledgerId: String, bookingId: Long) {
-        val ledger = getLedger(connection, ledgerId)
-
         // clear possible matches
         findMatchedTransactions(connection, ledgerId, bookingId).forEach { bankTransaction ->
             unmatchBankTransaction(
@@ -1118,20 +1097,6 @@ data class CategoryDto(
     val parentCategoryId: String?,
 ) : InformationElement()
 
-enum class CategoryMatcherType {
-    text,
-    regex,
-    startsWith,
-    endsWith,
-}
-
-data class CategoryMatcherDto(
-    val id: String,
-    val categoryId: String,
-    val type: CategoryMatcherType,
-    val pattern: String,
-    val description: String?,
-)
 
 data class BankTransaction(
     val id: Long,
@@ -1144,7 +1109,6 @@ data class BankTransaction(
     val balance: Long,
     val matchedLedgerId: String?,
     val matchedBookingId: Long?,
-    val matchedBookingRecordId: Long?,
 )
 
 data class BankTransactionAdd(
@@ -1167,8 +1131,6 @@ data class BookingRecordAdd(
     val description: String?,
     val categoryId: String,
     val amount: Long,
-    val matchedBankAccountId: String?,
-    val matchedBankTransactionId: Long?,
 )
 
 data class BookingRecordView(
@@ -1230,13 +1192,4 @@ class BankTxDateRangeFilter(
             toExclusive
         )
     }
-}
-
-class NextAfterIdFilter(
-    private val offset: Long,
-) : BookingsFilter {
-    override fun whereAndParams(): Pair<String, List<Any>> {
-        return "id > ?" to listOf(offset)
-    }
-
 }

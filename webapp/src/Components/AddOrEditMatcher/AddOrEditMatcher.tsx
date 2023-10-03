@@ -1,4 +1,4 @@
-import {useUserState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 import React, {useEffect, useState} from "react";
 import {TransactionMatcher} from "../../Websocket/types/transactionMatcher";
 import WebsocketClient from "../../Websocket/websocketClient";
@@ -26,7 +26,7 @@ const steps = [
 ];
 
 export const AddOrEditMatcher = () => {
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
     const [matcher, setMatcher] = useState<TransactionMatcher>();
     const [activeStep, setActiveStep] = React.useState(0);
     const [description, setDescription] = useState<string | undefined>('');
@@ -80,11 +80,17 @@ export const AddOrEditMatcher = () => {
                                         pattern: bankTransaction.description
                                     }
                                 ],
-                                target: {
-                                    type: "multipleCategoriesBooking",
-                                    multipleCategoriesBooking: {
-                                        creditRules: [],
-                                        debitRules: []
+                                action: {
+                                    type: "paymentOrIncome",
+                                    paymentOrIncomeConfig: {
+                                        mainSide: {
+                                            categoryToFixedAmountMapping: {},
+                                            categoryIdRemaining: "",
+                                        },
+                                        negatedSide: {
+                                            categoryToFixedAmountMapping: {},
+                                            categoryIdRemaining: "",
+                                        }
                                     }
                                 },
                                 lastUsed: formatIso(moment()),

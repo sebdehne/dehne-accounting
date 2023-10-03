@@ -14,10 +14,10 @@ import {formatLocatDayMonth} from "../../utils/formatting";
 import IconButton from '@mui/material/IconButton';
 import moment from "moment";
 import {PeriodSelector} from "../PeriodSelectors/PeriodSelector";
-import {useUserState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 
 export const LedgerMain = () => {
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
     const [ledger, setLedger] = useState<LedgerView>();
 
     useEffect(() => {
@@ -53,7 +53,7 @@ type BankAccountsProps = {
 const BankAccounts = ({ledger}: BankAccountsProps) => {
     const [accounts, setAccounts] = useState<BankAccountView[]>();
     const [showHidden, setShowHidden] = useState(false);
-    const {setUserState} = useUserState();
+    const {setUserState} = useGlobalState();
     let navigate = useNavigate();
 
     const openBankAccount = (bankAccountId: string) => {
@@ -105,7 +105,7 @@ type LedgerRapportProps = {
 }
 const LedgerRapport = ({ledger}: LedgerRapportProps) => {
     const [ledgerRapport, setLedgerRapport] = useState<LedgerRapportNode[]>([]);
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
 
     useEffect(() => {
         const subId = WebsocketService.subscribe({

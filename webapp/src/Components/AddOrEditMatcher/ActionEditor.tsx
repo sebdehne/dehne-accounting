@@ -1,18 +1,16 @@
-import {BankAccountTransactionView} from "../../Websocket/types/banktransactions";
 import {
-    BookingRule,
-    BookingRuleType,
+    BookingConfigurationForOneSide,
     TransactionMatcher,
-    TransactionMatcherTargetType
+    TransactionMatcherActionType
 } from "../../Websocket/types/transactionMatcher";
 import React, {useCallback, useState} from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import IconButton from "@mui/material/IconButton";
-import {removeItemWithSlice} from "../../utils/utils";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import {CategorySearchBox, SearchableCategory} from "../CategorySearchBox/CategorySearchBox";
 import "./ActionEditor.css";
+import {useGlobalState} from "../../utils/userstate";
 
 
 export type ActionEditorProps = {
@@ -21,15 +19,15 @@ export type ActionEditorProps = {
 }
 
 export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
-    const setRules = useCallback((isCredit: boolean) => (r: BookingRule[]) => {
+    const setConfig = useCallback((isMain: boolean) => (c: BookingConfigurationForOneSide) => {
         setMatcher(prevState => ({
             ...prevState,
-            target: {
-                ...prevState.target,
-                multipleCategoriesBooking: {
-                    ...prevState.target.multipleCategoriesBooking,
-                    creditRules: isCredit ? r : prevState.target.multipleCategoriesBooking!.creditRules,
-                    debitRules: isCredit ? prevState.target.multipleCategoriesBooking!.debitRules : r,
+            action: {
+                ...prevState.action,
+                paymentOrIncomeConfig: {
+                    ...prevState.action.paymentOrIncomeConfig,
+                    mainSide: isMain ? c : prevState.action.paymentOrIncomeConfig!.mainSide,
+                    negatedSide: isMain ? prevState.action.paymentOrIncomeConfig!.negatedSide : c,
                 }
             }
         }))
@@ -43,30 +41,36 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
             <Select
                 labelId="demo-simple-select-helper-label"
                 id="demo-simple-select-helper"
-                value={matcher.target.type}
+                value={matcher.action.type}
                 label="Target type"
-                onChange={(event, child) => setMatcher(prevState => ({
+                onChange={(event,) => setMatcher(prevState => ({
                     ...prevState,
                     target: {
-                        ...prevState.target,
-                        type: event.target.value as TransactionMatcherTargetType
+                        ...prevState.action,
+                        type: event.target.value as TransactionMatcherActionType
                     }
                 }))}
             >
-                <MenuItem value={'multipleCategoriesBooking'}>multipleCategoriesBooking</MenuItem>
-                <MenuItem value={'bankTransfer'}>bankTransfer</MenuItem>
+                <MenuItem value={'paymentOrIncome'}>Payment/income</MenuItem>
+                <MenuItem value={'bankTransfer'}>bank transfer</MenuItem>
             </Select>
         </FormControl>
 
-        {matcher.target.type === "multipleCategoriesBooking" && <div>
-            <BookingRulesEditor title={'credit'} rules={matcher.target.multipleCategoriesBooking?.creditRules ?? []} setRules={setRules(true)}/>
-            <BookingRulesEditor title={'debit'} rules={matcher.target.multipleCategoriesBooking?.debitRules ?? []} setRules={setRules(false)}/>
+        {matcher.action.type === "paymentOrIncome" && <div>
+            <ConfigEditor
+                title={'main side'}
+                config={matcher.action.paymentOrIncomeConfig!.mainSide}
+                setConfig={setConfig(true)}/>
+            <ConfigEditor
+                title={'negated side'}
+                config={matcher.action.paymentOrIncomeConfig!.negatedSide}
+                setConfig={setConfig(false)}/>
         </div>}
-        {matcher.target.type === "bankTransfer" && <div>
+        {matcher.action.type === "bankTransfer" && <div>
             <CategorySearchBox includeIntermediate={true} onSelectedCategoryId={category => setMatcher(prevState => ({
                 ...prevState,
-                target: {
-                    ...prevState.target,
+                action: {
+                    ...prevState.action,
                     transferCategory: category,
                     transferCategoryId: category.category.id
                 }
@@ -75,68 +79,79 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
     </div>);
 }
 
-type BookingRulesEditorProps = {
+type ConfigEditorProps = {
     title: string;
-    rules: BookingRule[];
-    setRules: (r: BookingRule[]) => void;
+    config: BookingConfigurationForOneSide;
+    setConfig: (c: BookingConfigurationForOneSide) => void;
 }
-const BookingRulesEditor = ({title, rules, setRules}: BookingRulesEditorProps) => {
 
-    const [type, setType] = useState<BookingRuleType>("categoryBookingRemaining");
-    const [category, setCategory] = useState<SearchableCategory>();
-    const [amountInCents, setAmountInCents] = useState('');
+const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
+    const {categoriesAsList} = useGlobalState();
 
-    const removeRule = useCallback((index: number) => {
-        setRules(removeItemWithSlice(rules, index))
-    }, [setRules]);
-    const addRule = useCallback(() => setRules([...rules, {
-        type,
-        category: category!,
-        categoryId: category!.category.id,
-        amountInCents: parseInt(amountInCents),
-    }]), [setRules, type, category, amountInCents]);
+    const categoryName = useCallback((categoryId: string) =>
+            categoriesAsList.find(c => c.id === categoryId)?.name,
+        [categoriesAsList]
+    );
+
+    const [addFixedMappingCategory, setAddFixedMappingCategory] = useState<SearchableCategory>();
+    const [addFixedMappingAmountInCents, setAddFixedMappingAmountInCents] = useState('');
+
+    const removeFixedAmountMapping = useCallback((categoryId: string) => {
+        const {[categoryId]: _, ...rest} = config.categoryToFixedAmountMapping;
+        setConfig(({
+            ...config,
+            categoryToFixedAmountMapping: rest
+        }));
+    }, [setConfig]);
+    const addFixedAmountMapping = useCallback(() => {
+        const categoryId = addFixedMappingCategory!.category!.id!;
+        setConfig(({
+            ...config,
+            categoryToFixedAmountMapping: {
+                ...config.categoryToFixedAmountMapping,
+                [categoryId]: parseInt(addFixedMappingAmountInCents)
+            }
+        }))
+    }, [setConfig, addFixedMappingCategory]);
 
     return (<div>
-        <h4>{title} rules</h4>
+        <h4>{title} config</h4>
 
-        <ul className="BookingRules">
-            {rules.map((r, index) => (<li key={index} className="BookingRule">
-                <div className="BookingRuleSummary">
-                    <div>Type: {r.type}</div>
-                    <div>category: {r.category.category.name}</div>
-                    {!!r.amountInCents && <div>Amount: {r.amountInCents}</div>}
-                </div>
-                <IconButton size="large" onClick={() => removeRule(index)}><DeleteIcon fontSize="inherit"/></IconButton>
-            </li>))}
+        <ul className="FixedAmountMapping">
+            {Object.entries(config.categoryToFixedAmountMapping).map(([categoryId, amount]) => (
+                <li key={categoryId} className="FixedAmountMappingEntry">
+                    <div className="FixedAmountMappingEntrySummary">
+                        <div>category: {categoryName(categoryId)}</div>
+                        <div>Amount: {amount}</div>
+                    </div>
+                    <IconButton size="large" onClick={() => removeFixedAmountMapping(categoryId)}><DeleteIcon
+                        fontSize="inherit"/></IconButton>
+                </li>))}
         </ul>
 
         <div>
-            <h5>Add:</h5>
-            <FormControl sx={{m: 1, minWidth: 120}}>
-                <InputLabel id="demo-simple-select-helper-label">Type</InputLabel>
-                <Select
-                    labelId="demo-simple-select-helper-label"
-                    id="demo-simple-select-helper"
-                    value={type}
-                    label="Type"
-                    onChange={(event, child) => {
-                        setType(event.target.value as BookingRuleType);
-                        setAmountInCents('');
-                    }}
-                >
-                    <MenuItem value={'categoryBookingRemaining'}>categoryBookingRemaining</MenuItem>
-                    <MenuItem value={'categoryBookingFixedAmount'}>categoryBookingFixedAmount</MenuItem>
-                </Select>
-            </FormControl>
-            {type === "categoryBookingFixedAmount" && <FormControl sx={{m: 1, width: '100%'}}>
+            <div style={{border: '1px white solid'}}>
                 <TextField
-                    value={amountInCents}
+                    value={addFixedMappingAmountInCents}
                     label="Amount"
-                    onChange={event => setAmountInCents(event.target.value ?? '')}
+                    onChange={event => setAddFixedMappingAmountInCents(event.target.value ?? '')}
                 />
-            </FormControl>}
-            <CategorySearchBox includeIntermediate={true} onSelectedCategoryId={category => setCategory(category)}/>
-            <IconButton size="large" onClick={() => addRule()}><AddIcon fontSize="inherit"/></IconButton>
+                <CategorySearchBox
+                    includeIntermediate={true}
+                    onSelectedCategoryId={category => setAddFixedMappingCategory(category)}
+                    title={"Fixed mapping category"}
+                />
+                <IconButton size="large" onClick={addFixedAmountMapping}><AddIcon fontSize="inherit"/></IconButton>
+            </div>
+
+            <CategorySearchBox
+                includeIntermediate={true}
+                onSelectedCategoryId={category => setConfig(({
+                    ...config,
+                    categoryIdRemaining: category.category.id
+                }))}
+                title={"Main category"}
+            />
         </div>
     </div>)
 }

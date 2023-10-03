@@ -13,10 +13,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import IconButton from "@mui/material/IconButton";
-import {useUserState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 
 export const BookTransaction = () => {
-    const {userState} = useUserState();
+    const {userState} = useGlobalState();
     const [transaction, setTransaction] = useState<BankAccountTransactionView>();
 
     useEffect(() => {
@@ -86,7 +86,7 @@ const MatchersSelector = ({
     const [macherIdsWhichMatched, setMacherIdsWhichMatched] = useState<string[]>([]);
     const [memoText, setMemoText] = useState('');
     const [allMatchersFilter, setAllMatchersFilter] = useState('');
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
 
     const candidates = (all: TransactionMatcher[], macherIdsWhichMatched: string[]) => all.filter(m => macherIdsWhichMatched.includes(m.id))
 

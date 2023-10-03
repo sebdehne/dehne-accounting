@@ -5,7 +5,7 @@ import {Button, Container} from "@mui/material";
 import Header from "../Header";
 import {LedgerView} from "../../Websocket/types/ledgers";
 import WebsocketService, {useUser} from "../../Websocket/websocketClient";
-import {useUserState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 
 
 function App() {
@@ -14,7 +14,7 @@ function App() {
 
     const {user} = useUser()
     const [ledgers, setLedgers] = useState<LedgerView[]>();
-    const {userState, setUserState} = useUserState();
+    const {userState, setUserState} = useGlobalState();
 
     useEffect(() => {
         const subId = WebsocketService.subscribe(

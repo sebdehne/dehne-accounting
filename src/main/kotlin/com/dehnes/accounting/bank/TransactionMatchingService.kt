@@ -104,7 +104,7 @@ class TransactionMatchingService(
 
             check(matcher.ledgerId == ledger.id)
 
-            val result = matcher.target.createBooking(
+            val result = matcher.action.createBooking(
                 ledgerId,
                 bankTransaction,
                 bankAccountDto,
@@ -113,58 +113,70 @@ class TransactionMatchingService(
                 memoText,
             )
 
-            if (result.booking != null) {
+            val bookingIdToMatch = if (result.booking != null) {
                 repository.addBooking(conn, userId, result.booking)
+            } else {
+                result.matchBookingId!!
             }
 
-            if (result.matchBookingId != null && result.matchBookingRecordId != null) {
-                repository.matchBankTransaction(
-                    conn,
-                    userId,
-                    bankAccountId,
-                    bankTransaction.id,
-                    ledgerId,
-                    result.matchBookingId,
-                    result.matchBookingRecordId,
-                )
-            }
+            repository.matchBankTransaction(
+                conn,
+                userId,
+                bankAccountId,
+                bankTransaction.id,
+                ledgerId,
+                bookingIdToMatch,
+            )
 
             repository.matchUsed(conn, matcherId)
         }
     }
 
-    private fun TransactionMatcherTarget.createBooking(
+    private fun TransactionMatcherAction.createBooking(
         ledgerId: String,
         bankTransaction: BankTransaction,
         bankAccountDto: BankAccountDto,
         connection: Connection,
         categories: Categories,
         memoText: String?,
-    ): TargetResult {
+    ): ActionResult {
         val records = when (this.type) {
-            TransactionMatcherTargetType.multipleCategoriesBooking -> {
+            TransactionMatcherActionType.paymentOrIncome -> {
 
-                val wrapper = this.multipleCategoriesBooking!!
+                val wrapper = this.paymentOrIncomeConfig!!
 
-                var remainingDebit = bankTransaction.amount
-                var remainingCredit = bankTransaction.amount * -1
-
-                val debitRecords = wrapper.debitRules.map { bookingRule ->
-                    createRecord(bookingRule, remainingDebit, memoText).apply {
-                        remainingDebit -= this.amount
+                val createRules = {startingAmount: Long, c: BookingConfigurationForOneSide ->
+                    val rules = mutableListOf<BookingRecordAdd>()
+                    var remaining = startingAmount
+                    c.categoryToFixedAmountMapping.forEach { (categoryId, amountInCents) ->
+                        rules.add(BookingRecordAdd(
+                            memoText,
+                            categoryId,
+                            amountInCents,
+                        ))
+                        remaining -= amountInCents
                     }
-                }
-                val creditRecords = wrapper.creditRules.map { bookingRule ->
-                    createRecord(bookingRule, remainingCredit, memoText).apply {
-                        remainingCredit -= this.amount
-                    }
+                    rules.add(BookingRecordAdd(
+                        memoText,
+                        c.categoryIdRemaining,
+                        remaining,
+                    ))
+                    rules
                 }
 
+                val mainRules = createRules(
+                    bankTransaction.amount,
+                    wrapper.mainSide
+                )
+                val negatedRules = createRules(
+                    bankTransaction.amount * -1,
+                    wrapper.negatedSide
+                )
 
-                creditRecords + debitRecords
+                mainRules + negatedRules
             }
 
-            TransactionMatcherTargetType.bankTransfer -> {
+            TransactionMatcherActionType.bankTransfer -> {
                 val otherCategoryId = transferCategoryId!!
                 val thisCategoryId = bankAccountDto.categoryId
 
@@ -198,18 +210,8 @@ class TransactionMatchingService(
                     }
                     .filter { it.records.all { it.amount.absoluteValue == bankTransaction.amount.absoluteValue } }
                     .filter { b ->
-
-                        repository.findMatchedTransactions(
-                            connection,
-                            ledgerId,
-                            b.id,
-                        )
-
-                        val recordId = b.records.single { it.category.id == otherCategoryId }
-
                         candidateTransactions.any { tx ->
                             tx.matchedLedgerId == ledgerId && tx.matchedBookingId == b.id
-                                    && tx.matchedBookingRecordId == recordId.id
                         }
                     }
 
@@ -217,10 +219,9 @@ class TransactionMatchingService(
                 // if there is an existing booking which matches, and
                 // there the "this" record is not matched -> create match without Booking
                 if (candidates.isNotEmpty()) {
-                    return TargetResult(
+                    return ActionResult(
                         null,
                         candidates.first().id,
-                        candidates.first().records.first { it.category.id == thisCategoryId }.id
                     )
                 }
 
@@ -229,67 +230,30 @@ class TransactionMatchingService(
                         description = memoText,
                         categoryId = thisCategoryId,
                         amount = bankTransaction.amount,
-                        matchedBankAccountId = null,
-                        matchedBankTransactionId = null
                     ),
                     BookingRecordAdd(
                         description = memoText,
                         categoryId = otherCategoryId,
                         amount = bankTransaction.amount * -1,
-                        matchedBankAccountId = null,
-                        matchedBankTransactionId = null
                     )
                 )
             }
         }
 
-        return TargetResult(
+        return ActionResult(
             BookingAdd(
                 ledgerId,
                 null,
                 bankTransaction.datetime,
-                records.mapIndexed { index, bookingRecordAdd ->
-                    if (index == 0) {
-                        bookingRecordAdd.copy(
-                            matchedBankAccountId = bankTransaction.bankAccountId,
-                            matchedBankTransactionId = bankTransaction.id
-                        )
-                    } else {
-                        bookingRecordAdd
-                    }
-                }
+                records,
             ),
-            null,
             null,
         )
     }
 }
 
-fun createRecord(
-    bookingRule: BookingRule,
-    remaining: Long,
-    memoText: String?,
-): BookingRecordAdd {
-
-    val amount: Long = when (bookingRule.type) {
-        BookingRuleType.categoryBookingRemaining -> remaining
-        BookingRuleType.categoryBookingFixedAmount -> bookingRule.amountInCents!!
-    }
-
-    return BookingRecordAdd(
-        memoText,
-        bookingRule.categoryId,
-        amount,
-        null,
-        null,
-    )
-}
-
-data class TargetResult(
+data class ActionResult(
     val booking: BookingAdd?,
     val matchBookingId: Long?,
-    val matchBookingRecordId: Long?,
 )
-
-
 
