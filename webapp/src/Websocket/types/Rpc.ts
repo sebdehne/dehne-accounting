@@ -9,7 +9,7 @@ export type RequestType = "subscribe"
     | 'deleteMatcher'
     | 'executeMatcher'
     | 'setUserState'
-    | 'removeLastBooking'
+    | 'removeBooking'
     ;
 
 export type RpcRequest = {
@@ -23,6 +23,7 @@ export type RpcRequest = {
     executeMatcherRequest?: ExecuteMatcherRequest;
     userState?: UserState;
     deleteMatcherId?: string;
+    bookingId?: number;
 }
 
 export type RpcResponse = {

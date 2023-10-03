@@ -1,4 +1,10 @@
 
+.HeaderLine {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
 .Bookings {
     list-style-type: none;
     padding-left: 0;
@@ -13,6 +19,14 @@
 .BookingHeader {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
+}
+
+.BookingHeaderSummary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .BookingRecords {
@@ -23,11 +37,15 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
 }
 .BookingRecordLeft {
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 .BookingRecordRight {
-
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
