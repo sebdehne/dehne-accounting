@@ -5,6 +5,7 @@ import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
+import com.dehnes.accounting.services.BankService
 import com.dehnes.accounting.services.BookingWriteService
 import com.dehnes.accounting.services.UserService
 import com.dehnes.accounting.services.UserStateService
@@ -28,6 +29,7 @@ class WebSocketServer : Endpoint() {
     private val objectMapper = configuration.getBean<ObjectMapper>()
     private val userService = configuration.getBean<UserService>()
     private val readService = configuration.getBean<ReadService>()
+    private val bankService = configuration.getBean<BankService>()
     private val userStateService = configuration.getBean<UserStateService>()
     private val transactionMatchingService = configuration.getBean<TransactionMatchingService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
@@ -151,6 +153,17 @@ class WebSocketServer : Endpoint() {
                 )
 
                 RpcResponse()
+            }
+
+            removeLastBankTransaction -> readService.doWithNotifies {
+                val (_, errorMsg) = logAndGetError(logger) {
+                    bankService.removeLastBankTransactions(
+                        user.id,
+                        rpcRequest.ledgerId!!,
+                        rpcRequest.bankAccountId!!
+                    )
+                }
+                RpcResponse(error = errorMsg)
             }
         }
 

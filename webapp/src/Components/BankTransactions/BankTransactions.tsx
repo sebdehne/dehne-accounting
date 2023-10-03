@@ -1,7 +1,7 @@
 import {useNavigate} from "react-router-dom";
 import Header from "../Header";
 import {Button, Container} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {BankAccountView} from "../../Websocket/types/bankaccount";
 import moment from "moment/moment";
@@ -63,14 +63,22 @@ export const BankTransactions = () => {
         })).then(() => navigate('/book/transaction'))
     }
 
+    const removeLastBankTransaction = useCallback(() => {
+        WebsocketClient.rpc(
+            {
+                type: "removeLastBankTransaction",
+                ledgerId: userState.ledgerId,
+                bankAccountId: userState.bankAccountId,
+            }
+        )
+    }, []);
+
     return (
         <Container maxWidth="sm" className="App">
-            <Header
-                title={bankAccount?.name ?? "Bank account: ..."}
-            />
+            <Header title={bankAccount?.name ?? "Bank account: ..."}/>
 
-            <Button
-                onClick={() => navigate('/bankaccount/import')}>Import</Button>
+            <Button onClick={() => navigate('/bankaccount/import')}>Import</Button>
+            <Button onClick={removeLastBankTransaction}>Delete last TX</Button>
 
             <PeriodSelector periodLocationInUserState={['bankTransactionsState', 'currentPeriod']}/>
 

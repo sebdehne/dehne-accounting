@@ -109,7 +109,7 @@ class ReadService(
         getBankTransaction -> {
             val bankTransactionRequest = readRequest.bankTransactionRequest!!
             ReadResponse(
-                bankTransaction = bankService.getTransactions(
+                bankTransaction = bankService.getTransaction(
                     userId,
                     bankTransactionRequest.ledgerId,
                     bankTransactionRequest.bankAccountId,

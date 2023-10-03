@@ -10,6 +10,7 @@ export type RequestType = "subscribe"
     | 'executeMatcher'
     | 'setUserState'
     | 'removeBooking'
+    | 'removeLastBankTransaction'
     ;
 
 export type RpcRequest = {
@@ -18,6 +19,7 @@ export type RpcRequest = {
     unsubscribe?: Unsubscribe;
 
     ledgerId?: string;
+    bankAccountId?: string;
     importBankTransactionsRequest?: ImportBankTransactionsRequest;
     addOrReplaceMatcherRequest?: TransactionMatcher;
     executeMatcherRequest?: ExecuteMatcherRequest;

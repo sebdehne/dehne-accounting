@@ -644,7 +644,7 @@ class Repository(
     fun removeLastBankTransaction(connection: Connection, userId: String, bankAccountId: String) {
         val bankAccount = getBankAccount(connection, bankAccountId) ?: error("Unknown bank account $bankAccountId")
         val lastTransaction = getBankTransaction(connection, bankAccountId, bankAccount.transactionsCounter)
-        check(lastTransaction.matchedBookingId != null) { "Cannot a matched transaction, remove booking forst" }
+        check(lastTransaction.matchedBookingId == null) { "Cannot a matched transaction, remove booking reference first" }
 
         connection.prepareStatement("DELETE FROM bank_transaction WHERE bank_account_id = ? and id = ?")
             .use { preparedStatement ->
@@ -658,6 +658,11 @@ class Repository(
             bankAccountId = bankAccountId,
             newCount = bankAccount.transactionsCounter - 1,
             newBalance = lastTransaction.balance - lastTransaction.amount
+        )
+        decreaseUnbookedCounter(
+            connection,
+            userId,
+            bankAccountId
         )
 
         changelog.add(
@@ -958,7 +963,10 @@ class Repository(
         }
 
         changelog.add(
-            connection, userId, ChangeLogEventType.bookingRemoved, mapOf(
+            connection,
+            userId,
+            ChangeLogEventType.bookingRemoved,
+            mapOf(
                 "ledgerId" to ledgerId,
                 "bookingId" to bookingId
             )

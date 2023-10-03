@@ -1,8 +1,9 @@
 - matcher: filter editor - search bank accounts when transfer
+- show general errors in client
 
-Bookings:
-- remove - toggle edit mode first -> show deleteIconButton
-- are-you-sure-dialog?
+Bank Transactions:
+- remove last TX
+
 
 Categories:
 - list
@@ -10,8 +11,6 @@ Categories:
 - edit
 - merge (can also be used to delete unused ones)
 
-Bank Transactions:
-- remove last TX
 
 Bank accounts:
 - add
@@ -24,6 +23,8 @@ Users:
 - remove
 
 ==== lower priority ==== :
+- are-you-sure-dialog?
+
 Balance-sheet:
 - configure which categories go where
 

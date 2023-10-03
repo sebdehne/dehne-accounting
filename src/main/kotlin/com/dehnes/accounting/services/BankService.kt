@@ -7,6 +7,7 @@ import com.dehnes.accounting.database.BankAccountDto
 import com.dehnes.accounting.database.BankAccountTransactionsFilter
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
+import com.dehnes.accounting.database.Transactions.writeTx
 import java.sql.Connection
 import javax.sql.DataSource
 
@@ -16,7 +17,23 @@ class BankService(
     private val dataSource: DataSource,
 ) {
 
-    fun getTransactions(
+    fun removeLastBankTransactions(
+        userId: String,
+        ledgerId: String,
+        bankAccountId: String,
+    ) {
+        dataSource.writeTx { conn ->
+            bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
+
+
+            repository.removeLastBankTransaction(
+                conn,
+                userId,
+                bankAccountId
+            )
+        }
+    }
+    fun getTransaction(
         userId: String,
         ledgerId: String,
         bankAccountId: String,

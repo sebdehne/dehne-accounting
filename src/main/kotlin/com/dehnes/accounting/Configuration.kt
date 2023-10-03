@@ -63,6 +63,7 @@ class Configuration {
         val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService)
 
 
+        beans[BankService::class] = bankService
         beans[ObjectMapper::class] = objectMapper
         beans[ReadService::class] = readService
         beans[UserService::class] = userService

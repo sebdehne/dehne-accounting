@@ -9,6 +9,8 @@ enum class RequestType {
     unsubscribe,
 
     importBankTransactions,
+    removeLastBankTransaction,
+
     addOrReplaceMatcher,
     deleteMatcher,
     executeMatcher,
@@ -23,6 +25,7 @@ data class RpcRequest(
     val subscribe: Subscribe?,
     val unsubscribe: Unsubscribe?,
     val ledgerId: String?,
+    val bankAccountId: String?,
     val importBankTransactionsRequest: ImportBankTransactionsRequest?,
     val addOrReplaceMatcherRequest: TransactionMatcher?,
     val executeMatcherRequest: ExecuteMatcherRequest?,
