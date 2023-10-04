@@ -5,8 +5,6 @@ import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.services.BookingReadService
-import com.dehnes.accounting.services.Categories
-import com.dehnes.accounting.services.CategoryService
 import com.dehnes.smarthome.utils.DateTimeUtils.plusDays
 import java.sql.Connection
 import javax.sql.DataSource
@@ -16,7 +14,6 @@ class TransactionMatchingService(
     private val repository: Repository,
     private val dataSource: DataSource,
     private val bookingReadService: BookingReadService,
-    private val categoryService: CategoryService,
 ) {
 
     fun addOrReplaceMatcher(
@@ -51,7 +48,12 @@ class TransactionMatchingService(
                     (repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == t.bankAccountId }
                         ?: error("No such bankId ${t.bankAccountId}"))
 
-                val bankTransaction = repository.getBankTransaction(conn, bankAccountDto.id, t.transactionId)
+                val bankTransaction = repository.getBankTransaction(
+                    conn,
+                    bankAccountDto.id,
+                    t.transactionId,
+                    ledgerId,
+                )
 
                 if (bankTransaction.matchedLedgerId == null) {
                     allMatchers
@@ -95,7 +97,12 @@ class TransactionMatchingService(
                 (repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == bankAccountId }
                     ?: error("No such bankId $bankAccountId"))
 
-            val bankTransaction = repository.getBankTransaction(conn, bankAccountDto.id, transactionId)
+            val bankTransaction = repository.getBankTransaction(
+                conn,
+                bankAccountDto.id,
+                transactionId,
+                ledgerId,
+            )
             check(bankTransaction.matchedLedgerId == null) { "transaction $transactionId already matched" }
 
             val matcher = repository.getAllMatchers(conn, ledgerId)
@@ -109,7 +116,6 @@ class TransactionMatchingService(
                 bankTransaction,
                 bankAccountDto,
                 conn,
-                categoryService.get(conn),
                 memoText,
             )
 
@@ -137,7 +143,6 @@ class TransactionMatchingService(
         bankTransaction: BankTransaction,
         bankAccountDto: BankAccountDto,
         connection: Connection,
-        categories: Categories,
         memoText: String?,
     ): ActionResult {
         val records = when (this.type) {
@@ -145,22 +150,26 @@ class TransactionMatchingService(
 
                 val wrapper = this.paymentOrIncomeConfig!!
 
-                val createRules = {startingAmount: Long, c: BookingConfigurationForOneSide ->
+                val createRules = { startingAmount: Long, c: BookingConfigurationForOneSide ->
                     val rules = mutableListOf<BookingRecordAdd>()
                     var remaining = startingAmount
                     c.categoryToFixedAmountMapping.forEach { (categoryId, amountInCents) ->
-                        rules.add(BookingRecordAdd(
-                            memoText,
-                            categoryId,
-                            amountInCents,
-                        ))
+                        rules.add(
+                            BookingRecordAdd(
+                                memoText,
+                                categoryId,
+                                amountInCents,
+                            )
+                        )
                         remaining -= amountInCents
                     }
-                    rules.add(BookingRecordAdd(
-                        memoText,
-                        c.categoryIdRemaining,
-                        remaining,
-                    ))
+                    rules.add(
+                        BookingRecordAdd(
+                            memoText,
+                            c.categoryIdRemaining,
+                            remaining,
+                        )
+                    )
                     rules
                 }
 
@@ -196,7 +205,6 @@ class TransactionMatchingService(
 
                 val candidates = repository.getBookings(
                     connection,
-                    categories,
                     ledgerId,
                     Int.MAX_VALUE,
                     DateRangeFilter(
@@ -206,7 +214,7 @@ class TransactionMatchingService(
                 )
                     .filter { b ->
                         b.records.size == 2 &&
-                                b.records.map { it.category.id }.toSet() == setOf(otherCategoryId, thisCategoryId)
+                                b.records.map { it.categoryId }.toSet() == setOf(otherCategoryId, thisCategoryId)
                     }
                     .filter { it.records.all { it.amount.absoluteValue == bankTransaction.amount.absoluteValue } }
                     .filter { b ->

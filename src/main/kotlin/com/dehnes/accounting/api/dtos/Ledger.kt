@@ -7,7 +7,6 @@ data class LedgerView(
     override val id: String,
     override val name: String,
     override val description: String?,
-    val bookingsCounter: Long,
     val accessLevel: AccessLevel,
 ) : InformationElement()
 

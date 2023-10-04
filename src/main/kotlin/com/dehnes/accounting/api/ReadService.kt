@@ -83,9 +83,7 @@ class ReadService(
 
         getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, false))
 
-        allCategories -> ReadResponse(categories = categoryService.get().asList.map {
-            CategoryView(it.id, it.name, it.description, it.parentCategoryId)
-        })
+        allCategories -> ReadResponse(categories = categoryService.get(readRequest.ledgerId!!).asList)
 
         getBankAccounts -> ReadResponse(
             bankAccounts = bankService.getAllAccountsFor(
@@ -125,9 +123,10 @@ class ReadService(
                     readRequest.ledgerId!!,
                     readRequest.ledgerRapportRequest!!.from,
                     readRequest.ledgerRapportRequest.toExcluding,
-                    emptyList()
                 )
             )
+
+            val categories = categoryService.get(readRequest.ledgerId)
 
             fun mapLeaf(rapportLeaf: RapportLeaf): LedgerRapportNode {
                 return LedgerRapportNode(
@@ -142,7 +141,7 @@ class ReadService(
                             r.description(),
                             r.booking.records.filterNot { it.id == r.bookingRecordId }.map {
                                 LedgerRapportBookingContraRecord(
-                                    it.category.name,
+                                    categories.asList.first { c -> c.id == it.categoryId }.name,
                                     it.bookingId,
                                     it.id
                                 )

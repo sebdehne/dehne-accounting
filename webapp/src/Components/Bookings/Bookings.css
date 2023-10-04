@@ -72,18 +72,3 @@
     align-items: center;
 }
 
-.BookingTypePayment {
-    padding-left: 50px;
-    color: #f8ea73;
-    font-weight: bold;
-}
-.BookingTypeIncome {
-    padding-left: 50px;
-    color: #2bd200;
-    font-weight: bold;
-}
-.BookingTypeOther {
-    padding-left: 50px;
-    font-weight: bold;
-    color: #2e2eff;
-}

@@ -1,13 +1,12 @@
 package com.dehnes.accounting.rapports
 
-import com.dehnes.accounting.services.RootCategory
-import com.dehnes.accounting.services.CategoryLeaf
-import com.dehnes.accounting.services.CategoryService
 import com.dehnes.accounting.database.BookingView
 import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.DateRangeFilter
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
+import com.dehnes.accounting.services.CategoryLeaf
+import com.dehnes.accounting.services.CategoryService
 import java.sql.Connection
 import java.time.Instant
 import javax.sql.DataSource
@@ -27,27 +26,20 @@ class RapportService(
         request: RapportRequest,
     ): List<RapportLeaf> {
 
-        val categories = categoryService.get(connection)
+        val categories = categoryService.get(connection, request.ledgerId)
+
         val bookings = repository.getBookings(
             connection,
-            categories,
             request.ledgerId,
             Int.MAX_VALUE,
             DateRangeFilter(request.from, request.toExcluding)
         )
 
-        val allCategoryIds = categories.resolveAllChildIds(request.topCategoryIds.ifEmpty { RootCategory.entries.map { it.id } })
-
         // build the rapport tree somehow :)
         fun buildLeaf(categoryLeaf: CategoryLeaf, parentCategoryId: String?): RapportLeaf? {
-            val mappedRecords = if (categoryLeaf.id in allCategoryIds) {
-                bookings
-                    .flatMap { b -> b.records.filter { it.category.id == categoryLeaf.id }.map { b to it.id } }
-                    .map { (b, brId) -> RapportRecord(
-                        b,
-                        brId,
-                    ) }
-            } else emptyList()
+            val mappedRecords = bookings
+                .flatMap { b -> b.records.filter { it.categoryId == categoryLeaf.id }.map { b to it.id } }
+                .map { (b, brId) -> RapportRecord(b, brId) }
 
             val children = categoryLeaf.children.mapNotNull { c ->
                 buildLeaf(c, categoryLeaf.id)
@@ -58,7 +50,13 @@ class RapportService(
             }
 
             return RapportLeaf(
-                CategoryDto(categoryLeaf.id, categoryLeaf.name, categoryLeaf.description, parentCategoryId),
+                CategoryDto(
+                    categoryLeaf.id,
+                    categoryLeaf.name,
+                    categoryLeaf.description,
+                    parentCategoryId,
+                    request.ledgerId
+                ),
                 mappedRecords,
                 mappedRecords.sumOf { it.amount() } + children.sumOf { it.totalAmountInCents },
                 children.sortedBy { it.categoryDto.name }
@@ -74,7 +72,6 @@ data class RapportRequest(
     val ledgerId: String,
     val from: Instant,
     val toExcluding: Instant,
-    val topCategoryIds: List<String>,
 )
 
 data class RapportLeaf(

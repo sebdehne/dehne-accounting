@@ -27,7 +27,6 @@ class BookingReadService(
 
         repository.getBookings(
             conn,
-            categoryService.get(conn),
             ledger.id,
             limit,
             *filters
@@ -66,7 +65,6 @@ class BookingReadService(
                 l.id,
                 l.name,
                 l.description,
-                l.bookingsCounter,
                 a.accessLevel
             )
         }.filter { user.isAdmin || it.accessLevel.hasAccess(write) }
@@ -85,31 +83,3 @@ enum class RootCategory(
     Equity("688979ce-986b-4b23-8f7c-62b271172398"),
     Payees("12ffcb90-f019-47fe-bdb0-27da28c2d745"),
 }
-
-enum class BookingType {
-    payment,
-    income,
-    transfer,
-    internalBooking,
-    ;
-
-    companion object {
-        fun determineTime(records: List<BookingRecordView>, categories: Categories): BookingType {
-            val rootsAndDirections = records.map { r ->
-                val root = categories.findRoot(r.category.id).toRootType()
-                root to r.amount.sign
-            }.filterNot { it.second == 0 }
-
-            val accounts = listOf(RootCategory.Asset, RootCategory.Liability)
-            val bookings = listOf(RootCategory.Income, RootCategory.Expense)
-            return when {
-                rootsAndDirections.all { it.first in accounts } -> transfer
-                rootsAndDirections.all { it.first in bookings } -> internalBooking
-                rootsAndDirections.any { it.first == RootCategory.Payees && it.second == -1 } -> income
-                rootsAndDirections.any { it.first == RootCategory.Payees && it.second == 1 } -> payment
-                else -> error("Unknown booking type")
-            }
-        }
-    }
-}
-

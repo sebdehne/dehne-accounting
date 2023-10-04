@@ -3,12 +3,14 @@ import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
 import {Button, ButtonGroup, CircularProgress} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import "./Header.css"
 
 type HeaderProps = {
     title: string;
+    clickable?: () => void;
 }
 
-const Header = ({title}: HeaderProps) => {
+const Header = ({title, clickable}: HeaderProps) => {
     const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
     const navigate = useNavigate();
 
@@ -60,7 +62,9 @@ const Header = ({title}: HeaderProps) => {
             </div>
 
         </div>
-        <h2 style={{textAlign: "center"}}>{title}</h2>
+
+        {clickable && <h2 className="HeaderAsLink" onClick={clickable}>{title}</h2>}
+        {!clickable && <h2 className="HeaderNoLink">{title}</h2>}
 
     </>
 };

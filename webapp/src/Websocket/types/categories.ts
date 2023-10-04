@@ -1,7 +1,7 @@
 import {InformationElement} from "./InformationElement";
 
 
-export interface CategoryView extends  InformationElement {
+export interface CategoryDto extends  InformationElement {
     parentCategoryId?: string;
 }
 

@@ -1,6 +1,5 @@
 package com.dehnes.accounting.services
 
-import com.dehnes.accounting.api.dtos.CategoryView
 import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
@@ -13,10 +12,10 @@ class CategoryService(
     private val dataSource: DataSource,
 ) {
 
-    fun get() = dataSource.readTx { conn -> get(conn) }
+    fun get(ledgerId: String) = dataSource.readTx { conn -> get(conn, ledgerId) }
 
-    fun get(connection: Connection): Categories {
-        val list = repository.getAllCategories(connection)
+    fun get(connection: Connection, ledgerId: String): Categories {
+        val list = repository.getAllCategories(connection, ledgerId)
         return Categories(
             readTree(list),
             list
@@ -65,71 +64,10 @@ data class CategoryLeaf(
     override val description: String?,
     val dto: CategoryDto,
     val children: List<CategoryLeaf>,
-) : InformationElement() {
-    fun toRootTypeNull() = if (dto.parentCategoryId == null) RootCategory.entries.firstOrNull { it.id == id } else null
-    fun toRootType() = toRootTypeNull() ?: error("$this is not a root category")
-}
+) : InformationElement()
 
 
 data class Categories(
     val asTree: List<CategoryLeaf>,
     val asList: List<CategoryDto>,
-) {
-
-    fun getDto(categoryId: String) =
-        asList.firstOrNull { it.id == categoryId } ?: error("No such category with id=$categoryId")
-
-    fun getView(categoryId: String) = asList
-        .firstOrNull { it.id == categoryId }
-        ?.let {
-            CategoryView(
-                it.id,
-                it.name,
-                it.description,
-                it.parentCategoryId
-            )
-        } ?: error("No such category with id=$categoryId")
-
-    fun findRoot(categoryId: String): CategoryLeaf {
-
-        fun hasChild(leaf: CategoryLeaf, target: String): Boolean {
-            return leaf.id == target || leaf.children.any { l ->
-                hasChild(l, target)
-            }
-        }
-
-        return asTree.first { root ->
-            hasChild(root, categoryId)
-        }
-    }
-
-    fun resolveAllChildIds(categoryIds: List<String>): Set<String> {
-        fun findCategory(current: CategoryLeaf, wantedId: String): CategoryLeaf? {
-            if (current.id == wantedId) return current
-            current.children.forEach { c ->
-                val r = findCategory(c, wantedId)
-                if (r != null) return r
-            }
-            return null
-        }
-
-        fun findCategory(wantedId: String): CategoryLeaf {
-            asTree.forEach { c ->
-                val r = findCategory(c, wantedId)
-                if (r != null) return r
-            }
-            error("Could not find category $wantedId")
-        }
-
-        fun getAllIds(current: CategoryLeaf): List<String> = listOf(current.id) + current.children.flatMap {
-            getAllIds(it)
-        }
-
-        val finalList = categoryIds.ifEmpty { asTree.map { it.id } }
-
-        return finalList.flatMap { nextId ->
-            val categoryLeaf = findCategory(nextId)
-            getAllIds(categoryLeaf)
-        }.toSet()
-    }
-}
+)

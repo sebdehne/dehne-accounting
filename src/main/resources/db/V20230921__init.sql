@@ -30,10 +30,10 @@ create unique index user_index1 on user (id);
 
 create table ledger
 (
-    id               text    not null,
-    name             text    not null,
-    description      text,
-    bookings_counter integer not null,
+    id                 text not null,
+    name               text not null,
+    description        text,
+    configuration_json text not null,
     primary key (id)
 );
 
@@ -73,8 +73,10 @@ create table category
     name               text not null,
     description        text,
     parent_category_id text,
-    primary key (id),
-    foreign key (parent_category_id) references category (id)
+    ledger_id          text not null,
+    primary key (id, ledger_id),
+    foreign key (parent_category_id, ledger_id) references category (id, ledger_id),
+    foreign key (ledger_id) references ledger (id)
 );
 
 create table changelog
@@ -109,22 +111,22 @@ create table booking_record
     primary key (ledger_id, booking_id, id),
     FOREIGN KEY (ledger_id, booking_id) REFERENCES booking (ledger_id, id),
     FOREIGN KEY (ledger_id) REFERENCES ledger (id),
-    FOREIGN KEY (category_id) REFERENCES category (id)
+    FOREIGN KEY (category_id, ledger_id) REFERENCES category (id, ledger_id)
 );
 
 create table bank_transaction
 (
-    bank_account_id           text      not null,
-    id                        INTEGER   not null,
-    description               text,
-    ledger_id                 text      not null,
-    bank_id                   text      not null,
-    datetime                  timestamp not null,
-    amount                    integer   not null,
-    balance                   integer   not null,
+    bank_account_id    text      not null,
+    id                 INTEGER   not null,
+    description        text,
+    ledger_id          text      not null,
+    bank_id            text      not null,
+    datetime           timestamp not null,
+    amount             integer   not null,
+    balance            integer   not null,
 
-    matched_ledger_id         text,
-    matched_booking_id        text,
+    matched_ledger_id  text,
+    matched_booking_id text,
 
     primary key (bank_account_id, id),
     foreign key (bank_id) references bank (id),

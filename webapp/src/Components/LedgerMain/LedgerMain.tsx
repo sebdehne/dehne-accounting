@@ -17,7 +17,7 @@ import {PeriodSelector} from "../PeriodSelectors/PeriodSelector";
 import {useGlobalState} from "../../utils/userstate";
 
 export const LedgerMain = () => {
-    const {userState} = useGlobalState();
+    const {userState, setUserState} = useGlobalState();
     const [ledger, setLedger] = useState<LedgerView>();
 
     let navigate = useNavigate();
@@ -33,17 +33,24 @@ export const LedgerMain = () => {
         } else if (userState && !userState.ledgerId) {
             navigate('/ledger', {replace: true});
         }
-    }, [setLedger, userState]);
+    }, [setLedger, userState, navigate]);
+
+    const onHeaderClick = () => {
+        setUserState(prev => ({
+            ...prev,
+            ledgerId: undefined
+        }))
+    }
 
     return (
         <Container maxWidth="sm" className="App">
             <Header
                 title={"Ledger: " + ledger?.name ?? ""}
+                clickable={onHeaderClick}
             />
 
             {ledger && <BankAccounts ledger={ledger}/>}
             {ledger && <LedgerRapport ledger={ledger}/>}
-
         </Container>
     )
 }
@@ -106,7 +113,7 @@ type LedgerRapportProps = {
 }
 const LedgerRapport = ({ledger}: LedgerRapportProps) => {
     const [ledgerRapport, setLedgerRapport] = useState<LedgerRapportNode[]>([]);
-    const {userState, setUserState} = useGlobalState();
+    const {userState} = useGlobalState();
 
     useEffect(() => {
         const subId = WebsocketService.subscribe({

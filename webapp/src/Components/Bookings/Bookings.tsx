@@ -47,7 +47,7 @@ export const Bookings = () => {
             )
             return () => WebsocketService.unsubscribe(subId);
         }
-    }, [setBookings, ledger]);
+    }, [setBookings, ledger, userState.bookingsState]);
 
     const deleteBooking = useCallback((bookingId: number) => {
         if (ledger) {
@@ -59,13 +59,18 @@ export const Bookings = () => {
         }
     }, [ledger]);
 
+    const getCategory = useCallback((categoryId: string) =>
+            categoriesAsList.find(c => c.id === categoryId)!,
+        [categoriesAsList]
+    );
+
     const filterFn = (b: BookingView): boolean => {
 
         const strings = [
             b.description,
             ...b.records.map(r => r.description),
-            ...b.records.map(r => r.category.name),
-            ...b.records.map(r => categoryParentsPath(categoriesAsList, r.category.parentCategoryId)),
+            ...b.records.map(r => getCategory(r.categoryId).name),
+            ...b.records.map(r => categoryParentsPath(categoriesAsList, getCategory(r.categoryId).parentCategoryId)),
         ].filter(s => !!s)
             .map(s => s!.toLowerCase());
 
@@ -109,9 +114,6 @@ export const Bookings = () => {
                             {b.description && <div className="BookingHeaderSummaryDescription"> - {b.description}</div>}
                         </div>
                         <div className="BookingHeaderRight">
-                            {!editMode && b.bookingType === "payment" && <div className="BookingTypePayment">{b.bookingType}</div>}
-                            {!editMode && b.bookingType === "income" && <div className="BookingTypeIncome">{b.bookingType}</div>}
-                            {!editMode && b.bookingType !== "income" && b.bookingType !== "payment" && <div className="BookingTypeOther">{b.bookingType}</div>}
                             {editMode && <IconButton
                                 size={"small"}
                                 onClick={() => deleteBooking(b.id)}
@@ -125,11 +127,12 @@ export const Bookings = () => {
                             <div className="BookingRecordLeft">
                                 <div className="BookingRecordLeftCategory">
                                     <div className="BookingRecordLeftCategoryPath">
-                                        {categoryParentsPath(categoriesAsList, r.category.parentCategoryId)}
+                                        {categoryParentsPath(categoriesAsList, getCategory(r.categoryId).parentCategoryId)}
                                     </div>
-                                    {r.category.name}
+                                    {getCategory(r.categoryId).name}
                                 </div>
-                                {r.description && <div className="BookingRecordLeftDescription"> - {r.description}</div>}
+                                {r.description &&
+                                    <div className="BookingRecordLeftDescription"> - {r.description}</div>}
                             </div>
                             <div className="BookingRecordRight">
                                 <Amount amountInCents={r.amount}/>

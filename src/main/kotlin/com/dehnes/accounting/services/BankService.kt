@@ -29,6 +29,7 @@ class BankService(
             repository.removeLastBankTransaction(
                 conn,
                 userId,
+                ledgerId,
                 bankAccountId
             )
         }
@@ -45,7 +46,12 @@ class BankService(
             error("User $userId does not have access to this bankAccount")
         }
 
-        val bankTransaction = repository.getBankTransaction(conn, bankAccountId, transactionId)
+        val bankTransaction = repository.getBankTransaction(
+            conn,
+            bankAccountId,
+            transactionId,
+            ledgerId,
+        )
         BankAccountTransactionView(
             bankTransaction.id,
             bankTransaction.description,

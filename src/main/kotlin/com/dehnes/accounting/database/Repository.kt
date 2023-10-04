@@ -1,11 +1,8 @@
 package com.dehnes.accounting.database
 
-import com.dehnes.accounting.api.dtos.CategoryView
 import com.dehnes.accounting.api.dtos.TransactionMatcher
 import com.dehnes.accounting.api.dtos.UserState
 import com.dehnes.accounting.domain.InformationElement
-import com.dehnes.accounting.services.BookingType
-import com.dehnes.accounting.services.Categories
 import com.dehnes.accounting.utils.SqlUtils
 import com.dehnes.smarthome.utils.toLong
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -143,9 +140,7 @@ class Repository(
             preparedStatement.executeQuery().use { rs ->
                 val l = mutableListOf<LedgerDto>()
                 while (rs.next()) {
-                    l.add(
-                        toLedger(rs)
-                    )
+                    l.add(toLedger(rs))
                 }
                 l
             }
@@ -161,33 +156,50 @@ class Repository(
         }
 
     private fun toLedger(rs: ResultSet) = LedgerDto(
-        rs.getString("id"),
-        rs.getString("name"),
-        rs.getString("description"),
-        rs.getLong("bookings_counter"),
+        id = rs.getString("id"),
+        name = rs.getString("name"),
+        description = rs.getString("description"),
+        configuration = objectMapper.readValue(rs.getString("configuration_json")),
     )
 
     fun addOrReplaceLedger(connection: Connection, userId: String, ledger: LedgerDto) {
         val updated =
-            connection.prepareStatement("UPDATE ledger SET name=?, description=? WHERE id=?")
+            connection.prepareStatement(
+                """
+                UPDATE ledger SET 
+                    name=?, 
+                    description=?, 
+                    configuration_json=? 
+                WHERE id=?
+            """.trimIndent()
+            )
                 .use { preparedStatement ->
                     preparedStatement.setString(1, ledger.name)
                     preparedStatement.setString(2, ledger.description)
-                    preparedStatement.setString(3, ledger.id)
+                    preparedStatement.setString(3, objectMapper.writeValueAsString(ledger.configuration))
+                    preparedStatement.setString(4, ledger.id)
                     preparedStatement.executeUpdate() == 1
                 }
 
         if (updated) {
             changelog.add(connection, userId, ChangeLogEventType.legderUpdated, ledger)
         } else {
-            connection.prepareStatement("INSERT INTO ledger (id, name, description, bookings_counter) VALUES (?,?,?,?)")
-                .use { preparedStatement ->
-                    preparedStatement.setString(1, ledger.id)
-                    preparedStatement.setString(2, ledger.name)
-                    preparedStatement.setString(3, ledger.description)
-                    preparedStatement.setLong(4, 0L)
-                    check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
-                }
+            connection.prepareStatement(
+                """
+                INSERT INTO ledger (
+                    id, 
+                    name, 
+                    description, 
+                    configuration_json
+                ) VALUES (?,?,?,?)
+            """.trimIndent()
+            ).use { preparedStatement ->
+                preparedStatement.setString(1, ledger.id)
+                preparedStatement.setString(2, ledger.name)
+                preparedStatement.setString(3, ledger.description)
+                preparedStatement.setString(4, objectMapper.writeValueAsString(ledger.configuration))
+                check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
+            }
             changelog.add(connection, userId, ChangeLogEventType.legderAdded, ledger)
         }
     }
@@ -219,15 +231,17 @@ class Repository(
             }
         }
 
-    fun getBankAccount(connection: Connection, bankAccountId: String): BankAccountDto? =
-        connection.prepareStatement("SELECT * FROM bank_account WHERE id=?").use { preparedStatement ->
-            preparedStatement.setString(1, bankAccountId)
-            preparedStatement.executeQuery().use { rs ->
-                if (rs.next()) {
-                    toBankAccount(rs)
-                } else null
+    fun getBankAccount(connection: Connection, ledgerId: String, bankAccountId: String): BankAccountDto? =
+        connection.prepareStatement("SELECT * FROM bank_account WHERE id=? and ledger_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, bankAccountId)
+                preparedStatement.setString(2, ledgerId)
+                preparedStatement.executeQuery().use { rs ->
+                    if (rs.next()) {
+                        toBankAccount(rs)
+                    } else null
+                }
             }
-        }
 
     private fun toBankAccount(rs: ResultSet) = BankAccountDto(
         rs.getString("id"),
@@ -248,14 +262,16 @@ class Repository(
     private fun setTransactionsCountAndBalance(
         connection: Connection,
         bankAccountId: String,
+        ledgerId: String,
         newCount: Long,
         newBalance: Long
     ) {
-        connection.prepareStatement("UPDATE bank_account SET transactions_counter = ?, current_balance = ? WHERE id = ?")
+        connection.prepareStatement("UPDATE bank_account SET transactions_counter = ?, current_balance = ? WHERE id = ? and ledger_id = ?")
             .use { preparedStatement ->
                 preparedStatement.setLong(1, newCount)
                 preparedStatement.setLong(2, newBalance)
                 preparedStatement.setString(3, bankAccountId)
+                preparedStatement.setString(4, ledgerId)
                 check(preparedStatement.executeUpdate() == 1)
             }
     }
@@ -263,13 +279,15 @@ class Repository(
     private fun setTransactionsCounterUnbooked(
         connection: Connection,
         userId: String,
+        ledgerId: String,
         bankAccountId: String,
         newUnbooked: Long,
     ) {
-        connection.prepareStatement("UPDATE bank_account SET transactions_counter_unbooked = ? WHERE id = ?")
+        connection.prepareStatement("UPDATE bank_account SET transactions_counter_unbooked = ? WHERE id = ? and ledger_id = ?")
             .use { preparedStatement ->
                 preparedStatement.setLong(1, newUnbooked)
                 preparedStatement.setString(2, bankAccountId)
+                preparedStatement.setString(3, ledgerId)
                 check(preparedStatement.executeUpdate() == 1)
             }
 
@@ -278,13 +296,15 @@ class Repository(
 
     private fun decreaseUnbookedCounter(
         connection: Connection,
+        ledgerId: String,
         userId: String,
         bankAccountId: String,
     ) {
-        val b = getBankAccount(connection, bankAccountId) ?: error("No such bank account $bankAccountId")
+        val b = getBankAccount(connection, ledgerId, bankAccountId) ?: error("No such bank account $bankAccountId")
         setTransactionsCounterUnbooked(
             connection = connection,
             userId = userId,
+            ledgerId = ledgerId,
             bankAccountId = bankAccountId,
             newUnbooked = b.transactionsCounterUnbooked - 1,
         )
@@ -293,12 +313,14 @@ class Repository(
     private fun increaseUnbookedCounter(
         connection: Connection,
         userId: String,
+        ledgerId: String,
         bankAccountId: String,
     ) {
-        val b = getBankAccount(connection, bankAccountId) ?: error("No such bank account $bankAccountId")
+        val b = getBankAccount(connection, ledgerId, bankAccountId) ?: error("No such bank account $bankAccountId")
         setTransactionsCounterUnbooked(
             connection = connection,
             userId = userId,
+            ledgerId = ledgerId,
             bankAccountId = bankAccountId,
             newUnbooked = b.transactionsCounterUnbooked + 1,
         )
@@ -358,7 +380,6 @@ class Repository(
 
         changelog.add(connection, userId, ChangeLogEventType.bankAccountAdded, bankAccount)
     }
-
 
     fun removeBankAccount(connection: Connection, userId: String, bankAccountId: String) {
         val deleted = connection.prepareStatement("DELETE FROM bank_account WHERE id=?").use { preparedStatement ->
@@ -429,8 +450,9 @@ class Repository(
     /*
      * Category
      */
-    fun getAllCategories(connection: Connection): List<CategoryDto> =
-        connection.prepareStatement("SELECT * FROM category").use { preparedStatement ->
+    fun getAllCategories(connection: Connection, ledgerId: String): List<CategoryDto> =
+        connection.prepareStatement("SELECT * FROM category where ledger_id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, ledgerId)
             preparedStatement.executeQuery().use { rs ->
                 val l = mutableListOf<CategoryDto>()
                 while (rs.next()) {
@@ -440,6 +462,7 @@ class Repository(
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("parent_category_id"),
+                            rs.getString("ledger_id"),
                         )
                     )
                 }
@@ -447,55 +470,68 @@ class Repository(
             }
         }
 
-    fun addOrReplaceCategory(connection: Connection, userId: String, category: CategoryDto) {
+    fun addOrReplaceCategory(
+        connection: Connection,
+        userId: String,
+        category: CategoryDto
+    ) {
         val updated =
-            connection.prepareStatement("UPDATE category SET name=?, description=?,parent_category_id=? WHERE id=?")
+            connection.prepareStatement(
+                """
+                UPDATE category SET 
+                    name=?, 
+                    description=?,
+                    parent_category_id=? 
+                WHERE id=? and ledger_id = ?
+            """.trimIndent()
+            )
                 .use { preparedStatement ->
                     preparedStatement.setString(1, category.name)
                     preparedStatement.setString(2, category.description)
                     preparedStatement.setString(3, category.parentCategoryId)
                     preparedStatement.setString(4, category.id)
+                    preparedStatement.setString(5, category.ledgerId)
                     preparedStatement.executeUpdate() == 1
                 }
 
         if (updated) {
             changelog.add(connection, userId, ChangeLogEventType.categoryUpdated, category)
         } else {
-            connection.prepareStatement("INSERT INTO category (id, name, description,parent_category_id) VALUES (?,?,?,?)")
+            connection.prepareStatement(
+                """
+                INSERT INTO category (
+                    id, 
+                    name, 
+                    description,
+                    parent_category_id,
+                    ledger_id
+                ) VALUES (?,?,?,?,?)
+            """.trimIndent()
+            )
                 .use { preparedStatement ->
                     preparedStatement.setString(1, category.id)
                     preparedStatement.setString(2, category.name)
                     preparedStatement.setString(3, category.description)
                     preparedStatement.setString(4, category.parentCategoryId)
+                    preparedStatement.setString(5, category.ledgerId)
                     check(preparedStatement.executeUpdate() == 1) { "Could not insert after failed update" }
                 }
             changelog.add(connection, userId, ChangeLogEventType.categoryAdded, category)
         }
     }
 
-    fun updateCategoryParent(connection: Connection, userId: String, categoryId: String, parentCategoryId: String?) {
-        connection.prepareStatement("UPDATE category SET parent_category_id=? WHERE id=?")
-            .use { preparedStatement ->
-                preparedStatement.setString(3, parentCategoryId)
-                preparedStatement.setString(4, categoryId)
-                check(preparedStatement.executeUpdate() == 1)
-            }
-        changelog.add(
-            connection,
-            userId,
-            ChangeLogEventType.categoryUpdated,
-            mapOf("id" to categoryId, "parentCategoryId" to parentCategoryId)
-        )
-    }
-
-    fun removeCategory(connection: Connection, userId: String, categoryId: String) {
-        val deleted = connection.prepareStatement("DELETE FROM category WHERE id=?").use { preparedStatement ->
+    fun removeCategory(
+        connection: Connection,
+        userId: String,
+        ledgerId: String,
+        categoryId: String
+    ) {
+        connection.prepareStatement("DELETE FROM category WHERE id=? AND ledger_id = ?").use { preparedStatement ->
             preparedStatement.setString(1, categoryId)
-            preparedStatement.executeUpdate() == 0
+            preparedStatement.setString(2, ledgerId)
+            preparedStatement.executeUpdate()
         }
-        if (deleted) {
-            changelog.add(connection, userId, ChangeLogEventType.categoryRemoved, mapOf("id" to categoryId))
-        }
+        changelog.add(connection, userId, ChangeLogEventType.categoryRemoved, mapOf("id" to categoryId))
     }
 
     /*
@@ -562,10 +598,10 @@ class Repository(
     }
 
     fun removeMatcher(connection: Connection, userId: String, matcherId: String) {
-            connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
-                preparedStatement.setString(1, matcherId)
-                preparedStatement.executeUpdate()
-            }
+        connection.prepareStatement("DELETE FROM bank_transaction_matchers where id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, matcherId)
+            preparedStatement.executeUpdate()
+        }
         changelog.add(connection, userId, ChangeLogEventType.matcherRemoved, mapOf("id" to matcherId))
     }
 
@@ -615,11 +651,13 @@ class Repository(
         connection: Connection,
         bankAccountId: String,
         id: Long,
+        ledgerId: String,
     ): BankTransaction =
-        connection.prepareStatement("SELECT * FROM bank_transaction where bank_account_id = ? and id = ?")
+        connection.prepareStatement("SELECT * FROM bank_transaction where bank_account_id = ? and id = ? and ledger_id = ?")
             .use { preparedStatement ->
                 preparedStatement.setString(1, bankAccountId)
                 preparedStatement.setLong(2, id)
+                preparedStatement.setString(3, ledgerId)
                 preparedStatement.executeQuery().use { rs ->
                     check(rs.next())
                     toBankTransaction(rs)
@@ -641,15 +679,27 @@ class Repository(
         },
     )
 
-    fun removeLastBankTransaction(connection: Connection, userId: String, bankAccountId: String) {
-        val bankAccount = getBankAccount(connection, bankAccountId) ?: error("Unknown bank account $bankAccountId")
-        val lastTransaction = getBankTransaction(connection, bankAccountId, bankAccount.transactionsCounter)
+    fun removeLastBankTransaction(
+        connection: Connection,
+        userId: String,
+        ledgerId: String,
+        bankAccountId: String
+    ) {
+        val bankAccount =
+            getBankAccount(connection, ledgerId, bankAccountId) ?: error("Unknown bank account $bankAccountId")
+        val lastTransaction = getBankTransaction(
+            connection = connection,
+            bankAccountId = bankAccountId,
+            id = bankAccount.transactionsCounter,
+            ledgerId = ledgerId
+        )
         check(lastTransaction.matchedBookingId == null) { "Cannot a matched transaction, remove booking reference first" }
 
-        connection.prepareStatement("DELETE FROM bank_transaction WHERE bank_account_id = ? and id = ?")
+        connection.prepareStatement("DELETE FROM bank_transaction WHERE bank_account_id = ? and id = ? and ledger_id = ?")
             .use { preparedStatement ->
                 preparedStatement.setString(1, bankAccount.id)
                 preparedStatement.setLong(2, bankAccount.transactionsCounter)
+                preparedStatement.setString(3, ledgerId)
                 check(preparedStatement.executeUpdate() == 1) { "Could not remove last bank transkaction" }
             }
 
@@ -657,12 +707,14 @@ class Repository(
             connection = connection,
             bankAccountId = bankAccountId,
             newCount = bankAccount.transactionsCounter - 1,
+            ledgerId = ledgerId,
             newBalance = lastTransaction.balance - lastTransaction.amount
         )
         decreaseUnbookedCounter(
-            connection,
-            userId,
-            bankAccountId
+            connection = connection,
+            ledgerId = ledgerId,
+            userId = userId,
+            bankAccountId = bankAccountId
         )
 
         changelog.add(
@@ -675,7 +727,7 @@ class Repository(
 
 
     fun addBankTransaction(connection: Connection, userId: String, bankTransaction: BankTransactionAdd): Long {
-        val bankAccount = getBankAccount(connection, bankTransaction.bankAccountId)
+        val bankAccount = getBankAccount(connection, bankTransaction.ledgerId, bankTransaction.bankAccountId)
             ?: error("Unknown bank account ${bankTransaction.bankAccountId}")
         val nextId = bankAccount.transactionsCounter + 1
         val newBalance = bankAccount.currentBalance + bankTransaction.amount
@@ -715,8 +767,9 @@ class Repository(
             bankAccountId = bankAccount.id,
             newCount = nextId,
             newBalance = newBalance,
+            ledgerId = bankTransaction.ledgerId,
         )
-        increaseUnbookedCounter(connection, userId, bankAccount.id)
+        increaseUnbookedCounter(connection, userId, bankTransaction.ledgerId, bankAccount.id)
 
         changelog.add(connection, userId, ChangeLogEventType.bankTransactionAdded, bankTransaction)
 
@@ -737,17 +790,23 @@ class Repository(
                 matched_ledger_id =?, 
                 matched_booking_id = ? 
             WHERE 
-                bank_account_id = ? AND id = ?
+                bank_account_id = ? AND id = ? and ledger_id = ?
         """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setString(1, ledgerId)
             preparedStatement.setLong(2, bookingId)
             preparedStatement.setString(3, bankAccountId)
             preparedStatement.setLong(4, transactionId)
+            preparedStatement.setString(5, ledgerId)
             check(preparedStatement.executeUpdate() == 1)
         }
 
-        decreaseUnbookedCounter(connection, userId, bankAccountId)
+        decreaseUnbookedCounter(
+            connection = connection,
+            ledgerId = ledgerId,
+            userId = userId,
+            bankAccountId = bankAccountId
+        )
     }
 
     fun findMatchedTransactions(
@@ -772,6 +831,7 @@ class Repository(
         connection: Connection,
         userId: String,
         bankTransaction: BankTransaction,
+        ledgerId: String,
     ) {
         connection.prepareStatement(
             """
@@ -779,15 +839,16 @@ class Repository(
                 matched_ledger_id = null, 
                 matched_booking_id = null
             WHERE 
-                bank_account_id = ? AND id = ?
+                bank_account_id = ? AND id = ? AND ledger_id = ?
         """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setString(1, bankTransaction.bankAccountId)
             preparedStatement.setLong(2, bankTransaction.id)
+            preparedStatement.setString(3, ledgerId)
             check(preparedStatement.executeUpdate() == 1)
         }
 
-        increaseUnbookedCounter(connection, userId, bankTransaction.bankAccountId)
+        increaseUnbookedCounter(connection, userId, ledgerId, bankTransaction.bankAccountId)
     }
 
     /*
@@ -798,7 +859,7 @@ class Repository(
         check(booking.records.sumOf { it.amount } == 0L) { "Records to not accumulate to zero" }
 
         val ledger = getLedger(connection, booking.ledgerId)
-        val nextId = ledger.bookingsCounter + 1
+        val nextId = ledger.configuration.bookingsCounter + 1
 
         connection.prepareStatement(
             """
@@ -842,23 +903,13 @@ class Repository(
 
         changelog.add(connection, userId, ChangeLogEventType.bookingAdded, booking)
 
-        run {
-            connection.prepareStatement("UPDATE ledger SET bookings_counter = ? WHERE id = ?")
-                .use { preparedStatement ->
-                    preparedStatement.setLong(1, nextId)
-                    preparedStatement.setString(2, ledger.id)
-                    check(preparedStatement.executeUpdate() == 1)
-                }
-            changelog.add(connection, userId, ChangeLogEventType.legderUpdated, mapOf("id" to nextId))
-        }
+        addOrReplaceLedger(connection, userId, ledger.addBookingsCounter(1))
 
         return nextId
-
     }
 
     fun getBookings(
         connection: Connection,
-        categories: Categories,
         ledgerId: String,
         limit: Int,
         vararg filters: BookingsFilter?,
@@ -922,7 +973,7 @@ class Repository(
                     bId,
                     r.bookingRecordId,
                     r.bookingRecordDescription,
-                    categories.getView(r.categoryId),
+                    r.categoryId,
                     r.amountInCents,
                 )
             }
@@ -932,7 +983,6 @@ class Repository(
                 bookingRecord.bookingDescription,
                 bookingRecord.datetime,
                 bookingRecordViews,
-                BookingType.determineTime(bookingRecordViews, categories)
             )
         }
     }
@@ -943,7 +993,8 @@ class Repository(
             unmatchBankTransaction(
                 connection,
                 userId,
-                bankTransaction
+                bankTransaction,
+                ledgerId
             )
         }
 
@@ -1061,8 +1112,21 @@ data class LedgerDto(
     override val id: String,
     override val name: String,
     override val description: String?,
-    val bookingsCounter: Long,
-) : InformationElement()
+    val configuration: LedgerConfiguration,
+) : InformationElement() {
+    fun addBookingsCounter(delta: Int) = copy(
+        configuration = configuration.copy(
+            bookingsCounter = configuration.bookingsCounter + delta
+        )
+    )
+}
+
+data class LedgerConfiguration(
+    val bookingsCounter: Long = 0,
+    val categoryIdsForExpensesAndIncome: List<String> = emptyList(),
+    val categoryIdsForBankAccounts: List<String> = emptyList(),
+    val categoryIdsForPayees: List<String> = emptyList(),
+)
 
 data class BankAccountDto(
     override val id: String,
@@ -1100,6 +1164,7 @@ data class CategoryDto(
     override val name: String,
     override val description: String?,
     val parentCategoryId: String?,
+    val ledgerId: String,
 ) : InformationElement()
 
 
@@ -1143,7 +1208,7 @@ data class BookingRecordView(
     val bookingId: Long,
     val id: Long,
     val description: String?,
-    val category: CategoryView,
+    val categoryId: String,
     val amount: Long,
 )
 
@@ -1153,7 +1218,6 @@ data class BookingView(
     val description: String?,
     val datetime: Instant,
     val records: List<BookingRecordView>,
-    val bookingType: BookingType,
 )
 
 data class BookingBookingRecord(

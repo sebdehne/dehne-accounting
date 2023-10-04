@@ -1,4 +1,4 @@
-import {CategoryView} from "./categories";
+import {CategoryDto} from "./categories";
 
 
 export type GetBookingsRequest = {
@@ -13,10 +13,7 @@ export type BookingView = {
     description?: string;
     datetime: string;
     records: BookingRecordView[],
-    bookingType: BookingType,
 }
-
-export type BookingType = 'payment' | 'income' | 'transfer' | 'internalBooking'
 
 
 export type  BookingRecordView = {
@@ -24,7 +21,7 @@ export type  BookingRecordView = {
     bookingId: number;
     id: number;
     description?: string;
-    category: CategoryView,
+    categoryId: string,
     amount: number;
 }
 

@@ -3,7 +3,7 @@ import {UserView} from "./user";
 import {BankAccountView, BankTransactionRequest} from "./bankaccount";
 import {LedgerRapportNode, LedgerRapportRequest} from "./ledger_rapport";
 import {BankAccountTransactionView, BankTransactionsRequest} from "./banktransactions";
-import {CategoryView} from "./categories";
+import {CategoryDto} from "./categories";
 import {UserState} from "../../utils/userstate";
 import {GetMatchersRequest, GetMatchersResponse} from "./transactionMatcher";
 import {BookingView, GetBookingsRequest} from "./bookings";
@@ -52,7 +52,7 @@ export type ReadResponse = {
     ledgerRapport?: LedgerRapportNode[];
     bankTransactions?: BankAccountTransactionView[];
     bankTransaction?: BankAccountTransactionView;
-    categories?: CategoryView[];
+    categories?: CategoryDto[];
     userState?: UserState;
     getMatchersResponse?: GetMatchersResponse;
     getBookingsResponse?: BookingView[];

@@ -1,16 +1,16 @@
 import {InformationElement} from "../../Websocket/types/InformationElement";
-import {CategoryView} from "../../Websocket/types/categories";
+import {CategoryDto} from "../../Websocket/types/categories";
 
 
 export interface CategoryTree extends InformationElement {
     children: CategoryTree[];
 }
 
-export const buildTree = (categories: CategoryView[]): CategoryTree[] => {
+export const buildTree = (categories: CategoryDto[]): CategoryTree[] => {
 
     const findChildren = (id: string) => categories.filter(c => c.parentCategoryId === id);
 
-    const toLeaf = (c: CategoryView): CategoryTree => ({
+    const toLeaf = (c: CategoryDto): CategoryTree => ({
         id: c.id,
         name: c.name,
         description: c.description,

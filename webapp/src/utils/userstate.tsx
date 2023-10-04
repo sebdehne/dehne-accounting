@@ -2,13 +2,13 @@ import React, {useContext, useEffect, useState} from 'react';
 import {formatIso, monthDelta, startOfCurrentMonth} from "./formatting";
 import WebsocketClient from "../Websocket/websocketClient";
 import JSONObjectMerge from "json-object-merge";
-import {CategoryView} from "../Websocket/types/categories";
+import {CategoryDto} from "../Websocket/types/categories";
 import {buildTree, CategoryTree} from "../Components/CategorySearchBox/CategoryTree";
 
 type ContextType = {
     userState: UserStateFrontendState;
     setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => Promise<void>;
-    categoriesAsList: CategoryView[];
+    categoriesAsList: CategoryDto[];
     categoriesAsTree: CategoryTree[];
 }
 
@@ -17,7 +17,7 @@ const GlobalStateProviderContext = React.createContext({} as ContextType);
 export type UserStateProviderProps = {
     children?: React.ReactNode;
     userStateInit?: UserStateFrontendState;
-    categoriesAsListInit?: CategoryView[];
+    categoriesAsListInit?: CategoryDto[];
     categoriesAsTreeInit?: CategoryTree[];
 }
 export const GlobalStateProvider = ({
@@ -28,27 +28,31 @@ export const GlobalStateProvider = ({
                                     }: UserStateProviderProps,
 ) => {
     const [userState, setUserState] = useState(userStateInit);
-    const [categoriesAsList, setCategoriesAsList] = useState<CategoryView[]>(categoriesAsListInit);
+    const [categoriesAsList, setCategoriesAsList] = useState<CategoryDto[]>(categoriesAsListInit);
     const [categoriesAsTree, setCategoriesAsTree] = useState<CategoryTree[]>(categoriesAsTreeInit);
 
     useEffect(() => {
-        const subId = WebsocketClient.subscribe({type: 'userState'},
+        const subId = WebsocketClient.subscribe(
+            {type: 'userState'},
             notify => setUserState(
                 createDefault(notify.readResponse.userState!.frontendState)
             )
         )
         return () => WebsocketClient.unsubscribe(subId);
     }, [setUserState]);
+
     useEffect(() => {
-        const subId = WebsocketClient.subscribe(
-            {type: "allCategories"},
-            notify => {
-                setCategoriesAsList(notify.readResponse.categories!);
-                setCategoriesAsTree(buildTree(notify.readResponse.categories!))
-            }
-        );
-        return () => WebsocketClient.unsubscribe(subId);
-    }, [setCategoriesAsList, setCategoriesAsTree]);
+        if (userState?.ledgerId) {
+            const subId = WebsocketClient.subscribe(
+                {type: "allCategories", ledgerId: userState.ledgerId},
+                notify => {
+                    setCategoriesAsList(notify.readResponse.categories!);
+                    setCategoriesAsTree(buildTree(notify.readResponse.categories!))
+                }
+            );
+            return () => WebsocketClient.unsubscribe(subId);
+        }
+    }, [setCategoriesAsList, setCategoriesAsTree, userState?.ledgerId]);
 
     const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
         const updated = fn(userState);

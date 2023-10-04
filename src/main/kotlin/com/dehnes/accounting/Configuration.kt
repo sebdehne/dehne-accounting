@@ -48,7 +48,7 @@ class Configuration {
         val bankService = BankService(bookingReadService, repository, datasource)
         val rapportService = RapportService(repository, categoryService, datasource)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
-        val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService, categoryService)
+        val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
         val userStateService = UserStateService(datasource, repository)
         val readService = ReadService(
             bookingReadService,

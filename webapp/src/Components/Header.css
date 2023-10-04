@@ -1,0 +1,9 @@
+
+.HeaderAsLink {
+    cursor: pointer;
+    text-align: center;
+}
+
+.HeaderNoLink {
+    text-align: center;
+}

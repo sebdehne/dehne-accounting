@@ -1,6 +1,7 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.database.BookingView
+import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.ChangeLogEventType
 import com.dehnes.accounting.database.ChangeLogEventType.*
 
@@ -60,7 +61,7 @@ data class ReadResponse(
     val ledgerRapport: List<LedgerRapportNode>? = null,
     val bankTransactions: List<BankAccountTransactionView>? = null,
     val bankTransaction: BankAccountTransactionView? = null,
-    val categories: List<CategoryView>? = null,
+    val categories: List<CategoryDto>? = null,
     val userState: UserState? = null,
     val getMatchersResponse: GetMatchersResponse? = null,
     val getBookingsResponse: List<BookingView>? = null,
