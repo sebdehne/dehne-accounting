@@ -7,22 +7,24 @@ import {useGlobalState} from "../../utils/userstate";
 export type NameEditorProps = {
     matcher: TransactionMatcher;
     setMatcher: React.Dispatch<React.SetStateAction<TransactionMatcher>>;
+    editMode: boolean;
 }
-export const NameEditor = ({matcher, setMatcher}: NameEditorProps) => {
+export const NameEditor = ({matcher, setMatcher, editMode}: NameEditorProps) => {
     const {categoriesAsList} = useGlobalState();
 
     useEffect(() => {
-        let initialName = "";
-        if (matcher.action.type === "paymentOrIncome") {
-            const firstRule = matcher.action.paymentOrIncomeConfig!;
-            initialName = categoriesAsList.find(c => c.id === firstRule.mainSide.categoryIdRemaining)?.name ?? ''
+        if (!editMode) {
+            let initialName = "";
+            if (matcher.action.type === "paymentOrIncome") {
+                const firstRule = matcher.action.paymentOrIncomeConfig!;
+                initialName = categoriesAsList.find(c => c.id === firstRule.mainSide.categoryIdRemaining)?.name ?? ''
+            }
+
+            setMatcher(({
+                ...matcher,
+                name: initialName
+            }))
         }
-
-        setMatcher(({
-            ...matcher,
-            name: initialName
-        }))
-
     }, []);
 
     return (<div>

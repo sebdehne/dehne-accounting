@@ -67,11 +67,13 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
                 setConfig={setConfig(false)}/>
         </div>}
         {matcher.action.type === "bankTransfer" && <div>
-            <CategorySearchBox includeIntermediate={true} onSelectedCategoryId={category => setMatcher(prevState => ({
+            <CategorySearchBox
+                defaultCategoryId={matcher.action.transferCategoryId}
+                includeIntermediate={true}
+                onSelectedCategoryId={category => setMatcher(prevState => ({
                 ...prevState,
                 action: {
                     ...prevState.action,
-                    transferCategory: category,
                     transferCategoryId: category.category.id
                 }
             }))}/>
@@ -137,6 +139,7 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
                     onChange={event => setAddFixedMappingAmountInCents(event.target.value ?? '')}
                 />
                 <CategorySearchBox
+                    defaultCategoryId={undefined}
                     includeIntermediate={true}
                     onSelectedCategoryId={category => setAddFixedMappingCategory(category)}
                     title={"Fixed mapping category"}
@@ -146,6 +149,7 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
 
             <CategorySearchBox
                 includeIntermediate={true}
+                defaultCategoryId={config.categoryIdRemaining}
                 onSelectedCategoryId={category => setConfig(({
                     ...config,
                     categoryIdRemaining: category.category.id

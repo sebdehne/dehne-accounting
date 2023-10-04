@@ -1,11 +1,14 @@
 - matcher: filter editor - search bank accounts when transfer
-- show general errors in client
 
-Bank Transactions:
-- remove last TX
-
+Bookings:
+- show category parents path
+- (category/free text) filter / search
+- UI for add/edit booking
+- bulk edit - how?
 
 Categories:
+- only admin?
+- namespace per ledger?
 - list
 - add
 - edit
@@ -23,7 +26,10 @@ Users:
 - remove
 
 ==== lower priority ==== :
-- are-you-sure-dialog?
+- show general errors in client
+
+- add new matcher: automatic name generation picks the wrong side
+- are-you-sure-dialog on delete(s)?
 
 Balance-sheet:
 - configure which categories go where

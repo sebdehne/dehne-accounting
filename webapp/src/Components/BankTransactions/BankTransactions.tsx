@@ -1,6 +1,6 @@
 import {useNavigate} from "react-router-dom";
 import Header from "../Header";
-import {Button, Container} from "@mui/material";
+import {Button, Container, FormControlLabel, Switch} from "@mui/material";
 import React, {useCallback, useEffect, useState} from "react";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {BankAccountView} from "../../Websocket/types/bankaccount";
@@ -14,11 +14,14 @@ import CheckIcon from '@mui/icons-material/Check';
 import IconButton from "@mui/material/IconButton";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import {useGlobalState} from "../../utils/userstate";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 export const BankTransactions = () => {
     const {userState, setUserState} = useGlobalState();
     const [bankAccount, setBankAccount] = useState<BankAccountView>()
     const [transactions, setTransactions] = useState<BankAccountTransactionView[]>();
+    const [editMode, setEditMode] = useState(false);
 
     useEffect(() => {
         if (userState.ledgerId && userState.bankAccountId) {
@@ -77,31 +80,53 @@ export const BankTransactions = () => {
         <Container maxWidth="sm" className="App">
             <Header title={bankAccount?.name ?? "Bank account: ..."}/>
 
-            <Button onClick={() => navigate('/bankaccount/import')}>Import</Button>
-            <Button onClick={removeLastBankTransaction}>Delete last TX</Button>
+            <div className="HeaderLine">
+                {editMode && <div>
+                    <Button variant={"contained"} onClick={() => navigate('/bankaccount/import')}>
+                        <CloudUploadIcon/>&nbsp;Import
+                    </Button>
+                    <Button variant={"outlined"} onClick={removeLastBankTransaction}>
+                        <DeleteIcon/>Delete last TX
+                    </Button>
+                </div>}
+                {!editMode && <div></div>}
+                <div><FormControlLabel
+                    control={
+                        <Switch
+                            checked={editMode}
+                            onChange={(event, checked) => setEditMode(checked)}
+                        />}
+                    label="Edit mode"
+                    labelPlacement="end"
+                /></div>
+            </div>
 
             <PeriodSelector periodLocationInUserState={['bankTransactionsState', 'currentPeriod']}/>
 
             {(transactions?.length ?? 0) > 0 && <ul className="Transactions">
-                {transactions?.map(t => (<li className="Transaction" key={t.id}>
-                    <div className="TransactionSummary">
-                        <div style={{
-                            marginRight: '10px',
-                            color: '#a2a2a2',
-                            width: '70px'
-                        }}>{formatLocatDayMonth(moment(t.datetime))}</div>
-                        <div>{t.description}</div>
-                    </div>
-                    <div className="TransactionAmounts">
-                        <Amount amountInCents={t.amount}/>
-                        <div style={{color: '#a2a2a2', marginLeft: '8px'}}><Amount amountInCents={t.balance}/></div>
-                        {t.matched && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
-                        {!t.matched && <div style={{width: '24px', height: '30px'}}>
-                            <IconButton
-                                onClick={() => bookTransaction(t.id)}>
-                                <ArrowRightIcon fontSize="inherit"/>
-                            </IconButton>
-                        </div>}
+                {transactions?.map(t => (<li
+                    className="TransactionAndEdit" key={t.id}
+                >
+                    <div className="Transaction">
+                        <div className="TransactionSummary">
+                            <div style={{
+                                marginRight: '10px',
+                                color: '#a2a2a2',
+                                width: '70px'
+                            }}>{formatLocatDayMonth(moment(t.datetime))}</div>
+                            <div>{t.description}</div>
+                        </div>
+                        <div className="TransactionAmounts">
+                            <Amount amountInCents={t.amount}/>
+                            <div style={{color: '#a2a2a2', marginLeft: '8px'}}><Amount amountInCents={t.balance}/></div>
+                            {t.matched && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
+                            {!t.matched && <div style={{width: '24px', height: '30px'}}>
+                                <IconButton
+                                    onClick={() => bookTransaction(t.id)}>
+                                    <ArrowRightIcon fontSize="inherit"/>
+                                </IconButton>
+                            </div>}
+                        </div>
                     </div>
                 </li>))}
             </ul>}
@@ -109,3 +134,4 @@ export const BankTransactions = () => {
         </Container>
     )
 }
+

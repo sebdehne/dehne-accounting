@@ -106,8 +106,8 @@ enum class BookingType {
             return when {
                 rootsAndDirections.all { it.first in accounts } -> transfer
                 rootsAndDirections.all { it.first in bookings } -> internalBooking
-                rootsAndDirections.any { it.first == RootCategory.Parties && it.second == 1 } -> income
-                rootsAndDirections.any { it.first == RootCategory.Parties && it.second == -1 } -> payment
+                rootsAndDirections.any { it.first == RootCategory.Parties && it.second == -1 } -> income
+                rootsAndDirections.any { it.first == RootCategory.Parties && it.second == 1 } -> payment
                 else -> error("Unknown booking type")
             }
         }

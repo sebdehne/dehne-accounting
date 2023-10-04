@@ -13,7 +13,12 @@ enum class TransactionMatcherFilterType(
     exact({ba: BankAccountDto,  t, f -> t.description == f.pattern!! }),
     contains({ ba: BankAccountDto, t, f -> t.description?.contains(f.pattern!!) ?: false }),
     amountBetween({ba: BankAccountDto,  t, f ->
-        t.amount in (f.fromAmount!!..f.toAmount!!)
+        val range = if (f.fromAmount!! < f.toAmount!!) {
+            (f.fromAmount..f.toAmount)
+        } else {
+            (f.toAmount..f.fromAmount)
+        }
+        t.amount in range
     }),
     income({ba: BankAccountDto,  t: BankTransaction, f: TransactionMatcherFilter ->
         t.amount > 0

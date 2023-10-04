@@ -8,11 +8,13 @@ export type CategorySearchBoxProps = {
     includeIntermediate: boolean;
     onSelectedCategoryId: (category: SearchableCategory) => void;
     title?: string;
+    defaultCategoryId: string | undefined;
 }
 
 export const CategorySearchBox = ({
                                       includeIntermediate,
                                       onSelectedCategoryId,
+                                      defaultCategoryId,
                                       title = "Search category"
                                   }: CategorySearchBoxProps) => {
     const {categoriesAsTree} = useGlobalState();
@@ -26,6 +28,7 @@ export const CategorySearchBox = ({
             freeSolo
             onChange={(_, value) => onSelectedCategoryId((value as SearchableCategory))}
             disableClearable
+            defaultValue={searchList.find(s => s.category.id === defaultCategoryId)}
             options={searchList}
             getOptionLabel={(option) => (option as SearchableCategory).parentsString + ' -> ' + (option as SearchableCategory).category.name}
             renderInput={(params) => (

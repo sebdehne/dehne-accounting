@@ -83,7 +83,7 @@ export const Bookings = () => {
                         <div className="BookingHeaderSummary">
                             <div>{formatLocatDayMonth(moment(b.datetime))}</div>
                             <div style={{marginLeft: '30px', color: 'darkgrey'}}>{b.bookingType}</div>
-                            <div>{b.description}</div>
+                            {b.description && <div className="BookingHeaderSummaryDescription"> - {b.description}</div>}
                         </div>
                         {editMode && <IconButton
                             size={"small"}
@@ -94,8 +94,8 @@ export const Bookings = () => {
                     <ul className="BookingRecords">
                         {b.records.map(r => (<li key={r.id} className="BookingRecord">
                             <div className="BookingRecordLeft">
-                                <div>{r.category.name}</div>
-                                <div>{r.description}</div>
+                                <div className="BookingRecordLeftCategory">{r.category.name}</div>
+                                {r.description && <div className="BookingRecordLeftDescription"> - {r.description}</div>}
                             </div>
                             <div className="BookingRecordRight">
                                 <Amount amountInCents={r.amount}/>

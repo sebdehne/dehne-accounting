@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './Components/App/App';
 import reportWebVitals from './reportWebVitals';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -17,6 +16,7 @@ import {BookTransaction} from "./Components/TransactionMatching/BookTransaction"
 import {GlobalStateProvider} from "./utils/userstate";
 import {AddOrEditMatcher} from "./Components/AddOrEditMatcher/AddOrEditMatcher";
 import {Bookings} from "./Components/Bookings/Bookings";
+import {ChooseLedger} from "./Components/ChooseLedger/ChooseLedger";
 
 
 const root = ReactDOM.createRoot(
@@ -29,8 +29,8 @@ root.render(
                 <CssBaseline/>
                 <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
                     <Routes>
-                        <Route path="/" element={<App/>}/>
-                        <Route path="/ledger" element={<LedgerMain/>}/>
+                        <Route path="/" element={<LedgerMain/>}/>
+                        <Route path="/ledger" element={<ChooseLedger/>}/>
                         <Route path="/bookings" element={<Bookings/>}/>
                         <Route path="/bankaccount" element={<BankTransactions/>}/>
                         <Route path="/bankaccount/import"

@@ -55,7 +55,7 @@ export const AddOrEditMatcher = () => {
     }, [userState, setMatcher]);
 
     useEffect(() => {
-        if (userState.ledgerId && userState.bankAccountId && userState.transactionId && !matcher) {
+        if (userState.ledgerId && userState.bankAccountId && userState.transactionId && !userState.matcherId) {
             const subId = WebsocketClient.subscribe(
                 {
                     type: "getBankTransaction",
@@ -115,10 +115,6 @@ export const AddOrEditMatcher = () => {
             type: "addOrReplaceMatcher",
             addOrReplaceMatcherRequest: matcher
         })
-            .then(() => setUserState(prev => ({
-                ...prev,
-                matcherId: undefined
-            })))
             .then(() => navigate(-1));
     };
 
@@ -150,6 +146,7 @@ export const AddOrEditMatcher = () => {
                                                   setMatcher={setMatcher as React.Dispatch<React.SetStateAction<TransactionMatcher>>}/>}
                                 {index === 2 &&
                                     <NameEditor matcher={matcher}
+                                                editMode={editMode}
                                                 setMatcher={setMatcher as React.Dispatch<React.SetStateAction<TransactionMatcher>>}/>}
                                 <Box sx={{mb: 2}}>
                                     <div>

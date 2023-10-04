@@ -58,7 +58,7 @@ export const BookTransaction = () => {
                     transactionId={transaction.id}
                     ledgerId={userState.ledgerId!}
                     bankAccountId={userState.bankAccountId!}
-                    onDone={() => navigate('/bankaccount')}
+                    onDone={() => navigate(-1)}
                 />
             }
 
@@ -170,7 +170,8 @@ const MatchersSelector = ({
                         onChange={event => setAllMatchersFilter(event.target.value ?? '')}
                     />
                 </FormControl>
-                <IconButton size="large" onClick={() => addOrEditMatcher(undefined)}><AddIcon fontSize="inherit"/></IconButton>
+                <IconButton size="large" onClick={() => addOrEditMatcher(undefined)}><AddIcon
+                    fontSize="inherit"/></IconButton>
             </div>
 
             <ul className="AllMatchers">

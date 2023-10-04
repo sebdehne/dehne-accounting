@@ -17,25 +17,28 @@ import {PeriodSelector} from "../PeriodSelectors/PeriodSelector";
 import {useGlobalState} from "../../utils/userstate";
 
 export const LedgerMain = () => {
-    const {userState, setUserState} = useGlobalState();
+    const {userState} = useGlobalState();
     const [ledger, setLedger] = useState<LedgerView>();
 
+    let navigate = useNavigate();
+
     useEffect(() => {
-        if (userState.ledgerId) {
+        if (userState && userState.ledgerId) {
             const subId = WebsocketService.subscribe(
                 {type: "getLedgers"},
                 n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
             );
 
             return () => WebsocketService.unsubscribe(subId);
+        } else if (userState && !userState.ledgerId) {
+            navigate('/ledger', {replace: true});
         }
     }, [setLedger, userState]);
-
 
     return (
         <Container maxWidth="sm" className="App">
             <Header
-                title={ledger?.name ?? ""}
+                title={"Ledger: " + ledger?.name ?? ""}
             />
 
             {ledger && <BankAccounts ledger={ledger}/>}
@@ -134,7 +137,7 @@ type LedgerRapportSubProps = {
     node: LedgerRapportNode;
     level: number;
 }
-const LedgerRapportSub = ({node, level, }: LedgerRapportSubProps) => {
+const LedgerRapportSub = ({node, level,}: LedgerRapportSubProps) => {
     const [collapsed, setCollapsed] = useState(true);
 
     return (<div className="LedgerRapportNode">
