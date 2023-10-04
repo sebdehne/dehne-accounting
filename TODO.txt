@@ -1,8 +1,6 @@
 - matcher: filter editor - search bank accounts when transfer
 
 Bookings:
-- show category parents path
-- (category/free text) filter / search
 - UI for add/edit booking
 - bulk edit - how?
 
@@ -40,7 +38,7 @@ Backups:
 - remove
 - take backup
 
-- kMyMoney import via GUI
+- kMyMoney import via GUI, RootCategory enum configurable
 - Error screen when no user-header is detected
 - first time user screen, create admin-user
 

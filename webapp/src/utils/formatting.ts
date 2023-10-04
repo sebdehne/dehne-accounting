@@ -1,4 +1,6 @@
 import moment from "moment";
+import {CategoryTree} from "../Components/CategorySearchBox/CategoryTree";
+import {CategoryView} from "../Websocket/types/categories";
 
 
 export function formatLocalDate(m: moment.Moment) {
@@ -33,3 +35,13 @@ export const arrayBufferToBase64 = (buffer: ArrayBuffer ) => {
     }
     return btoa( binary );
 };
+
+export const categoryParentsPath = (categories: CategoryView[], parentCategoryId: string |undefined): string => {
+    const parts: string[] = [];
+    let current = categories.find(c => c.id === parentCategoryId);
+    while(current) {
+        parts.unshift(current.name);
+        current = categories.find(c => c.id === current?.parentCategoryId);
+    }
+    return parts.length > 0 ? (parts.join(" > ") + " > ") : "";
+}

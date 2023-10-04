@@ -186,7 +186,7 @@ class KMyMoneyImporter(
                     val transferOtherBankAccount =
                         bankAndAccounts.firstOrNull { ba -> idMapping[ba.id] == targetAccounts.first().accountId }
 
-                    val parties = targetAccounts
+                    val payees = targetAccounts
                         .filter { it.payeeId != null }
                         .map { a -> payees.first { it.id == a.payeeId } }
                         .joinToString(",") { it.name }
@@ -206,7 +206,7 @@ class KMyMoneyImporter(
                         conn,
                         userId,
                         BankTransactionAdd(
-                            listOfNotNull(parties, text).joinToString(separator = ": "),
+                            listOfNotNull(payees, text).joinToString(separator = ": "),
                             bAccount.ledgerId,
                             bAccount.bankId,
                             bAccount.id,
@@ -317,8 +317,8 @@ class KMyMoneyImporter(
         }
 
         val partyRootCategory = CategoryDto(
-            RootCategory.Parties.id,
-            RootCategory.Parties.name,
+            RootCategory.Payees.id,
+            RootCategory.Payees.name,
             null,
             null
         )

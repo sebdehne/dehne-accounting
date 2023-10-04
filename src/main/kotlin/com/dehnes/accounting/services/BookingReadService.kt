@@ -2,7 +2,6 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.LedgerView
 import com.dehnes.accounting.database.BookingRecordView
-import com.dehnes.accounting.database.BookingView
 import com.dehnes.accounting.database.BookingsFilter
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
@@ -84,7 +83,7 @@ enum class RootCategory(
     Expense("0c0ff3a5-d0c3-48fa-a53b-a71b200d0c96"),
     Income("71795865-c7ce-4e09-ba30-56520a5266dd"),
     Equity("688979ce-986b-4b23-8f7c-62b271172398"),
-    Parties("12ffcb90-f019-47fe-bdb0-27da28c2d745"),
+    Payees("12ffcb90-f019-47fe-bdb0-27da28c2d745"),
 }
 
 enum class BookingType {
@@ -106,8 +105,8 @@ enum class BookingType {
             return when {
                 rootsAndDirections.all { it.first in accounts } -> transfer
                 rootsAndDirections.all { it.first in bookings } -> internalBooking
-                rootsAndDirections.any { it.first == RootCategory.Parties && it.second == -1 } -> income
-                rootsAndDirections.any { it.first == RootCategory.Parties && it.second == 1 } -> payment
+                rootsAndDirections.any { it.first == RootCategory.Payees && it.second == -1 } -> income
+                rootsAndDirections.any { it.first == RootCategory.Payees && it.second == 1 } -> payment
                 else -> error("Unknown booking type")
             }
         }

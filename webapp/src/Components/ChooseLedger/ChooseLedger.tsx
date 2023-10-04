@@ -9,7 +9,7 @@ import {useNavigate} from "react-router-dom";
 export const ChooseLedger = () => {
     const [ledgers, setLedgers] = useState<LedgerView[]>();
     const {user} = useUser();
-    const {setUserState} = useGlobalState();
+    const {userState, setUserState} = useGlobalState();
 
     useEffect(() => {
         const subId = WebsocketService.subscribe(
@@ -22,11 +22,17 @@ export const ChooseLedger = () => {
 
     let navigate = useNavigate();
 
+    useEffect(() => {
+        if (userState.ledgerId) {
+            navigate('/')
+        }
+    }, [userState]);
+
     const openLedger = (ledgerId: string) => {
         setUserState(prev => ({
             ...prev,
             ledgerId
-        })).then(() => navigate('/'))
+        }))
     }
 
     return (<Container maxWidth="sm" className="App">

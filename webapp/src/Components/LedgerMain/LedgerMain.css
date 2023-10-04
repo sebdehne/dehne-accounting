@@ -12,6 +12,11 @@
     list-style-type: none;
     align-items: center;
     justify-content: space-between;
+
+}
+.BakAccountSummary:hover {
+    cursor: pointer;
+    background: #676767;
 }
 
 .BakAccountSummaryInfo {
