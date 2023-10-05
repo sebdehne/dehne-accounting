@@ -6,7 +6,8 @@
 .BakAccountSummary {
     display: flex;
     flex-direction: row;
-    background: #333333;
+    border-radius: 15px;
+    background: #1f1f1f;
     margin-bottom: 15px;
     padding: 5px 20px 5px 15px;
     list-style-type: none;
@@ -16,7 +17,7 @@
 }
 .BakAccountSummary:hover {
     cursor: pointer;
-    background: #676767;
+    background: #464646;
 }
 
 .BakAccountSummaryInfo {

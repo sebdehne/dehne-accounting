@@ -856,7 +856,7 @@ class Repository(
     /*
      * Bookings
      */
-    fun addBooking(connection: Connection, userId: String, booking: BookingAdd): Long {
+    fun addBooking(connection: Connection, userId: String, booking: BookingView): Long {
         check(booking.records.isNotEmpty()) { "Cannot add booking without records" }
         check(booking.records.sumOf { it.amount } == 0L) { "Records to not accumulate to zero" }
 
@@ -908,6 +908,67 @@ class Repository(
         addOrReplaceLedger(connection, userId, ledger.addBookingsCounter(1))
 
         return nextId
+    }
+
+    fun editBooking(
+        connection: Connection,
+        userId: String,
+        booking: BookingView
+    ) {
+        check(booking.records.isNotEmpty()) { "Cannot add booking without records" }
+        check(booking.records.sumOf { it.amount } == 0L) { "Records to not accumulate to zero" }
+
+        // delete records
+        connection.prepareStatement("""
+            DELETE FROM booking_record where ledger_id = ? and booking_id = ?
+        """.trimIndent()).use { preparedStatement ->
+            preparedStatement.setString(1, booking.ledgerId)
+            preparedStatement.setLong(2, booking.id)
+            preparedStatement.executeUpdate()
+        }
+
+        // re-add records
+        booking.records.forEachIndexed { index, r ->
+            connection.prepareStatement("""
+                INSERT INTO booking_record (
+                    ledger_id, 
+                    booking_id, 
+                    id, 
+                    description, 
+                    category_id, 
+                    amount
+                ) VALUES (?,?,?,?,?,?)
+            """.trimIndent()).use { preparedStatement ->
+                preparedStatement.setString(1, booking.ledgerId)
+                preparedStatement.setLong(2, booking.id)
+                preparedStatement.setLong(3, index.toLong())
+                preparedStatement.setString(4, r.description)
+                preparedStatement.setString(5, r.categoryId)
+                preparedStatement.setLong(6, r.amount)
+                check(preparedStatement.executeUpdate() == 1)
+            }
+        }
+
+        // update description on booking
+        connection.prepareStatement("""
+            UPDATE booking set description = ?, datetime = ? WHERE ledger_id = ? AND id = ?
+        """.trimIndent()).use { preparedStatement ->
+            preparedStatement.setString(1, booking.description)
+            preparedStatement.setTimestamp(2, Timestamp.from(booking.datetime))
+            preparedStatement.setString(3, booking.ledgerId)
+            preparedStatement.setLong(4, booking.id)
+            check(preparedStatement.executeUpdate() == 1)
+        }
+
+        changelog.add(
+            connection,
+            userId,
+            ChangeLogEventType.bookingChanged,
+            mapOf(
+                "ledgerId" to booking.ledgerId,
+                "bookingId" to booking.id,
+            )
+        )
     }
 
     fun getBookings(
@@ -989,7 +1050,12 @@ class Repository(
         }
     }
 
-    fun removeBooking(connection: Connection, userId: String, ledgerId: String, bookingId: Long) {
+    fun removeBooking(
+        connection: Connection,
+        userId: String,
+        ledgerId: String,
+        bookingId: Long
+    ) {
         // clear possible matches
         findMatchedTransactions(connection, ledgerId, bookingId).forEach { bankTransaction ->
             unmatchBankTransaction(
@@ -1026,14 +1092,29 @@ class Repository(
         )
     }
 
-    fun changeCategory(connection: Connection, userId: String, ledgerId: String, bookingId: Long, bookingRecordId: Long, newCategoryId: String) {
+    fun changeCategory(
+        connection: Connection,
+        userId: String,
+        ledgerId: String,
+        bookingId: Long,
+        bookingRecordId: Long,
+        sourceCategoryId: String,
+        destinationCategoryId: String,
+    ) {
         val updated = connection.prepareStatement("""
-            UPDATE booking_record SET category_id = ? WHERE ledger_id = ? AND booking_id = ? AND id = ?
-        """.trimIndent()).use {             preparedStatement ->
-            preparedStatement.setString(1, newCategoryId)
+            UPDATE booking_record SET 
+                category_id = ? 
+            WHERE 
+                ledger_id = ? 
+                AND booking_id = ? 
+                AND id = ?
+                AND category_id = ?
+        """.trimIndent()).use { preparedStatement ->
+            preparedStatement.setString(1, destinationCategoryId)
             preparedStatement.setString(2, ledgerId)
             preparedStatement.setLong(3, bookingId)
             preparedStatement.setLong(4, bookingRecordId)
+            preparedStatement.setString(5, sourceCategoryId)
             preparedStatement.executeUpdate() > 0
         }
         if (updated) {
@@ -1097,7 +1178,6 @@ enum class AccessLevel {
         AccessRequest.owner -> this in listOf(admin, legderOwner)
         AccessRequest.write -> this in listOf(admin, legderOwner, legderReadWrite)
         AccessRequest.read -> this in listOf(admin, legderOwner, legderReadWrite, legderRead)
-        else -> false
     }
 }
 
@@ -1206,18 +1286,6 @@ data class BankTransactionAdd(
     val amount: Long,
 )
 
-data class BookingAdd(
-    val ledgerId: String,
-    val description: String?,
-    val datetime: Instant,
-    val records: List<BookingRecordAdd>,
-)
-
-data class BookingRecordAdd(
-    val description: String?,
-    val categoryId: String,
-    val amount: Long,
-)
 
 data class BookingRecordView(
     val ledgerId: String,
@@ -1271,6 +1339,13 @@ class CategoryFilter(
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> =
         "br.category_id in (${categoryIds.joinToString(",") {"?"}})" to categoryIds
+}
+
+class SingleBookingFilter(
+    private val bookingId: Long,
+) : BookingsFilter {
+    override fun whereAndParams(): Pair<String, List<Any>> =
+        "b.id = ?" to listOf(bookingId)
 }
 
 class BankTxDateRangeFilter(

@@ -1,5 +1,5 @@
 import Header from "../Header";
-import {Container, FormControl, FormControlLabel, Switch, TextField} from "@mui/material";
+import {Button, Container, FormControl, FormControlLabel, Switch, TextField} from "@mui/material";
 import React, {useCallback, useEffect, useState} from "react";
 import {useGlobalState} from "../../utils/userstate";
 import {LedgerView} from "../../Websocket/types/ledgers";
@@ -13,6 +13,9 @@ import moment from "moment";
 import {Amount} from "../Amount";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
+import EditIcon from "@mui/icons-material/Edit";
+import {useNavigate} from "react-router-dom";
+import AddIcon from "@mui/icons-material/Add";
 
 export const Bookings = () => {
     const {userState, categoriesAsList} = useGlobalState();
@@ -20,6 +23,8 @@ export const Bookings = () => {
     const [bookings, setBookings] = useState<BookingView[]>([]);
     const [editMode, setEditMode] = useState(false);
     const [filter, setFilter] = useState('');
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (userState?.ledgerId) {
@@ -85,7 +90,13 @@ export const Bookings = () => {
 
             <div className="HeaderLine">
                 <div>Found: {bookings.length} bookings</div>
-                <div><FormControlLabel
+                <div>
+                    {editMode && <Button
+                        variant={"outlined"}
+                        style={{margin: '10px'}}
+                        onClick={() => navigate('/booking')}
+                    ><AddIcon/> New booking </Button>}
+                    <FormControlLabel
                     control={
                         <Switch
                             checked={editMode}
@@ -115,10 +126,11 @@ export const Bookings = () => {
                         </div>
                         <div className="BookingHeaderRight">
                             {editMode && <IconButton
-                                size={"small"}
+                                onClick={() => navigate("/booking/" + b.id)}
+                            > <EditIcon fontSize="inherit"/> </IconButton>}
+                            {editMode && <IconButton
                                 onClick={() => deleteBooking(b.id)}
-                            > <DeleteIcon fontSize="inherit"/> </IconButton>
-                            }
+                            > <DeleteIcon fontSize="inherit"/> </IconButton>}
                         </div>
 
                     </div>

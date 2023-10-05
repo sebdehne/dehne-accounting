@@ -14,13 +14,13 @@ export type CategorySearchBoxProps2 = {
 }
 
 export const CategorySearchBox2 = ({
-                                      includeIntermediate,
-                                      onSelectedCategoryId,
+                                       includeIntermediate,
+                                       onSelectedCategoryId,
                                        value,
-                                      title = "Search category",
-                                      exclude = [],
-                                      allowEmpty = false,
-                                  }: CategorySearchBoxProps2) => {
+                                       title = "Search category",
+                                       exclude = [],
+                                       allowEmpty = false,
+                                   }: CategorySearchBoxProps2) => {
     const {categoriesAsTree} = useGlobalState();
     const searchList = useMemo(() =>
             buildSearchList(categoriesAsTree, includeIntermediate).filter(c => !exclude.includes(c.category.id)),

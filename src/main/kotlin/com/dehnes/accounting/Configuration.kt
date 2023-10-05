@@ -44,9 +44,9 @@ class Configuration {
         val repository = Repository(changelog, objectMapper)
         val categoryReadService = CategoryReadService(repository, datasource)
         val userService = UserService(datasource)
-        val bookingReadService = BookingReadService(repository, datasource, userService)
+        val bookingReadService = BookingReadService(repository, userService)
         val bankService = BankService(bookingReadService, repository, datasource)
-        val rapportService = RapportService(repository, categoryReadService, datasource)
+        val rapportService = RapportService(repository, categoryReadService)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
         val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
         val userStateService = UserStateService(datasource, repository)
@@ -58,7 +58,8 @@ class Configuration {
             rapportService,
             categoryReadService,
             userStateService,
-            transactionMatchingService
+            transactionMatchingService,
+            datasource
         )
         val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService, categoryReadService)
 

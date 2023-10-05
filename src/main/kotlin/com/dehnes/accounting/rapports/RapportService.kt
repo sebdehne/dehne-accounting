@@ -4,22 +4,15 @@ import com.dehnes.accounting.database.BookingView
 import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.DateRangeFilter
 import com.dehnes.accounting.database.Repository
-import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.CategoryLeaf
 import com.dehnes.accounting.services.CategoryReadService
 import java.sql.Connection
 import java.time.Instant
-import javax.sql.DataSource
 
 class RapportService(
     private val repository: Repository,
     private val categoryReadService: CategoryReadService,
-    private val dataSource: DataSource,
 ) {
-
-    fun rapport(
-        request: RapportRequest,
-    ): List<RapportLeaf> = dataSource.readTx { rapport(it, request) }
 
     fun rapport(
         connection: Connection,

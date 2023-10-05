@@ -53,7 +53,7 @@ export const AddOrEditCategory = () => {
                     parentCategoryId: !!parentCategoryId ? parentCategoryId : undefined,
                     ledgerId: userState.ledgerId
                 }
-            }).then(() => navigate('/categories'))
+            }).then(() => navigate('/categories', {replace: true}))
         }
     }, [userState, editCategory, name, parentCategoryId]);
 

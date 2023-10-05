@@ -1,29 +1,35 @@
 package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.LedgerView
-import com.dehnes.accounting.database.AccessRequest
-import com.dehnes.accounting.database.BookingsFilter
-import com.dehnes.accounting.database.Repository
-import com.dehnes.accounting.database.Transactions.readTx
+import com.dehnes.accounting.database.*
 import java.sql.Connection
-import javax.sql.DataSource
 
 class BookingReadService(
     private val repository: Repository,
-    private val dataSource: DataSource,
     private val userService: UserService,
 ) {
 
+    fun getBooking(
+        conn: Connection,
+        ledgerId: String,
+        bookingId: Long,
+    ): BookingView = repository.getBookings(
+        conn,
+        ledgerId,
+        Int.MAX_VALUE,
+        SingleBookingFilter(bookingId)
+    ).single()
+
     fun getBookings(
+        conn: Connection,
         userId: String,
         ledgerId: String,
         limit: Int,
         vararg filters: BookingsFilter?,
-    ) = dataSource.readTx { conn ->
-
+    ): List<BookingView> {
         val ledger = getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
-        repository.getBookings(
+        return repository.getBookings(
             conn,
             ledger.id,
             limit,
@@ -31,23 +37,14 @@ class BookingReadService(
         )
     }
 
-    fun listLedgers(userId: String, accessRequest: AccessRequest): List<LedgerView> {
-        return dataSource.readTx {
-            listLedgers(it, userId, accessRequest)
-        }
-    }
 
     fun getLedgerAuthorized(
         connection: Connection,
         userId: String,
         ledgerId: String,
         accessRequest: AccessRequest,
-    ): LedgerView {
-        val ledger = listLedgers(connection, userId, accessRequest).firstOrNull { it.id == ledgerId }
-            ?: error("User $userId has not access to $ledgerId")
-
-        return ledger
-    }
+    ): LedgerView = listLedgers(connection, userId, accessRequest).firstOrNull { it.id == ledgerId }
+        ?: error("User $userId has not access to $ledgerId")
 
     fun listLedgers(connection: Connection, userId: String, accessRequest: AccessRequest): List<LedgerView> {
         val user = userService.getUserById(connection, userId) ?: error("Unknown userId=$userId")

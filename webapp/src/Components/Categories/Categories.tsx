@@ -18,7 +18,7 @@ export const Categories = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (userState && userState.ledgerId) {
+        if (userState?.ledgerId) {
             const subId = WebsocketService.subscribe(
                 {type: "getLedgers"},
                 n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))

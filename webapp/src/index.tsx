@@ -19,8 +19,10 @@ import {Bookings} from "./Components/Bookings/Bookings";
 import {ChooseLedger} from "./Components/ChooseLedger/ChooseLedger";
 import {Categories} from "./Components/Categories/Categories";
 import {AddOrEditCategory} from "./Components/Categories/AddOrEditCategory";
-import {Outlet, useLocation, useNavigationType} from 'react-router-dom';
-
+import {AddOrEditBooking} from "./Components/Booking/AddOrEditBooking";
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
+import 'moment/locale/nb';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -29,23 +31,32 @@ root.render(
     <React.StrictMode>
         <GlobalStateProvider>
             <ThemeProvider theme={theme}>
-                <CssBaseline/>
-                <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
-                    <Routes>
-                        <Route path="/" element={<LedgerMain/>}/>
-                        <Route path="/ledger" element={<ChooseLedger/>}/>
-                        <Route path="/categories" element={<Categories/>}/>
-                        <Route path="/category" element={<AddOrEditCategory/>}/>
-                        <Route path="/category/:editCategoryId" element={<AddOrEditCategory/>}/>
-                        <Route path="/bookings" element={<Bookings/>}/>
-                        <Route path="/bankaccount" element={<BankTransactions/>}/>
-                        <Route path="/bankaccount/import"
-                               element={<BankTransactionsImporter/>}/>
-                        <Route path="/book/transaction" element={<BookTransaction/>}/>
-                        <Route path="/matcher" element={<AddOrEditMatcher/>}/>
-                        <Route path="/matcher/:matcherId" element={<AddOrEditMatcher/>}/>
-                    </Routes>
-                </BrowserRouter>
+                <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="nb">
+                    <CssBaseline/>
+                    <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
+                        <Routes>
+                            <Route path="/" element={<LedgerMain/>}/>
+                            <Route path="/ledger" element={<ChooseLedger/>}/>
+
+                            <Route path="/categories" element={<Categories/>}/>
+                            <Route path="/category" element={<AddOrEditCategory/>}/>
+                            <Route path="/category/:editCategoryId" element={<AddOrEditCategory/>}/>
+
+                            <Route path="/bankaccount" element={<BankTransactions/>}/>
+                            <Route path="/bankaccount/import"
+                                   element={<BankTransactionsImporter/>}/>
+
+                            <Route path="/book/transaction" element={<BookTransaction/>}/>
+
+                            <Route path="/matcher" element={<AddOrEditMatcher/>}/>
+                            <Route path="/matcher/:matcherId" element={<AddOrEditMatcher/>}/>
+
+                            <Route path="/bookings" element={<Bookings/>}/>
+                            <Route path="/booking" element={<AddOrEditBooking/>}/>
+                            <Route path="/booking/:bookingId" element={<AddOrEditBooking/>}/>
+                        </Routes>
+                    </BrowserRouter>
+                </LocalizationProvider>
             </ThemeProvider>
         </GlobalStateProvider>
     </React.StrictMode>

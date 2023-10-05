@@ -33,6 +33,7 @@ export type ReadRequestType = "userInfo"
     | 'userState'
     | 'getMatchers'
     | 'getBookings'
+    | 'getBooking'
     ;
 
 export type ReadRequest = {
@@ -43,6 +44,7 @@ export type ReadRequest = {
     bankTransactionRequest?: BankTransactionRequest;
     getMatchersRequest?: GetMatchersRequest;
     getBookingsRequest?: GetBookingsRequest;
+    getBookingId?: number;
 }
 
 export type ReadResponse = {
@@ -56,5 +58,6 @@ export type ReadResponse = {
     userState?: UserState;
     getMatchersResponse?: GetMatchersResponse;
     getBookingsResponse?: BookingView[];
+    getBookingResponse?: BookingView;
 }
 

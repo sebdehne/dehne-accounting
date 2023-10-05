@@ -340,7 +340,10 @@ class KMyMoneyImporter(
                                 bookingId = alreadyBookedCandidate.id,
                             )
                         } else {
-                            val mainRecord = BookingRecordAdd(
+                            val mainRecord = BookingRecordView(
+                                ledger.id,
+                                0,
+                                0,
                                 mainTx.memo,
                                 when (txType) {
                                     paymentOrIncome,
@@ -355,7 +358,10 @@ class KMyMoneyImporter(
                                 mainTx.amountInCents.toLong() * txType.multiplier,
                             )
                             val otherRecords = targetAccounts.map {
-                                BookingRecordAdd(
+                                BookingRecordView(
+                                    ledger.id,
+                                    0,
+                                    0,
                                     it.memo,
                                     when (txType) {
                                         transferInsideLedger,
@@ -369,8 +375,9 @@ class KMyMoneyImporter(
                             val bookingId = repository.addBooking(
                                 conn,
                                 userId,
-                                BookingAdd(
+                                BookingView(
                                     bAccount.ledgerId,
+                                    0,
                                     if (txType == transferInsideLedger) tx.id else null, // so that we can find a match
                                     tx.postDate.atStartOfDay().atZone(zoneId).toInstant(),
                                     listOf(

@@ -2,8 +2,8 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.UserState
 import com.dehnes.accounting.database.Repository
-import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
+import java.sql.Connection
 import javax.sql.DataSource
 
 class UserStateService(
@@ -11,9 +11,7 @@ class UserStateService(
     private val repository: Repository,
 ) {
 
-    fun getUserState(userId: String) = dataSource.readTx { conn ->
-        repository.getUserState(conn, userId)
-    }
+    fun getUserState(conn: Connection, userId: String) = repository.getUserState(conn, userId)
 
     fun setUserState(userId: String, userState: UserState) {
         dataSource.writeTx { conn ->

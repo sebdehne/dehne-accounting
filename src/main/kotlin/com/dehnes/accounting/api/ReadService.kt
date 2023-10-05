@@ -7,15 +7,18 @@ import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType
 import com.dehnes.accounting.database.DateRangeFilter
+import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.rapports.RapportLeaf
 import com.dehnes.accounting.rapports.RapportRequest
 import com.dehnes.accounting.rapports.RapportService
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
+import java.sql.Connection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
+import javax.sql.DataSource
 
 class ReadService(
     private val bookingReadService: BookingReadService,
@@ -26,6 +29,7 @@ class ReadService(
     private val categoryReadService: CategoryReadService,
     private val userStateService: UserStateService,
     private val transactionMatchingService: TransactionMatchingService,
+    private val dataSource: DataSource,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -34,7 +38,7 @@ class ReadService(
 
     private val threadLocalChangeLog = ThreadLocal<Queue<ChangeEvent>>()
 
-    fun  <T> doWithNotifies(fn: () -> T): T {
+    fun <T> doWithNotifies(fn: () -> T): T {
         threadLocalChangeLog.set(LinkedList())
         val result: T?
         try {
@@ -65,133 +69,157 @@ class ReadService(
 
         executorService.submit(wrap(logger) {
 
-            compressed.forEach { changeEvent ->
+            dataSource.readTx { conn ->
+                compressed.forEach { changeEvent ->
 
-                listeners.values
-                    .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
-                    .filter { changeEvent.changeLogEventType == null || changeEvent.changeLogEventType in it.readRequest.type.events }
-                    .forEach { sub ->
-                        try {
-                            sub.onEvent(
-                                Notify(sub.subscriptionId, handleRequest(sub.userId, sub.readRequest))
-                            )
-                        } catch (e: Throwable) {
-                            logger.error(e) { "" }
+                    listeners.values
+                        .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
+                        .filter { changeEvent.changeLogEventType == null || changeEvent.changeLogEventType in it.readRequest.type.events }
+                        .forEach { sub ->
+                            try {
+                                sub.onEvent(
+                                    Notify(
+                                        sub.subscriptionId,
+                                        handleRequest(conn, sub.userId, sub.readRequest)
+                                    )
+                                )
+                            } catch (e: Throwable) {
+                                logger.error(e) { "" }
+                            }
                         }
-                    }
 
+                }
             }
+
+
         })
     }
 
-    fun handleRequest(userId: String, readRequest: ReadRequest): ReadResponse = when (readRequest.type) {
-        userInfo -> ReadResponse(userView = UserView.fromUser(userService.getUserById(userId)!!))
+    fun handleRequest(
+        connection: Connection,
+        userId: String,
+        readRequest: ReadRequest
+    ): ReadResponse =
+        when (readRequest.type) {
+            userInfo -> ReadResponse(userView = UserView.fromUser(userService.getUserById(connection, userId)!!))
 
-        userState -> {
-            val userState = userStateService.getUserState(userId)
-            ReadResponse(userState = userState)
-        }
+            userState -> {
+                val userState = userStateService.getUserState(connection, userId)
+                ReadResponse(userState = userState)
+            }
 
-        getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, AccessRequest.read))
+            getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(connection, userId, AccessRequest.read))
 
-        allCategories -> ReadResponse(categories = categoryReadService.get(readRequest.ledgerId!!).asList)
+            allCategories -> ReadResponse(categories = categoryReadService.get(connection, readRequest.ledgerId!!).asList)
 
-        getBankAccounts -> ReadResponse(
-            bankAccounts = bankService.getAllAccountsFor(
-                userId,
-                readRequest.ledgerId!!
-            )
-        )
-
-        getBankTransactions -> {
-            val request = readRequest.bankTransactionsRequest!!
-            ReadResponse(
-                bankTransactions = bankService.getTransactions(
+            getBankAccounts -> ReadResponse(
+                bankAccounts = bankService.getAllAccountsFor(
+                    connection,
                     userId,
-                    readRequest.ledgerId!!,
-                    request.bankAccountId,
-                    BankTxDateRangeFilter(request.from, request.toExcluding)
-                )
-            )
-        }
-
-        getBankTransaction -> {
-            val bankTransactionRequest = readRequest.bankTransactionRequest!!
-            ReadResponse(
-                bankTransaction = bankService.getTransaction(
-                    userId,
-                    bankTransactionRequest.ledgerId,
-                    bankTransactionRequest.bankAccountId,
-                    bankTransactionRequest.transactionId
-                )
-            )
-        }
-
-        ledgerRapport -> {
-
-            val rapport = rapportService.rapport(
-                RapportRequest(
-                    readRequest.ledgerId!!,
-                    readRequest.ledgerRapportRequest!!.from,
-                    readRequest.ledgerRapportRequest.toExcluding,
+                    readRequest.ledgerId!!
                 )
             )
 
-            val categories = categoryReadService.get(readRequest.ledgerId)
-
-            fun mapLeaf(rapportLeaf: RapportLeaf): LedgerRapportNode {
-                return LedgerRapportNode(
-                    rapportLeaf.categoryDto.name,
-                    rapportLeaf.totalAmountInCents,
-                    rapportLeaf.records.map { r ->
-                        LedgerRapportBookingRecord(
-                            r.booking.id,
-                            r.bookingRecordId,
-                            r.booking.datetime,
-                            r.amount(),
-                            r.description(),
-                            r.booking.records.filterNot { it.id == r.bookingRecordId }.map {
-                                LedgerRapportBookingContraRecord(
-                                    categories.asList.first { c -> c.id == it.categoryId }.name,
-                                    it.bookingId,
-                                    it.id
-                                )
-                            }
-                        )
-                    },
-                    rapportLeaf.children.map { mapLeaf(it) }
+            getBankTransactions -> {
+                val request = readRequest.bankTransactionsRequest!!
+                ReadResponse(
+                    bankTransactions = bankService.getTransactions(
+                        connection,
+                        userId,
+                        readRequest.ledgerId!!,
+                        request.bankAccountId,
+                        BankTxDateRangeFilter(request.from, request.toExcluding)
+                    )
                 )
             }
 
-            ReadResponse(ledgerRapport = rapport.map { mapLeaf(it) })
-        }
-
-        getMatchers -> {
-
-            val matchersRequest = readRequest.getMatchersRequest!!
-            val r = transactionMatchingService.getMatchers(
-                userId,
-                matchersRequest.ledgerId,
-                matchersRequest.testMatchFor
-            )
-
-            ReadResponse(getMatchersResponse = r)
-        }
-
-        getBookings -> {
-            val bookingsRequest = readRequest.getBookingsRequest!!
-            val r = bookingReadService.getBookings(
-                userId,
-                readRequest.ledgerId!!,
-                bookingsRequest.limit ?: 1000,
-                DateRangeFilter(
-                    bookingsRequest.from,
-                    bookingsRequest.toExcluding
+            getBankTransaction -> {
+                val bankTransactionRequest = readRequest.bankTransactionRequest!!
+                ReadResponse(
+                    bankTransaction = bankService.getTransaction(
+                        connection,
+                        userId,
+                        bankTransactionRequest.ledgerId,
+                        bankTransactionRequest.bankAccountId,
+                        bankTransactionRequest.transactionId
+                    )
                 )
-            )
-            ReadResponse(getBookingsResponse = r)
+            }
+
+            ledgerRapport -> {
+
+                val rapport = rapportService.rapport(
+                    connection,
+                    RapportRequest(
+                        readRequest.ledgerId!!,
+                        readRequest.ledgerRapportRequest!!.from,
+                        readRequest.ledgerRapportRequest.toExcluding,
+                    )
+                )
+
+                val categories = categoryReadService.get(readRequest.ledgerId)
+
+                fun mapLeaf(rapportLeaf: RapportLeaf): LedgerRapportNode {
+                    return LedgerRapportNode(
+                        rapportLeaf.categoryDto.name,
+                        rapportLeaf.totalAmountInCents,
+                        rapportLeaf.records.map { r ->
+                            LedgerRapportBookingRecord(
+                                r.booking.id,
+                                r.bookingRecordId,
+                                r.booking.datetime,
+                                r.amount(),
+                                r.description(),
+                                r.booking.records.filterNot { it.id == r.bookingRecordId }.map {
+                                    LedgerRapportBookingContraRecord(
+                                        categories.asList.first { c -> c.id == it.categoryId }.name,
+                                        it.bookingId,
+                                        it.id
+                                    )
+                                }
+                            )
+                        },
+                        rapportLeaf.children.map { mapLeaf(it) }
+                    )
+                }
+
+                ReadResponse(ledgerRapport = rapport.map { mapLeaf(it) })
+            }
+
+            getMatchers -> {
+
+                val matchersRequest = readRequest.getMatchersRequest!!
+                val r = transactionMatchingService.getMatchers(
+                    connection,
+                    userId,
+                    matchersRequest.ledgerId,
+                    matchersRequest.testMatchFor
+                )
+
+                ReadResponse(getMatchersResponse = r)
+            }
+
+            getBookings -> {
+                val bookingsRequest = readRequest.getBookingsRequest!!
+                val r = bookingReadService.getBookings(
+                    connection,
+                    userId,
+                    readRequest.ledgerId!!,
+                    bookingsRequest.limit ?: 1000,
+                    DateRangeFilter(
+                        bookingsRequest.from,
+                        bookingsRequest.toExcluding
+                    )
+                )
+                ReadResponse(getBookingsResponse = r)
+            }
+
+            getBooking -> ReadResponse(getBookingResponse = bookingReadService.getBooking(
+                connection,
+                readRequest.ledgerId!!,
+                readRequest.getBookingId!!
+            ))
         }
-    }
 
 }
 

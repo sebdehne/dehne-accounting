@@ -1,5 +1,5 @@
 import React, {useCallback, useMemo, useState} from "react";
-import {formatIso, formatMonth, formatYear, formatYearMonth, monthDelta, yearDelta} from "../../utils/formatting";
+import {formatIso, formatMonth, formatYear, monthDelta, yearDelta} from "../../utils/formatting";
 import IconButton from "@mui/material/IconButton";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
@@ -17,11 +17,13 @@ export const PeriodSelector = ({periodLocationInUserState}: PeriodSelectorProps)
     const {userState, setUserState} = useGlobalState();
 
     const period = useMemo(() => {
-        let currentObj = userState as any;
-        periodLocationInUserState.forEach(loc => {
-            currentObj = currentObj[loc] as any
-        });
-        return currentObj as PeriodWindow;
+        if (userState) {
+            let currentObj = userState as any;
+            periodLocationInUserState.forEach(loc => {
+                currentObj = currentObj[loc] as any
+            });
+            return currentObj as PeriodWindow;
+        }
     }, [periodLocationInUserState, userState]);
     const updatePeriod = useCallback((p: PeriodWindow) => {
         setUserState(prevState => {
@@ -40,7 +42,7 @@ export const PeriodSelector = ({periodLocationInUserState}: PeriodSelectorProps)
 
     return (
         <>
-            {period.type === "month" && <MonthPeriodSelector
+            {period?.type === "month" && <MonthPeriodSelector
                 period={[moment(period.startDateTime), moment(period.endDateTime)]}
                 setPeriod={p => updatePeriod({
                     startDateTime: formatIso(p[0]),

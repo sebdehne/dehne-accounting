@@ -7,7 +7,6 @@ import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.BankAccountDto
 import com.dehnes.accounting.database.BankAccountTransactionsFilter
 import com.dehnes.accounting.database.Repository
-import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
 import java.sql.Connection
 import javax.sql.DataSource
@@ -35,12 +34,14 @@ class BankService(
             )
         }
     }
+
     fun getTransaction(
+        conn: Connection,
         userId: String,
         ledgerId: String,
         bankAccountId: String,
         transactionId: Long,
-    ) = dataSource.readTx { conn ->
+    ): BankAccountTransactionView {
         val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
         if (!repository.getAllBankAccountsForLedger(conn, ledger.id).any { it.id == bankAccountId }) {
@@ -53,7 +54,7 @@ class BankService(
             transactionId,
             ledgerId,
         )
-        BankAccountTransactionView(
+        return BankAccountTransactionView(
             bankTransaction.id,
             bankTransaction.description,
             bankTransaction.datetime,
@@ -62,39 +63,36 @@ class BankService(
             bankTransaction.matchedLedgerId != null,
         )
     }
-
     fun getTransactions(
+        conn: Connection,
         userId: String,
         ledgerId: String,
         bankAccountId: String,
         vararg filters: BankAccountTransactionsFilter
     ): List<BankAccountTransactionView> {
 
-        return dataSource.readTx { conn ->
-            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
-            if (!repository.getAllBankAccountsForLedger(conn, ledger.id).any { it.id == bankAccountId }) {
-                error("User $userId does not have access to this bankAccount")
-            }
+        if (!repository.getAllBankAccountsForLedger(conn, ledger.id).any { it.id == bankAccountId }) {
+            error("User $userId does not have access to this bankAccount")
+        }
 
-            repository.getBankTransactions(conn, bankAccountId, Int.MAX_VALUE, *filters).map {
-                BankAccountTransactionView(
-                    it.id,
-                    it.description,
-                    it.datetime,
-                    it.amount,
-                    it.balance,
-                    it.matchedLedgerId != null
-                )
-            }
+        return repository.getBankTransactions(conn, bankAccountId, Int.MAX_VALUE, *filters).map {
+            BankAccountTransactionView(
+                it.id,
+                it.description,
+                it.datetime,
+                it.amount,
+                it.balance,
+                it.matchedLedgerId != null
+            )
         }
     }
 
-    fun getAllAccountsFor(userId: String, ledgerId: String) = dataSource.readTx {
+    fun getAllAccountsFor(conn: Connection, userId: String, ledgerId: String): List<BankAccountView> {
+        val allBanks = repository.getAllBanks(conn)
 
-        val allBanks = repository.getAllBanks(it)
-
-        getAccountsWithSummary(it, userId, ledgerId).map { a ->
+        return getAccountsWithSummary(conn, userId, ledgerId).map { a ->
             BankAccountView(
                 a.id,
                 a.name,
@@ -108,7 +106,7 @@ class BankService(
         }
     }
 
-    fun getAccountsWithSummary(conn: Connection, userId: String, ledgerId: String): List<BankAccountDto> {
+    private fun getAccountsWithSummary(conn: Connection, userId: String, ledgerId: String): List<BankAccountDto> {
         val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
         return repository.getAllBankAccountsForLedger(conn, ledger.id)

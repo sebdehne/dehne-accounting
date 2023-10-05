@@ -182,6 +182,16 @@ class WebSocketServer : Endpoint() {
                 }
                 RpcResponse(error = errorMsg)
             }
+
+            addOrReplaceBooking -> readService.doWithNotifies {
+                val (_, errorMsg) = logAndGetError(logger) {
+                    bookingWriteService.addOrReplaceBooking(
+                        user.id,
+                        rpcRequest.addOrReplaceBooking!!
+                    )
+                }
+                RpcResponse(error = errorMsg)
+            }
         }
 
         argSession.basicRemote.sendText(

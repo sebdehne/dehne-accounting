@@ -9,7 +9,6 @@ class UserService(
     private val dataSource: DataSource
 ) {
 
-    fun getUserById(userId: String) = dataSource.readTx { getUserById(it, userId) }
     fun getUserByEmail(userEmail: String) = dataSource.readTx { getUserByEmail(it, userEmail) }
 
     fun getUserById(connection: Connection, userId: String) =
@@ -43,10 +42,6 @@ class UserService(
         }
 
 }
-
-enum class
-
-data
 
 class User(
     override val id: String,

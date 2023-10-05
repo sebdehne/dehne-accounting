@@ -1,8 +1,6 @@
 package com.dehnes.accounting.services
 
-import com.dehnes.accounting.database.AccessRequest
-import com.dehnes.accounting.database.CategoryFilter
-import com.dehnes.accounting.database.Repository
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
 import javax.sql.DataSource
 
@@ -12,6 +10,36 @@ class BookingWriteService(
     private val bookingReadService: BookingReadService,
     private val categoryReadService: CategoryReadService,
 ) {
+
+    fun addOrReplaceBooking(
+        userId: String,
+        bookingView: BookingView
+    ) {
+        dataSource.writeTx { conn ->
+            bookingReadService.getLedgerAuthorized(conn, userId, bookingView.ledgerId, AccessRequest.write)
+
+            val existing = repository.getBookings(
+                conn,
+                bookingView.ledgerId,
+                Int.MAX_VALUE,
+                SingleBookingFilter(bookingId = bookingView.id)
+            ).singleOrNull()
+
+            if (existing != null) {
+                repository.editBooking(
+                    conn,
+                    userId,
+                    bookingView
+                )
+            } else {
+                repository.addBooking(
+                    conn,
+                    userId,
+                    bookingView
+                )
+            }
+        }
+    }
 
     fun mergeCategories(
         userId: String,
@@ -30,7 +58,7 @@ class BookingWriteService(
             check(categories.asList.any { it.id == destinationCategoryId })
 
             /*
-             * A) find all booking my sourceCategoryId and change to destinationCategoryId
+             * A) find all booking-records my sourceCategoryId and change to destinationCategoryId
              */
             repository.getBookings(
                 conn,
@@ -42,12 +70,13 @@ class BookingWriteService(
                     .filter { br -> br.categoryId == sourceCategoryId }
                     .forEach { br ->
                         repository.changeCategory(
-                            conn,
-                            userId,
-                            ledgerId,
-                            b.id,
-                            br.id,
-                            destinationCategoryId
+                            connection = conn,
+                            userId = userId,
+                            ledgerId = ledgerId,
+                            bookingId = b.id,
+                            bookingRecordId = br.id,
+                            sourceCategoryId = sourceCategoryId,
+                            destinationCategoryId = destinationCategoryId
                         )
                     }
             }

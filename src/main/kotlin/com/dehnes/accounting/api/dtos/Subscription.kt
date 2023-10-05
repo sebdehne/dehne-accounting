@@ -38,6 +38,7 @@ enum class ReadRequestType(
     getMatchers(matcherAdded, matcherUpdated, matcherRemoved),
 
     getBookings(bookingAdded, bookingRemoved, bookingChanged),
+    getBooking(bookingAdded, bookingRemoved, bookingChanged),
 
     ;
 
@@ -52,6 +53,7 @@ data class ReadRequest(
     val bankTransactionRequest: BankTransactionRequest? = null,
     val getMatchersRequest: GetMatchersRequest? = null,
     val getBookingsRequest: GetBookingsRequest? = null,
+    val getBookingId: Long? = null,
 )
 
 data class ReadResponse(
@@ -65,4 +67,5 @@ data class ReadResponse(
     val userState: UserState? = null,
     val getMatchersResponse: GetMatchersResponse? = null,
     val getBookingsResponse: List<BookingView>? = null,
+    val getBookingResponse: BookingView? = null,
 )

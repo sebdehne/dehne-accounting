@@ -2,8 +2,6 @@
 
 Bookings:
 - UI for add/edit booking
-- bulk edit - how?
-
 
 Bank accounts:
 - add
@@ -16,6 +14,7 @@ Users:
 - remove
 
 ==== lower priority ==== :
+- bulk edit - how?
 - show general errors in client
 
 - add new matcher: automatic name generation picks the wrong side
@@ -23,7 +22,6 @@ Users:
 
 Balance-sheet:
 - configure which categories go where
-
 
 Backups:
 - list

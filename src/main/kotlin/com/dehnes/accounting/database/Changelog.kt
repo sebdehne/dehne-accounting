@@ -19,7 +19,7 @@ class Changelog(
             readService = configuration.getBeanNull()
         }
         check(!requireReadService || readService != null)
-        return readService;
+        return readService
     }
 
     fun add(connection: Connection, userId: String, type: ChangeLogEventType, value: Any) {

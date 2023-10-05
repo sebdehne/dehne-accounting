@@ -33,41 +33,40 @@ class TransactionMatchingService(
     }
 
     fun getMatchers(
+        conn: Connection,
         userId: String,
         ledgerId: String,
         testMatchFor: TestMatchFor?,
     ): GetMatchersResponse {
 
-        return dataSource.readTx { conn ->
-            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
-            val allMatchers = repository.getAllMatchers(conn, ledgerId)
+        val allMatchers = repository.getAllMatchers(conn, ledgerId)
 
-            val macherIdsWhichMatched = testMatchFor?.let { t ->
-                val bankAccountDto =
-                    (repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == t.bankAccountId }
-                        ?: error("No such bankId ${t.bankAccountId}"))
+        val macherIdsWhichMatched = testMatchFor?.let { t ->
+            val bankAccountDto =
+                (repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == t.bankAccountId }
+                    ?: error("No such bankId ${t.bankAccountId}"))
 
-                val bankTransaction = repository.getBankTransaction(
-                    conn,
-                    bankAccountDto.id,
-                    t.transactionId,
-                    ledgerId,
-                )
-
-                if (bankTransaction.matchedLedgerId == null) {
-                    allMatchers
-                        .filter { it.filters.all { it.type.fn(bankAccountDto, bankTransaction, it) } }
-                        .map { it.id }
-                } else emptyList()
-
-            } ?: emptyList()
-
-            GetMatchersResponse(
-                allMatchers,
-                macherIdsWhichMatched
+            val bankTransaction = repository.getBankTransaction(
+                conn,
+                bankAccountDto.id,
+                t.transactionId,
+                ledgerId,
             )
-        }
+
+            if (bankTransaction.matchedLedgerId == null) {
+                allMatchers
+                    .filter { it.filters.all { it.type.fn(bankAccountDto, bankTransaction, it) } }
+                    .map { it.id }
+            } else emptyList()
+
+        } ?: emptyList()
+
+        return GetMatchersResponse(
+            allMatchers,
+            macherIdsWhichMatched
+        )
     }
 
     fun deleteMatcher(
@@ -151,11 +150,14 @@ class TransactionMatchingService(
                 val wrapper = this.paymentOrIncomeConfig!!
 
                 val createRules = { startingAmount: Long, c: BookingConfigurationForOneSide ->
-                    val rules = mutableListOf<BookingRecordAdd>()
+                    val rules = mutableListOf<BookingRecordView>()
                     var remaining = startingAmount
                     c.categoryToFixedAmountMapping.forEach { (categoryId, amountInCents) ->
                         rules.add(
-                            BookingRecordAdd(
+                            BookingRecordView(
+                                ledgerId,
+                                0,
+                                0,
                                 memoText,
                                 categoryId,
                                 amountInCents,
@@ -164,7 +166,10 @@ class TransactionMatchingService(
                         remaining -= amountInCents
                     }
                     rules.add(
-                        BookingRecordAdd(
+                        BookingRecordView(
+                            ledgerId,
+                            0,
+                            0,
                             memoText,
                             c.categoryIdRemaining,
                             remaining,
@@ -234,23 +239,30 @@ class TransactionMatchingService(
                 }
 
                 listOf(
-                    BookingRecordAdd(
-                        description = memoText,
-                        categoryId = thisCategoryId,
-                        amount = bankTransaction.amount,
+                    BookingRecordView(
+                        ledgerId,
+                        0,
+                        0,
+                        memoText,
+                        thisCategoryId,
+                        bankTransaction.amount,
                     ),
-                    BookingRecordAdd(
-                        description = memoText,
-                        categoryId = otherCategoryId,
-                        amount = bankTransaction.amount * -1,
+                    BookingRecordView(
+                        ledgerId,
+                        0,
+                        0,
+                        memoText,
+                        otherCategoryId,
+                        bankTransaction.amount * -1,
                     )
                 )
             }
         }
 
         return ActionResult(
-            BookingAdd(
+            BookingView(
                 ledgerId,
+                0,
                 null,
                 bankTransaction.datetime,
                 records,
@@ -261,7 +273,7 @@ class TransactionMatchingService(
 }
 
 data class ActionResult(
-    val booking: BookingAdd?,
+    val booking: BookingView?,
     val matchBookingId: Long?,
 )
 
