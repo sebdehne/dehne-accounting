@@ -27,7 +27,7 @@ enum class ReadRequestType(
     getLedgers(legderUpdated, legderRemoved, legderAdded, userLedgerAccessChanged),
     getBankAccounts(bankAdded, bankUpdated, bankRemoved, bankAccountAdded, bankAccountUpdated, bankAccountRemoved),
 
-    ledgerRapport(bookingAdded, bookingRemoved),
+    ledgerRapport(bookingAdded, bookingRemoved, bookingChanged),
     getBankTransactions(bankTransactionAdded, bankTransactionRemoveLast),
     getBankTransaction(bankTransactionAdded, bankTransactionRemoveLast),
 
@@ -37,7 +37,7 @@ enum class ReadRequestType(
 
     getMatchers(matcherAdded, matcherUpdated, matcherRemoved),
 
-    getBookings(bookingAdded, bookingRemoved),
+    getBookings(bookingAdded, bookingRemoved, bookingChanged),
 
     ;
 

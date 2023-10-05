@@ -42,11 +42,11 @@ class Configuration {
 
         val changelog = Changelog(objectMapper)
         val repository = Repository(changelog, objectMapper)
-        val categoryService = CategoryService(repository, datasource)
+        val categoryReadService = CategoryReadService(repository, datasource)
         val userService = UserService(datasource)
-        val bookingReadService = BookingReadService(repository, datasource, userService, categoryService)
+        val bookingReadService = BookingReadService(repository, datasource, userService)
         val bankService = BankService(bookingReadService, repository, datasource)
-        val rapportService = RapportService(repository, categoryService, datasource)
+        val rapportService = RapportService(repository, categoryReadService, datasource)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
         val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
         val userStateService = UserStateService(datasource, repository)
@@ -56,11 +56,11 @@ class Configuration {
             executorService,
             userService,
             rapportService,
-            categoryService,
+            categoryReadService,
             userStateService,
             transactionMatchingService
         )
-        val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService)
+        val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService, categoryReadService)
 
 
         beans[BankService::class] = bankService
@@ -71,6 +71,7 @@ class Configuration {
         beans[TransactionMatchingService::class] = transactionMatchingService
         beans[UserStateService::class] = userStateService
         beans[BookingWriteService::class] = bookingWriteService
+        beans[CategoryWriteService::class] = CategoryWriteService(repository, datasource, bookingReadService)
     }
 
     inline fun <reified T> getBeanNull(): T? {

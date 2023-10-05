@@ -1,9 +1,6 @@
 package com.dehnes.accounting.bank.importers
 
-import com.dehnes.accounting.database.BankTransaction
-import com.dehnes.accounting.database.BankTransactionAdd
-import com.dehnes.accounting.database.BankTxDateRangeFilter
-import com.dehnes.accounting.database.Repository
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.services.BookingReadService
 import com.dehnes.smarthome.utils.DateTimeUtils.plusDays
@@ -24,7 +21,7 @@ class BankTransactionImportService(
         duplicationHandler: DuplicationHandler,
     ) = dataSource.writeTx { conn ->
 
-        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.write)
 
         val bankAccount =
             repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == bankAccountId }

@@ -6,14 +6,14 @@ import com.dehnes.accounting.database.DateRangeFilter
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.CategoryLeaf
-import com.dehnes.accounting.services.CategoryService
+import com.dehnes.accounting.services.CategoryReadService
 import java.sql.Connection
 import java.time.Instant
 import javax.sql.DataSource
 
 class RapportService(
     private val repository: Repository,
-    private val categoryService: CategoryService,
+    private val categoryReadService: CategoryReadService,
     private val dataSource: DataSource,
 ) {
 
@@ -26,7 +26,7 @@ class RapportService(
         request: RapportRequest,
     ): List<RapportLeaf> {
 
-        val categories = categoryService.get(connection, request.ledgerId)
+        val categories = categoryReadService.get(connection, request.ledgerId)
 
         val bookings = repository.getBookings(
             connection,

@@ -3,6 +3,7 @@ package com.dehnes.accounting.services
 import com.dehnes.accounting.api.dtos.BankAccountTransactionView
 import com.dehnes.accounting.api.dtos.BankAccountView
 import com.dehnes.accounting.api.dtos.BankView
+import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.BankAccountDto
 import com.dehnes.accounting.database.BankAccountTransactionsFilter
 import com.dehnes.accounting.database.Repository
@@ -23,7 +24,7 @@ class BankService(
         bankAccountId: String,
     ) {
         dataSource.writeTx { conn ->
-            bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
+            bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.write)
 
 
             repository.removeLastBankTransaction(
@@ -40,7 +41,7 @@ class BankService(
         bankAccountId: String,
         transactionId: Long,
     ) = dataSource.readTx { conn ->
-        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
         if (!repository.getAllBankAccountsForLedger(conn, ledger.id).any { it.id == bankAccountId }) {
             error("User $userId does not have access to this bankAccount")
@@ -70,7 +71,7 @@ class BankService(
     ): List<BankAccountTransactionView> {
 
         return dataSource.readTx { conn ->
-            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
+            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
             if (!repository.getAllBankAccountsForLedger(conn, ledger.id).any { it.id == bankAccountId }) {
                 error("User $userId does not have access to this bankAccount")
@@ -108,7 +109,7 @@ class BankService(
     }
 
     fun getAccountsWithSummary(conn: Connection, userId: String, ledgerId: String): List<BankAccountDto> {
-        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
+        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
         return repository.getAllBankAccountsForLedger(conn, ledger.id)
     }

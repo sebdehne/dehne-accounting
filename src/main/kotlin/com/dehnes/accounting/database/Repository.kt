@@ -1024,6 +1024,25 @@ class Repository(
         )
     }
 
+    fun changeCategory(connection: Connection, userId: String, ledgerId: String, bookingId: Long, bookingRecordId: Long, newCategoryId: String) {
+        val updated = connection.prepareStatement("""
+            UPDATE booking_record SET category_id = ? WHERE ledger_id = ? AND booking_id = ? AND id = ?
+        """.trimIndent()).use {             preparedStatement ->
+            preparedStatement.setString(1, newCategoryId)
+            preparedStatement.setString(2, ledgerId)
+            preparedStatement.setLong(3, bookingId)
+            preparedStatement.setLong(4, bookingRecordId)
+            preparedStatement.executeUpdate() > 0
+        }
+        if (updated) {
+            changelog.add(connection, userId, ChangeLogEventType.bookingChanged, mapOf(
+                "ledgerId" to ledgerId,
+                "bookingId" to bookingId,
+                "id" to bookingRecordId,
+            ))
+        }
+    }
+
     /*
      * User state
      */
@@ -1071,25 +1090,20 @@ enum class AccessLevel {
     none,
     ;
 
-    fun hasAccess(write: Boolean) = if (write) {
-        when (this) {
-            admin,
-            legderOwner,
-            legderReadWrite -> true
-
-            legderRead,
-            none -> false
-        }
-    } else {
-        when (this) {
-            admin,
-            legderOwner,
-            legderReadWrite,
-            legderRead -> true
-
-            none -> false
-        }
+    fun hasAccess(req: AccessRequest) = when (req) {
+        AccessRequest.admin -> this == admin
+        AccessRequest.owner -> this in listOf(admin, legderOwner)
+        AccessRequest.write -> this in listOf(admin, legderOwner, legderReadWrite)
+        AccessRequest.read -> this in listOf(admin, legderOwner, legderReadWrite, legderRead)
+        else -> false
     }
+}
+
+enum class AccessRequest {
+    read,
+    write,
+    owner,
+    admin
 }
 
 data class BankDto(
@@ -1249,6 +1263,14 @@ class DateRangeFilter(
             toExclusive
         )
     }
+}
+class CategoryFilter(
+    private val categoryIds: List<String>,
+) : BookingsFilter {
+    override fun whereAndParams(): Pair<String, List<Any>> =
+        "br.category_id in (${categoryIds.joinToString(",") {"?"}})" to listOf(
+            categoryIds
+        )
 }
 
 class BankTxDateRangeFilter(

@@ -5,10 +5,7 @@ import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
-import com.dehnes.accounting.services.BankService
-import com.dehnes.accounting.services.BookingWriteService
-import com.dehnes.accounting.services.UserService
-import com.dehnes.accounting.services.UserStateService
+import com.dehnes.accounting.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.websocket.CloseReason
@@ -30,6 +27,7 @@ class WebSocketServer : Endpoint() {
     private val userService = configuration.getBean<UserService>()
     private val readService = configuration.getBean<ReadService>()
     private val bankService = configuration.getBean<BankService>()
+    private val categoryWriteService = configuration.getBean<CategoryWriteService>()
     private val userStateService = configuration.getBean<UserStateService>()
     private val transactionMatchingService = configuration.getBean<TransactionMatchingService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
@@ -161,6 +159,25 @@ class WebSocketServer : Endpoint() {
                         user.id,
                         rpcRequest.ledgerId!!,
                         rpcRequest.bankAccountId!!
+                    )
+                }
+                RpcResponse(error = errorMsg)
+            }
+
+            addOrReplaceCategory -> readService.doWithNotifies {
+                val (_, errorMsg) = logAndGetError(logger) {
+                    categoryWriteService.addOrReplaceCategory(user.id, rpcRequest.addOrReplaceCategory!!)
+                }
+                RpcResponse(error = errorMsg)
+            }
+
+            mergeCategories -> readService.doWithNotifies {
+                val (_, errorMsg) = logAndGetError(logger) {
+                    bookingWriteService.mergeCategories(
+                        user.id,
+                        rpcRequest.ledgerId!!,
+                        rpcRequest.mergeCategoriesRequest!!.sourceCategoryId,
+                        rpcRequest.mergeCategoriesRequest.destinationCategoryId,
                     )
                 }
                 RpcResponse(error = errorMsg)

@@ -7,7 +7,7 @@ import com.dehnes.accounting.domain.InformationElement
 import java.sql.Connection
 import javax.sql.DataSource
 
-class CategoryService(
+class CategoryReadService(
     private val repository: Repository,
     private val dataSource: DataSource,
 ) {

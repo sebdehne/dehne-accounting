@@ -1,19 +1,17 @@
 package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.LedgerView
-import com.dehnes.accounting.database.BookingRecordView
+import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.BookingsFilter
 import com.dehnes.accounting.database.Repository
 import com.dehnes.accounting.database.Transactions.readTx
 import java.sql.Connection
 import javax.sql.DataSource
-import kotlin.math.sign
 
 class BookingReadService(
     private val repository: Repository,
     private val dataSource: DataSource,
     private val userService: UserService,
-    private val categoryService: CategoryService,
 ) {
 
     fun getBookings(
@@ -23,7 +21,7 @@ class BookingReadService(
         vararg filters: BookingsFilter?,
     ) = dataSource.readTx { conn ->
 
-        val ledger = getLedgerAuthorized(conn, userId, ledgerId, write = false)
+        val ledger = getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
         repository.getBookings(
             conn,
@@ -33,9 +31,9 @@ class BookingReadService(
         )
     }
 
-    fun listLedgers(userId: String, write: Boolean): List<LedgerView> {
+    fun listLedgers(userId: String, accessRequest: AccessRequest): List<LedgerView> {
         return dataSource.readTx {
-            listLedgers(it, userId, write)
+            listLedgers(it, userId, accessRequest)
         }
     }
 
@@ -43,16 +41,15 @@ class BookingReadService(
         connection: Connection,
         userId: String,
         ledgerId: String,
-        write: Boolean,
+        accessRequest: AccessRequest,
     ): LedgerView {
-        val ledger = listLedgers(connection, userId, write).firstOrNull { it.id == ledgerId }
+        val ledger = listLedgers(connection, userId, accessRequest).firstOrNull { it.id == ledgerId }
             ?: error("User $userId has not access to $ledgerId")
 
         return ledger
     }
 
-
-    fun listLedgers(connection: Connection, userId: String, write: Boolean): List<LedgerView> {
+    fun listLedgers(connection: Connection, userId: String, accessRequest: AccessRequest): List<LedgerView> {
         val user = userService.getUserById(connection, userId) ?: error("Unknown userId=$userId")
         if (!user.isActive) return emptyList()
 
@@ -67,19 +64,9 @@ class BookingReadService(
                 l.description,
                 a.accessLevel
             )
-        }.filter { user.isAdmin || it.accessLevel.hasAccess(write) }
+        }.filter { user.isAdmin || it.accessLevel.hasAccess(accessRequest) }
     }
 
 }
 
 
-enum class RootCategory(
-    val id: String,
-) {
-    Asset("2f131f9d-c47e-4c9d-998b-8c477913fdcc"),
-    Liability("68b9ab02-67ac-4a09-b080-b043c1a4cde6"),
-    Expense("0c0ff3a5-d0c3-48fa-a53b-a71b200d0c96"),
-    Income("71795865-c7ce-4e09-ba30-56520a5266dd"),
-    Equity("688979ce-986b-4b23-8f7c-62b271172398"),
-    Payees("12ffcb90-f019-47fe-bdb0-27da28c2d745"),
-}

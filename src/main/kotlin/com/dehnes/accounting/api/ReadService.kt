@@ -3,6 +3,7 @@ package com.dehnes.accounting.api
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
 import com.dehnes.accounting.bank.TransactionMatchingService
+import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType
 import com.dehnes.accounting.database.DateRangeFilter
@@ -22,7 +23,7 @@ class ReadService(
     private val executorService: ExecutorService,
     private val userService: UserService,
     private val rapportService: RapportService,
-    private val categoryService: CategoryService,
+    private val categoryReadService: CategoryReadService,
     private val userStateService: UserStateService,
     private val transactionMatchingService: TransactionMatchingService,
 ) {
@@ -39,7 +40,7 @@ class ReadService(
         try {
             result = fn()
         } finally {
-            threadLocalChangeLog.get().forEach(::sendOutNotifies)
+            sendOutNotifies(threadLocalChangeLog.get())
             threadLocalChangeLog.remove()
         }
 
@@ -59,20 +60,27 @@ class ReadService(
         threadLocalChangeLog.get()?.add(ChangeEvent(changeLogEventType, subId))
     }
 
-    private fun sendOutNotifies(changeEvent: ChangeEvent) {
+    private fun sendOutNotifies(changeEvent: Collection<ChangeEvent>) {
+        val compressed = changeEvent.toSet()
+
         executorService.submit(wrap(logger) {
-            listeners.values
-                .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
-                .filter { changeEvent.changeLogEventType == null || changeEvent.changeLogEventType in it.readRequest.type.events }
-                .forEach { sub ->
-                    try {
-                        sub.onEvent(
-                            Notify(sub.subscriptionId, handleRequest(sub.userId, sub.readRequest))
-                        )
-                    } catch (e: Throwable) {
-                        logger.error(e) { "" }
+
+            compressed.forEach { changeEvent ->
+
+                listeners.values
+                    .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
+                    .filter { changeEvent.changeLogEventType == null || changeEvent.changeLogEventType in it.readRequest.type.events }
+                    .forEach { sub ->
+                        try {
+                            sub.onEvent(
+                                Notify(sub.subscriptionId, handleRequest(sub.userId, sub.readRequest))
+                            )
+                        } catch (e: Throwable) {
+                            logger.error(e) { "" }
+                        }
                     }
-                }
+
+            }
         })
     }
 
@@ -81,9 +89,9 @@ class ReadService(
 
         userState -> ReadResponse(userState = userStateService.getUserState(userId))
 
-        getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, false))
+        getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, AccessRequest.read))
 
-        allCategories -> ReadResponse(categories = categoryService.get(readRequest.ledgerId!!).asList)
+        allCategories -> ReadResponse(categories = categoryReadService.get(readRequest.ledgerId!!).asList)
 
         getBankAccounts -> ReadResponse(
             bankAccounts = bankService.getAllAccountsFor(
@@ -126,7 +134,7 @@ class ReadService(
                 )
             )
 
-            val categories = categoryService.get(readRequest.ledgerId)
+            val categories = categoryReadService.get(readRequest.ledgerId)
 
             fun mapLeaf(rapportLeaf: RapportLeaf): LedgerRapportNode {
                 return LedgerRapportNode(

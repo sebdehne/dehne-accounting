@@ -22,7 +22,7 @@ class TransactionMatchingService(
     ) {
 
         dataSource.writeTx { conn ->
-            bookingReadService.getLedgerAuthorized(conn, userId, matcher.ledgerId, write = true)
+            bookingReadService.getLedgerAuthorized(conn, userId, matcher.ledgerId, AccessRequest.write)
 
             repository.addOrReplaceMatcher(
                 conn,
@@ -39,7 +39,7 @@ class TransactionMatchingService(
     ): GetMatchersResponse {
 
         return dataSource.readTx { conn ->
-            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = false)
+            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
 
             val allMatchers = repository.getAllMatchers(conn, ledgerId)
 
@@ -76,7 +76,7 @@ class TransactionMatchingService(
         matcherId: String,
     ) {
         dataSource.writeTx { conn ->
-            bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
+            bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.write)
 
             repository.removeMatcher(conn, userId, matcherId)
         }
@@ -91,7 +91,7 @@ class TransactionMatchingService(
         memoText: String?,
     ) {
         dataSource.writeTx { conn ->
-            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, write = true)
+            val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.write)
 
             val bankAccountDto =
                 (repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == bankAccountId }

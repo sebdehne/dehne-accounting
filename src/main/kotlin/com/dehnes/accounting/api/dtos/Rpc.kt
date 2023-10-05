@@ -2,6 +2,7 @@ package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.bank.importers.DuplicationHandler
 import com.dehnes.accounting.bank.importers.ImportResult
+import com.dehnes.accounting.database.CategoryDto
 
 
 enum class RequestType {
@@ -18,6 +19,9 @@ enum class RequestType {
     removeBooking,
 
     setUserState,
+
+    addOrReplaceCategory,
+    mergeCategories,
 }
 
 data class RpcRequest(
@@ -32,6 +36,8 @@ data class RpcRequest(
     val userState: UserState?,
     val deleteMatcherId: String?,
     val bookingId: Long?,
+    val addOrReplaceCategory: CategoryDto?,
+    val mergeCategoriesRequest: MergeCategoriesRequest?,
 )
 
 data class RpcResponse(

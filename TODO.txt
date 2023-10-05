@@ -4,9 +4,9 @@ Bookings:
 - UI for add/edit booking
 - bulk edit - how?
 
+
 Categories:
-- only admin?
-- namespace per ledger?
+- write: only ledger owner
 - list
 - add
 - edit
