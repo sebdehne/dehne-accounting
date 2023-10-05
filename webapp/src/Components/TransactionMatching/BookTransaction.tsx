@@ -20,7 +20,7 @@ export const BookTransaction = () => {
     const [transaction, setTransaction] = useState<BankAccountTransactionView>();
 
     useEffect(() => {
-        if (userState.ledgerId && userState.bankAccountId && userState.transactionId) {
+        if (userState?.ledgerId && userState.bankAccountId && userState.transactionId) {
             const subId = WebsocketClient.subscribe(
                 {
                     type: "getBankTransaction",
@@ -53,7 +53,7 @@ export const BookTransaction = () => {
             </div>}
 
 
-            {transaction &&
+            {userState?.ledgerId && transaction &&
                 <MatchersSelector
                     transactionId={transaction.id}
                     ledgerId={userState.ledgerId!}

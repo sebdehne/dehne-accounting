@@ -116,15 +116,17 @@ const LedgerRapport = ({ledger}: LedgerRapportProps) => {
     const {userState} = useGlobalState();
 
     useEffect(() => {
-        const subId = WebsocketService.subscribe({
-            type: "ledgerRapport",
-            ledgerId: ledger.id,
-            ledgerRapportRequest: {
-                from: userState.legderMainState.currentPeriod.startDateTime,
-                toExcluding: userState.legderMainState.currentPeriod.endDateTime,
-            }
-        }, n => setLedgerRapport(n.readResponse.ledgerRapport!))
-        return () => WebsocketService.unsubscribe(subId);
+        if (userState?.legderMainState) {
+            const subId = WebsocketService.subscribe({
+                type: "ledgerRapport",
+                ledgerId: ledger.id,
+                ledgerRapportRequest: {
+                    from: userState.legderMainState.currentPeriod.startDateTime,
+                    toExcluding: userState.legderMainState.currentPeriod.endDateTime,
+                }
+            }, n => setLedgerRapport(n.readResponse.ledgerRapport!))
+            return () => WebsocketService.unsubscribe(subId);
+        }
     }, [ledger, userState]);
 
 

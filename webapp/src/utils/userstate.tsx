@@ -6,7 +6,7 @@ import {CategoryDto} from "../Websocket/types/categories";
 import {buildTree, CategoryTree} from "../Components/CategorySearchBox/CategoryTree";
 
 type ContextType = {
-    userState: UserStateFrontendState;
+    userState: UserStateFrontendState | undefined;
     setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => Promise<void>;
     categoriesAsList: CategoryDto[];
     categoriesAsTree: CategoryTree[];
@@ -16,27 +16,21 @@ const GlobalStateProviderContext = React.createContext({} as ContextType);
 
 export type UserStateProviderProps = {
     children?: React.ReactNode;
-    userStateInit?: UserStateFrontendState;
-    categoriesAsListInit?: CategoryDto[];
-    categoriesAsTreeInit?: CategoryTree[];
 }
-export const GlobalStateProvider = ({
-                                        children,
-                                        userStateInit = createDefault(),
-                                        categoriesAsListInit = [],
-                                        categoriesAsTreeInit = [],
-                                    }: UserStateProviderProps,
-) => {
-    const [userState, setUserState] = useState(userStateInit);
-    const [categoriesAsList, setCategoriesAsList] = useState<CategoryDto[]>(categoriesAsListInit);
-    const [categoriesAsTree, setCategoriesAsTree] = useState<CategoryTree[]>(categoriesAsTreeInit);
+export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
+
+    const [userState, setUserState] = useState<UserStateFrontendState |undefined>(undefined);
+    const [categoriesAsList, setCategoriesAsList] = useState<CategoryDto[]>([]);
+    const [categoriesAsTree, setCategoriesAsTree] = useState<CategoryTree[]>([]);
 
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
             {type: 'userState'},
-            notify => setUserState(
-                createDefault(notify.readResponse.userState!.frontendState)
-            )
+            notify => {
+                return setUserState(
+                    createDefault(notify.readResponse.userState!.frontendState)
+                );
+            }
         )
         return () => WebsocketClient.unsubscribe(subId);
     }, [setUserState]);
@@ -55,15 +49,18 @@ export const GlobalStateProvider = ({
     }, [setCategoriesAsList, setCategoriesAsTree, userState?.ledgerId]);
 
     const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
-        const updated = fn(userState);
-        return new Promise<void>(resolve => {
-            WebsocketClient.rpc({
-                type: "setUserState",
-                userState: {
-                    frontendState: updated
-                }
-            }).then(() => resolve())
-        });
+        if (userState) {
+            const updated = fn(userState);
+            return new Promise<void>(resolve => {
+                WebsocketClient.rpc({
+                    type: "setUserState",
+                    userState: {
+                        frontendState: updated
+                    }
+                }).then(() => resolve())
+            });
+        }
+        return new Promise<void>(resolve => resolve())
     }
 
     return (
@@ -126,7 +123,6 @@ export type UserStateFrontendState = {
     ledgerId?: string;
     bankAccountId?: string;
     transactionId?: number;
-    matcherId?: string;
 }
 
 export type BookingsState = {

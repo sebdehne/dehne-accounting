@@ -23,7 +23,7 @@ export const ChooseLedger = () => {
     let navigate = useNavigate();
 
     useEffect(() => {
-        if (userState.ledgerId) {
+        if (userState?.ledgerId) {
             navigate('/')
         }
     }, [userState]);

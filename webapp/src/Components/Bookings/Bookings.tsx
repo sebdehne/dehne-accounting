@@ -22,7 +22,7 @@ export const Bookings = () => {
     const [filter, setFilter] = useState('');
 
     useEffect(() => {
-        if (userState.ledgerId) {
+        if (userState?.ledgerId) {
             const subId = WebsocketService.subscribe(
                 {type: "getLedgers"},
                 n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
@@ -33,7 +33,7 @@ export const Bookings = () => {
     }, [setLedger, userState]);
 
     useEffect(() => {
-        if (ledger) {
+        if (ledger && userState) {
             const subId = WebsocketClient.subscribe(
                 {
                     type: "getBookings",
@@ -47,7 +47,7 @@ export const Bookings = () => {
             )
             return () => WebsocketService.unsubscribe(subId);
         }
-    }, [setBookings, ledger, userState.bookingsState]);
+    }, [setBookings, ledger, userState?.bookingsState]);
 
     const deleteBooking = useCallback((bookingId: number) => {
         if (ledger) {

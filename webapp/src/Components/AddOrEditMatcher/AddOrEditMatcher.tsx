@@ -9,7 +9,7 @@ import {Box, Button, Container, Paper, Step, StepContent, StepLabel, Stepper, Ty
 import {FilterEditor} from "./FilterEditor";
 import {ActionEditor} from "./ActionEditor";
 import {NameEditor} from "./NameEditor";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import Header from "../Header";
 
 
@@ -26,36 +26,50 @@ const steps = [
 ];
 
 export const AddOrEditMatcher = () => {
-    const {userState, setUserState} = useGlobalState();
-    const [matcher, setMatcher] = useState<TransactionMatcher>();
+    const {userState} = useGlobalState();
+    const {matcherId} = useParams();
+
+    const [origMatcher, setOrigMatcher] = useState<TransactionMatcher | undefined>();
+    const [matcher, setMatcher] = useState<TransactionMatcher | undefined>();
+
     const [activeStep, setActiveStep] = React.useState(0);
-    const [description, setDescription] = useState<string | undefined>('');
 
-    const editMode = !!userState.matcherId;
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (userState.ledgerId) {
-            if (userState.matcherId) {
-                const subId = WebsocketClient.subscribe(
-                    {
-                        type: "getMatchers", getMatchersRequest: {
-                            ledgerId: userState.ledgerId,
-                        }
-                    },
-                    notify => {
-                        let matchersResponse = notify.readResponse.getMatchersResponse!;
-                        setMatcher(matchersResponse.machers.find(m => m.id === userState.matcherId));
-                    }
-                )
-
-                return () => WebsocketClient.unsubscribe(subId);
-            }
-
+        if (userState && !userState.ledgerId) {
+            navigate("/ledger");
         }
-    }, [userState, setMatcher]);
+    }, [userState, navigate]);
 
+    // fetch matcher to edit
     useEffect(() => {
-        if (userState.ledgerId && userState.bankAccountId && userState.transactionId && !userState.matcherId) {
+        if (userState?.ledgerId && !origMatcher && matcherId) {
+            const subId = WebsocketClient.subscribe(
+                {
+                    type: "getMatchers", getMatchersRequest: {
+                        ledgerId: userState.ledgerId,
+                    }
+                },
+                notify => {
+                    let matchersResponse = notify.readResponse.getMatchersResponse!;
+                    if (!origMatcher) {
+                        const find = matchersResponse.machers.find(m => m.id === matcherId);
+                        if (find) {
+                            setOrigMatcher(find);
+                            setMatcher(JSON.parse(JSON.stringify(find)) as TransactionMatcher)
+                        }
+                    }
+                }
+            )
+
+            return () => WebsocketClient.unsubscribe(subId);
+        }
+    }, [origMatcher, matcherId, userState, setOrigMatcher, setMatcher]);
+
+    // fetch bank-transaction and create default values for new matcher
+    useEffect(() => {
+        if (userState?.ledgerId && userState.bankAccountId && userState.transactionId && !matcherId && !matcher) {
             const subId = WebsocketClient.subscribe(
                 {
                     type: "getBankTransaction",
@@ -68,10 +82,9 @@ export const AddOrEditMatcher = () => {
                 notify => {
                     if (!matcher) {
                         const bankTransaction = notify.readResponse.bankTransaction!;
-                        setDescription(bankTransaction.description);
                         setMatcher((
                             {
-                                name: "",
+                                name: bankTransaction.description ?? '',
                                 ledgerId: userState.ledgerId!,
                                 id: uuidv4(),
                                 filters: [
@@ -102,13 +115,11 @@ export const AddOrEditMatcher = () => {
 
             return () => WebsocketClient.unsubscribe(subId);
         }
-    }, [userState, matcher, setDescription, setMatcher]);
+    }, [userState, matcher, setMatcher, matcherId]);
 
     const handleNext = () => setActiveStep((prevActiveStep) => prevActiveStep + 1);
     const handleBack = () => setActiveStep((prevActiveStep) => prevActiveStep - 1);
     const handleReset = () => setActiveStep(0);
-
-    let navigate = useNavigate();
 
     const submit = () => {
         WebsocketClient.rpc({
@@ -121,7 +132,7 @@ export const AddOrEditMatcher = () => {
     return (
         <Container maxWidth="sm" className="App">
             <Header
-                title={(editMode ? "Edit " : "Add ") + matcher?.name}
+                title={(origMatcher ? "Edit " : "Add ") + matcher?.name}
             />
 
             {matcher && <div>
@@ -140,13 +151,13 @@ export const AddOrEditMatcher = () => {
                                 {index === 0 &&
                                     <FilterEditor matcher={matcher}
                                                   setMatcher={setMatcher as React.Dispatch<React.SetStateAction<TransactionMatcher>>}
-                                                  description={description}/>}
+                                                  description={matcher?.name ?? ''}/>}
                                 {index === 1 &&
                                     <ActionEditor matcher={matcher}
                                                   setMatcher={setMatcher as React.Dispatch<React.SetStateAction<TransactionMatcher>>}/>}
                                 {index === 2 &&
                                     <NameEditor matcher={matcher}
-                                                editMode={editMode}
+                                                editMode={!!matcher}
                                                 setMatcher={setMatcher as React.Dispatch<React.SetStateAction<TransactionMatcher>>}/>}
                                 <Box sx={{mb: 2}}>
                                     <div>

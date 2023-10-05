@@ -1,26 +1,26 @@
 import {useMemo} from "react";
-import {CategoryTree} from "./CategoryTree";
 import {Autocomplete, TextField} from "@mui/material";
 import {useGlobalState} from "../../utils/userstate";
+import {buildSearchList, SearchableCategory} from "./CategorySearchBox";
 
 
-export type CategorySearchBoxProps = {
+export type CategorySearchBoxProps2 = {
     includeIntermediate: boolean;
-    onSelectedCategoryId: (category: SearchableCategory | undefined) => void;
+    onSelectedCategoryId: (categoryId: string | undefined) => void;
     title?: string;
-    defaultCategoryId: string | undefined;
+    value: string | undefined;
     exclude?: string[];
     allowEmpty?: boolean;
 }
 
-export const CategorySearchBox = ({
+export const CategorySearchBox2 = ({
                                       includeIntermediate,
                                       onSelectedCategoryId,
-                                      defaultCategoryId,
+                                       value,
                                       title = "Search category",
                                       exclude = [],
                                       allowEmpty = false,
-                                  }: CategorySearchBoxProps) => {
+                                  }: CategorySearchBoxProps2) => {
     const {categoriesAsTree} = useGlobalState();
     const searchList = useMemo(() =>
             buildSearchList(categoriesAsTree, includeIntermediate).filter(c => !exclude.includes(c.category.id)),
@@ -31,10 +31,10 @@ export const CategorySearchBox = ({
         <Autocomplete
             disableClearable={!allowEmpty}
             onChange={(_, value) => onSelectedCategoryId(
-                !!value ? (value as SearchableCategory) : undefined
+                !!value ? (value as SearchableCategory).category.id : undefined
             )}
-            defaultValue={searchList.find(s => s.category.id === defaultCategoryId)}
             options={searchList}
+            value={searchList.find(c => c.category.id === value)}
             getOptionLabel={(option) => (option as SearchableCategory).parentsString + ' -> ' + (option as SearchableCategory).category.name}
             renderInput={(params) => (
                 <TextField
@@ -50,25 +50,3 @@ export const CategorySearchBox = ({
     </div>);
 }
 
-export type SearchableCategory = {
-    category: CategoryTree;
-    parentsString: string;
-}
-
-export const buildSearchList = (tree: CategoryTree[], includeIntermediate: boolean): SearchableCategory[] => {
-    let result: SearchableCategory[] = [];
-
-    const visit = (t: CategoryTree, parentNames: string[]) => {
-        if (t.children.length === 0 || includeIntermediate) {
-            result.push({
-                category: t,
-                parentsString: parentNames.join(":")
-            });
-        }
-        t.children.forEach(c => visit(c, [...parentNames, t.name]));
-    }
-
-    tree.map(t => visit(t, []));
-
-    return result;
-}

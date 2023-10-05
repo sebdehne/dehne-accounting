@@ -24,7 +24,7 @@ export const BankTransactions = () => {
     const [editMode, setEditMode] = useState(false);
 
     useEffect(() => {
-        if (userState.ledgerId && userState.bankAccountId) {
+        if (userState?.ledgerId && userState.bankAccountId) {
             const subId = WebsocketClient
                 .subscribe(
                     {type: "getBankAccounts", ledgerId: userState.ledgerId},
@@ -37,7 +37,7 @@ export const BankTransactions = () => {
     }, [userState]);
 
     useEffect(() => {
-        if (!bankAccount) return () => {
+        if (!bankAccount ||!userState?.ledgerId) return () => {
         };
 
         const subId = WebsocketClient
@@ -67,13 +67,15 @@ export const BankTransactions = () => {
     }
 
     const removeLastBankTransaction = useCallback(() => {
-        WebsocketClient.rpc(
-            {
-                type: "removeLastBankTransaction",
-                ledgerId: userState.ledgerId,
-                bankAccountId: userState.bankAccountId,
-            }
-        )
+        if (userState?.ledgerId) {
+            WebsocketClient.rpc(
+                {
+                    type: "removeLastBankTransaction",
+                    ledgerId: userState.ledgerId,
+                    bankAccountId: userState.bankAccountId,
+                }
+            )
+        }
     }, []);
 
     return (

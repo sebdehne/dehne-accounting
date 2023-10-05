@@ -17,6 +17,9 @@ import {GlobalStateProvider} from "./utils/userstate";
 import {AddOrEditMatcher} from "./Components/AddOrEditMatcher/AddOrEditMatcher";
 import {Bookings} from "./Components/Bookings/Bookings";
 import {ChooseLedger} from "./Components/ChooseLedger/ChooseLedger";
+import {Categories} from "./Components/Categories/Categories";
+import {AddOrEditCategory} from "./Components/Categories/AddOrEditCategory";
+import {Outlet, useLocation, useNavigationType} from 'react-router-dom';
 
 
 const root = ReactDOM.createRoot(
@@ -31,12 +34,16 @@ root.render(
                     <Routes>
                         <Route path="/" element={<LedgerMain/>}/>
                         <Route path="/ledger" element={<ChooseLedger/>}/>
+                        <Route path="/categories" element={<Categories/>}/>
+                        <Route path="/category" element={<AddOrEditCategory/>}/>
+                        <Route path="/category/:editCategoryId" element={<AddOrEditCategory/>}/>
                         <Route path="/bookings" element={<Bookings/>}/>
                         <Route path="/bankaccount" element={<BankTransactions/>}/>
                         <Route path="/bankaccount/import"
                                element={<BankTransactionsImporter/>}/>
                         <Route path="/book/transaction" element={<BookTransaction/>}/>
                         <Route path="/matcher" element={<AddOrEditMatcher/>}/>
+                        <Route path="/matcher/:matcherId" element={<AddOrEditMatcher/>}/>
                     </Routes>
                 </BrowserRouter>
             </ThemeProvider>

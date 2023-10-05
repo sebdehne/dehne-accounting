@@ -45,7 +45,7 @@ export const arrayBufferToBase64 = (buffer: ArrayBuffer ) => {
     return btoa( binary );
 };
 
-export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId: string |undefined): string => {
+export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId: string |undefined, endDelimiter: boolean = true): string => {
     const parts: string[] = [];
     /* eslint-disable no-loop-func */
     let current = categories.find(c => c.id === parentCategoryId);
@@ -53,5 +53,5 @@ export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId:
         parts.unshift(current.name);
         current = categories.find(c => c.id === current?.parentCategoryId);
     }
-    return parts.length > 0 ? (parts.join(" > ") + " > ") : "";
+    return parts.length > 0 ? (parts.join(" > ") + (endDelimiter ? " > " : "")) : "";
 }

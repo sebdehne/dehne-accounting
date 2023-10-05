@@ -78,6 +78,8 @@ create table category
     foreign key (parent_category_id, ledger_id) references category (id, ledger_id),
     foreign key (ledger_id) references ledger (id)
 );
+-- enforce unique names for categories which share the same parent
+create unique index category_idx_001 on category (ledger_id, parent_category_id, name);
 
 create table changelog
 (

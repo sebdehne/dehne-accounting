@@ -5,14 +5,6 @@ Bookings:
 - bulk edit - how?
 
 
-Categories:
-- write: only ledger owner
-- list
-- add
-- edit
-- merge (can also be used to delete unused ones)
-
-
 Bank accounts:
 - add
 - edit

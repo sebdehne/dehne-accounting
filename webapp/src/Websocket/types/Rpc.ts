@@ -1,6 +1,7 @@
 import {Subscribe, Unsubscribe} from "./Subscription";
 import {ExecuteMatcherRequest, TransactionMatcher} from "./transactionMatcher";
 import {UserState} from "../../utils/userstate";
+import {CategoryDto, MergeCategoriesRequest} from "./categories";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
@@ -11,6 +12,8 @@ export type RequestType = "subscribe"
     | 'setUserState'
     | 'removeBooking'
     | 'removeLastBankTransaction'
+    | 'addOrReplaceCategory'
+    | 'mergeCategories'
     ;
 
 export type RpcRequest = {
@@ -26,6 +29,8 @@ export type RpcRequest = {
     userState?: UserState;
     deleteMatcherId?: string;
     bookingId?: number;
+    addOrReplaceCategory?: CategoryDto;
+    mergeCategoriesRequest?: MergeCategoriesRequest;
 }
 
 export type RpcResponse = {

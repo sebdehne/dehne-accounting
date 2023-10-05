@@ -62,6 +62,16 @@ class BookingWriteService(
                     child.copy(parentCategoryId = destinationCategoryId)
                 )
             }
+
+            /*
+             * Delete source category
+             */
+            repository.removeCategory(
+                conn,
+                userId,
+                ledgerId,
+                sourceCategoryId
+            )
         }
     }
 

@@ -87,7 +87,10 @@ class ReadService(
     fun handleRequest(userId: String, readRequest: ReadRequest): ReadResponse = when (readRequest.type) {
         userInfo -> ReadResponse(userView = UserView.fromUser(userService.getUserById(userId)!!))
 
-        userState -> ReadResponse(userState = userStateService.getUserState(userId))
+        userState -> {
+            val userState = userStateService.getUserState(userId)
+            ReadResponse(userState = userState)
+        }
 
         getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(userId, AccessRequest.read))
 

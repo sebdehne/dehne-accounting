@@ -33,9 +33,7 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
         }))
     }, [matcher]);
 
-
     return (<div>
-
         <FormControl sx={{m: 1, minWidth: 120}}>
             <InputLabel id="demo-simple-select-helper-label">Target type</InputLabel>
             <Select
@@ -74,7 +72,7 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
                 ...prevState,
                 action: {
                     ...prevState.action,
-                    transferCategoryId: category.category.id
+                    transferCategoryId: category!.category.id
                 }
             }))}/>
         </div>}
@@ -149,10 +147,10 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
 
             <CategorySearchBox
                 includeIntermediate={true}
-                defaultCategoryId={config.categoryIdRemaining}
+                defaultCategoryId={config.categoryIdRemaining ?? ''}
                 onSelectedCategoryId={category => setConfig(({
                     ...config,
-                    categoryIdRemaining: category.category.id
+                    categoryIdRemaining: category!.category.id
                 }))}
                 title={"Main category"}
             />

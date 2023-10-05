@@ -50,14 +50,18 @@ const Header = ({title, clickable}: HeaderProps) => {
             </div>
             <div>
                 <ButtonGroup>
-                    <Button style={{marginRight: '5px'}}
+                    <Button style={{marginRight: '2px'}}
                             color="primary"
                             variant="contained"
                             onClick={() => navigate('/')}>Home</Button>
-                    <Button style={{marginRight: '5px'}}
+                    <Button style={{marginRight: '2px'}}
                             color="primary"
                             variant="contained"
                             onClick={() => navigate('/bookings')}>Bookings</Button>
+                    <Button style={{marginRight: '2px'}}
+                            color="primary"
+                            variant="contained"
+                            onClick={() => navigate('/categories')}>Categories</Button>
                 </ButtonGroup>
             </div>
 

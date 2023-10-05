@@ -30,7 +30,7 @@ export const BankTransactionsImporter = () => {
     const [ignoreDescriptionDuringImport, setIgnoreDescriptionDuringImport] = useState(false);
 
     useEffect(() => {
-        if (userState.ledgerId && userState.bankAccountId) {
+        if (userState?.ledgerId && userState.bankAccountId) {
             const subId = WebsocketClient
                 .subscribe(
                     {type: "getBankAccounts", ledgerId: userState.ledgerId},
@@ -50,7 +50,7 @@ export const BankTransactionsImporter = () => {
         }
     }
     const importNow = () => {
-        if (selectedFile && bankAccount) {
+        if (selectedFile && bankAccount && userState?.ledgerId) {
             const fr = new FileReader();
             fr.onload = () => {
                 const data: ArrayBuffer = fr.result as ArrayBuffer;

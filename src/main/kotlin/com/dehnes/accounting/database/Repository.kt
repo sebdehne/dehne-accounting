@@ -475,6 +475,8 @@ class Repository(
         userId: String,
         category: CategoryDto
     ) {
+
+        check(category.name.isNotBlank())
         val updated =
             connection.prepareStatement(
                 """
@@ -487,7 +489,7 @@ class Repository(
             )
                 .use { preparedStatement ->
                     preparedStatement.setString(1, category.name)
-                    preparedStatement.setString(2, category.description)
+                    preparedStatement.setString(2, category.description?.ifBlank { null })
                     preparedStatement.setString(3, category.parentCategoryId)
                     preparedStatement.setString(4, category.id)
                     preparedStatement.setString(5, category.ledgerId)
@@ -1268,9 +1270,7 @@ class CategoryFilter(
     private val categoryIds: List<String>,
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> =
-        "br.category_id in (${categoryIds.joinToString(",") {"?"}})" to listOf(
-            categoryIds
-        )
+        "br.category_id in (${categoryIds.joinToString(",") {"?"}})" to categoryIds
 }
 
 class BankTxDateRangeFilter(
