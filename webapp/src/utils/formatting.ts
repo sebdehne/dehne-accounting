@@ -13,6 +13,13 @@ export function formatLocatDayMonth(m: moment.Moment) {
 export function formatYearMonth(m: moment.Moment) {
     return m.format('MMMM, YYYY');
 }
+export function formatMonth(m: moment.Moment) {
+    return m.format('MMMM');
+}
+
+export function formatYear(m: moment.Moment) {
+    return m.format('YYYY');
+}
 export function formatIso(m: moment.Moment) {
     return m.format();
 }
@@ -23,6 +30,9 @@ export function startOfCurrentMonth(): moment.Moment {
 
 export function monthDelta(m: moment.Moment, delta: number): moment.Moment {
     return m.clone().add(delta, 'months');
+}
+export function yearDelta(m: moment.Moment, delta: number): moment.Moment {
+    return m.clone().add(delta, 'years');
 }
 
 export const arrayBufferToBase64 = (buffer: ArrayBuffer ) => {

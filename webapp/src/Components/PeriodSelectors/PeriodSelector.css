@@ -5,3 +5,14 @@
     align-items: center;
     font-size: 1.4em;
 }
+
+.MonthPeriodSelectorMonthAndYear {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.MonthPeriodSelectorEditYear {
+    display: flex;
+    flex-direction: column;
+}

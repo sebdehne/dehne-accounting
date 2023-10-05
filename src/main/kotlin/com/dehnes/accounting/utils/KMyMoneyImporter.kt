@@ -4,7 +4,7 @@ import com.dehnes.accounting.bank.importers.SupportedImporters
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
-import com.dehnes.accounting.services.CategoryService
+import com.dehnes.accounting.utils.KMyMoneyImporter.TransactionType.*
 import com.dehnes.smarthome.utils.DateTimeUtils.zoneId
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
@@ -20,7 +20,6 @@ import javax.xml.parsers.DocumentBuilderFactory
 class KMyMoneyImporter(
     private val repository: Repository,
     private val dataSource: DataSource,
-    private val categoryService: CategoryService,
 ) {
 
     internal class CategoryImporter(
@@ -45,13 +44,15 @@ class KMyMoneyImporter(
             return categoriesList.first { it.id == accountId }
         }
 
-        fun getImportedPayeeByName(connection: Connection, payeeName: String): Pair<CategoryDto, Payee> =
-            getImportedPayee(connection, payees.single { it.name == payeeName }.id)
+        fun getImportedPayee(
+            connection: Connection,
+            payeeId: String?,
+            defaultPayeeName: String
+        ): Pair<CategoryDto, Payee> {
+            val finalPayeeId = payeeId ?: payees.single { it.name == defaultPayeeName }.id
+            payeeIdMapping[finalPayeeId]?.let { return it }
 
-        fun getImportedPayee(connection: Connection, payeeId: String): Pair<CategoryDto, Payee> {
-            payeeIdMapping[payeeId]?.let { return it }
-
-            val payee = payees.single { it.id == payeeId }
+            val payee = payees.single { it.id == finalPayeeId }
 
             val categoryDto = CategoryDto(
                 UUID.nameUUIDFromBytes(payee.id.toByteArray()).toString(),
@@ -61,7 +62,7 @@ class KMyMoneyImporter(
                 ledger.id
             )
 
-            payeeIdMapping[payeeId] = (categoryDto to payee)
+            payeeIdMapping[finalPayeeId] = (categoryDto to payee)
 
             repository.addOrReplaceCategory(
                 connection,
@@ -240,6 +241,12 @@ class KMyMoneyImporter(
         val account: AccountTree,
     )
 
+    enum class TransactionType(val multiplier: Int) {
+        paymentOrIncome(-1),
+        transferInsideLedger(1),
+        transferOutsideLedger(-1),
+    }
+
     private fun importTransactions(
         ledger: LedgerDto,
         categoryImporter: CategoryImporter,
@@ -261,15 +268,24 @@ class KMyMoneyImporter(
                         val mainTx = tx.splits.single { it.accountId == bAccountOriginal.id }
                         val targetAccounts = tx.splits.filterNot { it.id == mainTx.id }
 
-                        val transferOtherBankAccount = bankAndAccounts
+                        val transferOtherBankAccountThisLedger = bankAndAccounts
                             .accountsForThisLedger
-                            .firstOrNull { (_, otherAccount) -> otherAccount.id == targetAccounts.first().accountId }
+                            .firstOrNull { (_, _, account) -> account.id == targetAccounts.first().accountId }
+                        val transferOtherBankAccountOtherLedger = bankAndAccounts
+                            .otherLedgerAccountIds
+                            .any { otherAccountId -> otherAccountId == targetAccounts.first().accountId }
+
+                        val txType = when {
+                            transferOtherBankAccountThisLedger == null && !transferOtherBankAccountOtherLedger -> paymentOrIncome
+                            transferOtherBankAccountOtherLedger -> transferOutsideLedger
+                            else -> transferInsideLedger
+                        }
 
                         val payeesOrAccounts = targetAccounts
                             .mapNotNull { a ->
 
                                 if (a.payeeId != null) {
-                                    categoryImporter.getImportedPayee(conn, a.payeeId).first
+                                    categoryImporter.getImportedPayee(conn, a.payeeId, defaultPayeeName).first
                                 } else {
                                     if (a.accountId in bankAndAccounts.otherLedgerAccountIds) {
                                         return@mapNotNull null
@@ -286,6 +302,7 @@ class KMyMoneyImporter(
                             .ifEmpty { null }
                             ?.joinToString(",")
 
+
                         // bank-tx
                         val bankTxId = repository.addBankTransaction(
                             conn,
@@ -300,7 +317,7 @@ class KMyMoneyImporter(
                             )
                         )
 
-                        val alreadyBookedCandidate = if (transferOtherBankAccount != null) {
+                        val alreadyBookedCandidate = if (txType == transferInsideLedger) {
                             repository.getBookings(
                                 conn,
                                 bAccount.ledgerId,
@@ -315,55 +332,50 @@ class KMyMoneyImporter(
                         // ledger booking
                         if (alreadyBookedCandidate != null) {
                             repository.matchBankTransaction(
-                                conn,
-                                userId,
-                                bAccount.id,
-                                bankTxId,
-                                bAccount.ledgerId,
-                                alreadyBookedCandidate.id,
+                                connection = conn,
+                                userId = userId,
+                                bankAccountId = bAccount.id,
+                                transactionId = bankTxId,
+                                ledgerId = bAccount.ledgerId,
+                                bookingId = alreadyBookedCandidate.id,
                             )
                         } else {
+                            val mainRecord = BookingRecordAdd(
+                                mainTx.memo,
+                                when (txType) {
+                                    paymentOrIncome,
+                                    transferOutsideLedger -> categoryImporter.getImportedPayee(
+                                        conn,
+                                        mainTx.payeeId,
+                                        defaultPayeeName
+                                    ).first.id
+
+                                    transferInsideLedger -> bAccountCategory.id
+                                },
+                                mainTx.amountInCents.toLong() * txType.multiplier,
+                            )
+                            val otherRecords = targetAccounts.map {
+                                BookingRecordAdd(
+                                    it.memo,
+                                    when (txType) {
+                                        transferInsideLedger,
+                                        paymentOrIncome -> categoryImporter.getImported(conn, it.accountId).first.id
+
+                                        transferOutsideLedger -> bAccountCategory.id
+                                    },
+                                    it.amountInCents.toLong() * txType.multiplier,
+                                )
+                            }
                             val bookingId = repository.addBooking(
                                 conn,
                                 userId,
                                 BookingAdd(
                                     bAccount.ledgerId,
-                                    transferOtherBankAccount?.let { tx.id },
+                                    if (txType == transferInsideLedger) tx.id else null, // so that we can find a match
                                     tx.postDate.atStartOfDay().atZone(zoneId).toInstant(),
                                     listOf(
-                                        BookingRecordAdd(
-                                            mainTx.memo,
-                                            when {
-                                                transferOtherBankAccount != null -> bAccountCategory.id
-                                                else -> (mainTx.payeeId?.let {
-                                                    categoryImporter.getImportedPayee(
-                                                        conn,
-                                                        it
-                                                    )
-                                                }
-                                                    ?: categoryImporter.getImportedPayeeByName(conn, defaultPayeeName))
-                                                    .first
-                                                    .id
-                                            },
-                                            mainTx.amountInCents.toLong() * -1,
-                                        )
-                                    ) + targetAccounts.map {
-                                        BookingRecordAdd(
-                                            it.memo,
-                                            run {
-                                                if (it.accountId in bankAndAccounts.otherLedgerAccountIds) {
-                                                    if (it.payeeId != null) {
-                                                        categoryImporter.getImportedPayee(conn, it.payeeId).first
-                                                    } else {
-                                                        error("Do not know which category to make the booking against")
-                                                    }
-                                                } else {
-                                                    categoryImporter.getImported(conn, it.accountId).first
-                                                }
-                                            }.id,
-                                            it.amountInCents.toLong() * -1,
-                                        )
-                                    }
+                                        mainRecord
+                                    ) + otherRecords
                                 )
                             )
                             repository.matchBankTransaction(
@@ -624,11 +636,4 @@ class KMyMoneyImporter(
         val name: String
     )
 
-}
-
-fun MutableMap<String, String>.addNewId(id: String, id2: String) {
-    var r = this.put(id, id2)
-    check(r == null || r == id2)
-    r = this.put(id2, id)
-    check(r == null || r == id)
 }

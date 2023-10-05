@@ -1,8 +1,10 @@
-import React, {useCallback, useMemo} from "react";
-import {formatIso, formatYearMonth, monthDelta} from "../../utils/formatting";
+import React, {useCallback, useMemo, useState} from "react";
+import {formatIso, formatMonth, formatYear, formatYearMonth, monthDelta, yearDelta} from "../../utils/formatting";
 import IconButton from "@mui/material/IconButton";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import './PeriodSelector.css'
 import moment from "moment";
 import {PeriodWindow, useGlobalState} from "../../utils/userstate";
@@ -56,19 +58,35 @@ type MonthPeriodSelectorProps = {
     setPeriod: (p: moment.Moment[]) => void;
 }
 const MonthPeriodSelector = ({period, setPeriod}: MonthPeriodSelectorProps) => {
+    const [editYear, setEditYear] = useState(false);
 
-    const updatePeriode = (deltaMonth: number) => {
+    const updatePeriodeMonth = (deltaMonth: number) => {
         const newStart = monthDelta(period[0], deltaMonth);
         const newEnd = monthDelta(newStart, 1);
         setPeriod([newStart, newEnd]);
     }
+    const updatePeriodeYear = (deltaMonth: number) => {
+        const newStart = yearDelta(period[0], deltaMonth);
+        const newEnd = monthDelta(newStart, 1);
+        setPeriod([newStart, newEnd]);
+    }
+
 
     return (
         <div className="MonthPeriodSelector">
-            <IconButton size="large" onClick={() => updatePeriode(-1)}><ArrowLeftIcon
+            <IconButton size="large" onClick={() => updatePeriodeMonth(-1)}><ArrowLeftIcon
                 fontSize="inherit"/></IconButton>
-            <div>{formatYearMonth(period[0])}</div>
-            <IconButton size="large" onClick={() => updatePeriode(1)}><ArrowRightIcon
+            <div className="MonthPeriodSelectorMonthAndYear">
+                <div>{formatMonth(period[0])}</div>
+                <div>,&nbsp;</div>
+                {editYear && <div className="MonthPeriodSelectorEditYear">
+                    <IconButton onClick={() => updatePeriodeYear(1)}><ArrowUpwardIcon/></IconButton>
+                    <div onClick={() => setEditYear(false)}>{formatYear(period[0])}</div>
+                    <IconButton onClick={() => updatePeriodeYear(-1)}><ArrowDownwardIcon/></IconButton>
+                </div>}
+                {!editYear && <div onClick={() => setEditYear(true)}>{formatYear(period[0])}</div>}
+            </div>
+            <IconButton size="large" onClick={() => updatePeriodeMonth(1)}><ArrowRightIcon
                 fontSize="inherit"/></IconButton>
         </div>
     )
