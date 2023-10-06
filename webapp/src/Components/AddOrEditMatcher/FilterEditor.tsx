@@ -9,8 +9,10 @@ import './FilterEditor.css';
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
-import {BankAccountTransactionView} from "../../Websocket/types/banktransactions";
 import AddIcon from '@mui/icons-material/Add';
+import {AmountTextField} from "../AmountTextfield/AmountTextfield";
+import {amountInCentsToString} from "../../utils/formatting";
+import {useGlobalState} from "../../utils/userstate";
 
 export type FilterEditorProps = {
     description?: string;
@@ -18,11 +20,11 @@ export type FilterEditorProps = {
     setMatcher: React.Dispatch<React.SetStateAction<TransactionMatcher>>;
 }
 export const FilterEditor = ({matcher, setMatcher, description}: FilterEditorProps) => {
-
+    const {userState} = useGlobalState()
     const [filterType, setFilterType] = useState<TransactionMatcherFilterType>("exact");
     const [pattern, setPattern] = useState(description);
-    const [fromAmount, setFromAmount] = useState('');
-    const [toAmount, setToAmount] = useState('');
+    const [fromAmount, setFromAmount] = useState(0);
+    const [toAmount, setToAmount] = useState(0);
     const [bankAccountName, setBankAccountName] = useState('');
 
     const addFilter = useCallback((f: TransactionMatcherFilter) => {
@@ -45,6 +47,8 @@ export const FilterEditor = ({matcher, setMatcher, description}: FilterEditorPro
     const needsAmounts = (type: TransactionMatcherFilterType) => ['amountBetween'].includes(type)
     const needsBankAccountName = (type: TransactionMatcherFilterType) => ['ifAccountName'].includes(type)
 
+    if (!userState) return null;
+
     return (
         <div>
 
@@ -53,8 +57,8 @@ export const FilterEditor = ({matcher, setMatcher, description}: FilterEditorPro
                     <div className="FilterSummary">
                         <div>Type: {f.type}</div>
                         {needsPattern(f.type) && <div>Pattern: {f.pattern}</div>}
-                        {needsAmounts(f.type) && <div>From: {f.fromAmount}</div>}
-                        {needsAmounts(f.type) && <div>From: {f.toAmount}</div>}
+                        {needsAmounts(f.type) && <div>From: {amountInCentsToString(f.fromAmount!, userState.locale)}</div>}
+                        {needsAmounts(f.type) && <div>To: {amountInCentsToString(f.toAmount!, userState.locale)}</div>}
                         {needsBankAccountName(f.type) && <div>Bank account: {f.bankAccountName}</div>}
                     </div>
                     <IconButton size="large" onClick={() => removeFilter(index)}>
@@ -87,14 +91,12 @@ export const FilterEditor = ({matcher, setMatcher, description}: FilterEditorPro
                     <TextField value={pattern} label="Pattern"
                                onChange={event => setPattern(event.target.value ?? '')}/>
                 </FormControl>}
-                {needsAmounts(filterType) && <FormControl sx={{m: 1, minWidth: 300}}>
-                    <TextField value={fromAmount} label="From amount"
-                               onChange={event => setFromAmount(event.target.value ?? '')}/>
-                </FormControl>}
-                {needsAmounts(filterType) && <FormControl sx={{m: 1, minWidth: 300}}>
-                    <TextField value={toAmount} label="To amount"
-                               onChange={event => setToAmount(event.target.value ?? '')}/>
-                </FormControl>}
+                {needsAmounts(filterType) &&
+                    <AmountTextField label={"From"} initialValue={fromAmount} setValue={newValue => setFromAmount(newValue)}/>
+                }
+                {needsAmounts(filterType) &&
+                    <AmountTextField label={"To"} initialValue={toAmount} setValue={newValue => setToAmount(newValue)}/>
+                }
                 {needsBankAccountName(filterType) && <FormControl sx={{m: 1, minWidth: 300}}>
                     <TextField value={bankAccountName} label="Bank account name"
                                onChange={event => setBankAccountName(event.target.value ?? '')}/>
@@ -104,8 +106,8 @@ export const FilterEditor = ({matcher, setMatcher, description}: FilterEditorPro
                         {
                             type: filterType,
                             pattern,
-                            toAmount: parseInt(toAmount),
-                            fromAmount: parseInt(fromAmount),
+                            toAmount: toAmount,
+                            fromAmount: fromAmount,
                             bankAccountName,
                         }
                     )}><AddIcon fontSize="inherit"/></IconButton>
