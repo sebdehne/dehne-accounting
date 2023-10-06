@@ -16,7 +16,8 @@ interface Importer {
 enum class SupportedImporters(
     val klazz: KClass<out Importer>
 ) {
-    DanskeBankCsvExportImporter(com.dehnes.accounting.bank.importers.DanskeBankCsvExportImporter::class)
+    DanskeBankCsvExportImporter(com.dehnes.accounting.bank.importers.DanskeBankCsvExportImporter::class),
+    SBanken(SBankenCsvExportImporter::class),
 }
 
 data class BankTransactionImportRecord(

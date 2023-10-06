@@ -3,7 +3,6 @@
 - edit matcher doesnt work
 - matchers: OR-rules vs AND-rules
 
-
 Bank accounts:
 - add
 - edit
