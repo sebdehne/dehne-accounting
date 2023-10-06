@@ -1,7 +1,7 @@
 package com.dehnes.accounting.bank.importers
 
 import com.dehnes.accounting.utils.CsvParser.parseLine
-import com.dehnes.smarthome.utils.DateTimeUtils.zoneId
+import com.dehnes.accounting.utils.DateTimeUtils.zoneId
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -42,6 +42,8 @@ class DanskeBankCsvExportImporter : Importer {
         onNewRecord: (record: BankTransactionImportRecord) -> Unit
     ) {
 
+        val records = mutableListOf<BankTransactionImportRecord>()
+
         BufferedReader(InputStreamReader(dataSource, StandardCharsets.ISO_8859_1)).use { reader ->
             val headerLine = reader.readLine().parseLine()
 
@@ -56,7 +58,6 @@ class DanskeBankCsvExportImporter : Importer {
                 val line = reader.readLine() ?: break
                 val parts = line.parseLine()
 
-
                 val date = LocalDate.parse(getValue(parts, "Dato"), datoFormat)
                 val text = getValue(parts, "Tekst")
                 val status = getValue(parts, "Status")
@@ -64,12 +65,12 @@ class DanskeBankCsvExportImporter : Importer {
                 if (status != "Utført") continue
 
                 val amount = getValue(parts, "Beløp").parseAmount()
-                val saldo = getValue(parts, "Saldo").parseAmount()
+                //val saldo = getValue(parts, "Saldo").parseAmount()
                 val avstemt = getValue(parts, "Avstemt") == "Ja"
 
                 if (avstemt) continue
 
-                onNewRecord(
+                records.add(
                     BankTransactionImportRecord(
                         text,
                         date.atStartOfDay().atZone(zoneId).toInstant(),
@@ -79,10 +80,15 @@ class DanskeBankCsvExportImporter : Importer {
             }
         }
 
+        // export from online banking has ascending order, but
+        // export from mobile app has descending order :/
+        records.sortedBy { it.datetime }.forEach(onNewRecord)
     }
 
     private fun String.parseAmount(): Long {
-        var str = this.replace(".", "")
+        var str = this
+            .replace(".", "")
+            .replace(" ", "")
         val negativ = if (str.startsWith("-")) {
             str = str.drop(1)
             -1

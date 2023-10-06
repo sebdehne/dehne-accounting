@@ -1,8 +1,8 @@
-package com.dehnes.smarthome.utils
+package com.dehnes.accounting.utils
 
 import mu.KotlinLogging
 
-val errorLogger = KotlinLogging.logger("com.dehnes.smarthome.utils.ErrorLogger")
+val errorLogger = KotlinLogging.logger("com.dehnes.accounting.utils.ErrorLogger")
 
 fun withLogging(fn: () -> Unit) = Runnable {
     try {

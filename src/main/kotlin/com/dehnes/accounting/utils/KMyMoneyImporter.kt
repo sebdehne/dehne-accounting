@@ -5,7 +5,7 @@ import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.utils.KMyMoneyImporter.TransactionType.*
-import com.dehnes.smarthome.utils.DateTimeUtils.zoneId
+import com.dehnes.accounting.utils.DateTimeUtils.zoneId
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Node

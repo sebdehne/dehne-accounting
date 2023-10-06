@@ -3,7 +3,7 @@ package com.dehnes.accounting.bank.importers
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.services.BookingReadService
-import com.dehnes.smarthome.utils.DateTimeUtils.plusDays
+import com.dehnes.accounting.utils.DateTimeUtils.plusDays
 import java.io.InputStream
 import javax.sql.DataSource
 

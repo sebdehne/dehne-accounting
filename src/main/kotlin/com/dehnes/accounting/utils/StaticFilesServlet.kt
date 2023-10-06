@@ -1,4 +1,4 @@
-package com.dehnes.smarthome.utils
+package com.dehnes.accounting.utils
 
 import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
@@ -35,7 +35,7 @@ val allowedDirs = listOf(
     "^\\d\\d\\d\\d-\\d\\d-\\d\\d".toRegex()
 )
 val defaultFile = "index.html"
-val contextPath = "smarthome"
+val contextPath = "accounting"
 
 fun pathToResource(path: String): String? {
 

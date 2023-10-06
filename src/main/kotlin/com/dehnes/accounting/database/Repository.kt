@@ -4,7 +4,7 @@ import com.dehnes.accounting.api.dtos.TransactionMatcher
 import com.dehnes.accounting.api.dtos.UserState
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.utils.SqlUtils
-import com.dehnes.smarthome.utils.toLong
+import com.dehnes.accounting.utils.toLong
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection

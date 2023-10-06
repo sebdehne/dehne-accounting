@@ -1,9 +1,9 @@
 <configuration debug="true" scan="true" scanPeriod="30 seconds">
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/smarthome.log</file>
+        <file>logs/dehne-accounting.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/smarthome.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>logs/dehne-accounting.%d{yyyy-MM-dd}.log</fileNamePattern>
 
             <!-- keep 5 days' worth of history -->
             <maxHistory>5</maxHistory>

@@ -1,4 +1,4 @@
-package com.dehnes.smarthome.utils
+package com.dehnes.accounting.utils
 
 import java.nio.ByteBuffer
 

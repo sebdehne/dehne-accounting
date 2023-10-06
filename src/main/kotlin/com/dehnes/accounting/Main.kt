@@ -1,7 +1,7 @@
 package com.dehnes.accounting
 
 import com.dehnes.accounting.api.WebSocketServer
-import com.dehnes.smarthome.utils.StaticFilesServlet
+import com.dehnes.accounting.utils.StaticFilesServlet
 import jakarta.websocket.HandshakeResponse
 import jakarta.websocket.server.HandshakeRequest
 import jakarta.websocket.server.ServerEndpointConfig
@@ -22,7 +22,7 @@ fun main() {
 
     val server = Server()
     val connector = ServerConnector(server)
-    connector.port = 9090
+    connector.port = 9095
     server.addConnector(connector)
 
     val handler = ServletContextHandler(ServletContextHandler.SESSIONS)
@@ -33,7 +33,7 @@ fun main() {
 
     handler.addServlet(ServletHolder(StaticFilesServlet()), "/*")
 
-    JakartaWebSocketServletContainerInitializer.configure(handler) { context, container ->
+    JakartaWebSocketServletContainerInitializer.configure(handler) { _, container ->
         container.defaultMaxSessionIdleTimeout = Duration.ofMinutes(10).toMillis()
         container.addEndpoint(
             ServerEndpointConfig.Builder

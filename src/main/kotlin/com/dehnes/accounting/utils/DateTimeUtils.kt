@@ -1,10 +1,8 @@
-package com.dehnes.smarthome.utils
+package com.dehnes.accounting.utils
 
 import java.time.Instant
 import java.time.ZoneId
-import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
 
 object DateTimeUtils {
 

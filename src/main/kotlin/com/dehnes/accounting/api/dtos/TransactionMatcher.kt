@@ -5,6 +5,7 @@ import com.dehnes.accounting.database.BankTransaction
 import java.time.Instant
 
 
+@Suppress("UNUSED_ANONYMOUS_PARAMETER")
 enum class TransactionMatcherFilterType(
     val fn: (ba: BankAccountDto, t: BankTransaction, f: TransactionMatcherFilter) -> Boolean
 ) {

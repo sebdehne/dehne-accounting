@@ -55,7 +55,7 @@ export const BankTransactions = () => {
             );
 
         return () => WebsocketClient.unsubscribe(subId);
-    }, [userState, userState, bankAccount]);
+    }, [userState, bankAccount]);
 
     const navigate = useNavigate();
 
@@ -76,7 +76,7 @@ export const BankTransactions = () => {
                 }
             )
         }
-    }, []);
+    }, [userState]);
 
     return (
         <Container maxWidth="sm" className="App">

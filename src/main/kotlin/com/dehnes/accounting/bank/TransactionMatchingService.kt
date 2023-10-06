@@ -2,10 +2,9 @@ package com.dehnes.accounting.bank
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.database.*
-import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.services.BookingReadService
-import com.dehnes.smarthome.utils.DateTimeUtils.plusDays
+import com.dehnes.accounting.utils.DateTimeUtils.plusDays
 import java.sql.Connection
 import javax.sql.DataSource
 import kotlin.math.absoluteValue
