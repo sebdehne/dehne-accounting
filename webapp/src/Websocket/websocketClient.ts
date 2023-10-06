@@ -113,7 +113,7 @@ function reconnect() {
         });
 
         // re-subscribe
-        Object.entries(SubscriptionsById).map(([key, sub]) => {
+        Object.entries(SubscriptionsById).forEach(([key, sub]) => {
             console.log("onopen - re-subscribe: " + key)
             rpc({
                 type: "subscribe",

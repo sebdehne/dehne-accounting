@@ -8,9 +8,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import IconButton from "@mui/material/IconButton";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
-import {CategorySearchBox, SearchableCategory} from "../CategorySearchBox/CategorySearchBox";
 import "./ActionEditor.css";
 import {useGlobalState} from "../../utils/userstate";
+import {CategorySearchBox2} from "../CategorySearchBox/CategorySearchBox2";
 
 
 export type ActionEditorProps = {
@@ -65,14 +65,14 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
                 setConfig={setConfig(false)}/>
         </div>}
         {matcher.action.type === "bankTransfer" && <div>
-            <CategorySearchBox
-                defaultCategoryId={matcher.action.transferCategoryId}
+            <CategorySearchBox2
+                value={matcher.action.transferCategoryId}
                 includeIntermediate={true}
-                onSelectedCategoryId={category => setMatcher(prevState => ({
+                onSelectedCategoryId={categoryId => setMatcher(prevState => ({
                 ...prevState,
                 action: {
                     ...prevState.action,
-                    transferCategoryId: category!.category.id
+                    transferCategoryId: categoryId!
                 }
             }))}/>
         </div>}
@@ -93,7 +93,7 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
         [categoriesAsList]
     );
 
-    const [addFixedMappingCategory, setAddFixedMappingCategory] = useState<SearchableCategory>();
+    const [addFixedMappingCategory, setAddFixedMappingCategory] = useState<string>();
     const [addFixedMappingAmountInCents, setAddFixedMappingAmountInCents] = useState('');
 
     const removeFixedAmountMapping = useCallback((categoryId: string) => {
@@ -104,7 +104,7 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
         }));
     }, [setConfig]);
     const addFixedAmountMapping = useCallback(() => {
-        const categoryId = addFixedMappingCategory!.category!.id!;
+        const categoryId = addFixedMappingCategory!;
         setConfig(({
             ...config,
             categoryToFixedAmountMapping: {
@@ -136,21 +136,21 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
                     label="Amount"
                     onChange={event => setAddFixedMappingAmountInCents(event.target.value ?? '')}
                 />
-                <CategorySearchBox
-                    defaultCategoryId={undefined}
+                <CategorySearchBox2
+                    value={undefined}
                     includeIntermediate={true}
-                    onSelectedCategoryId={category => setAddFixedMappingCategory(category)}
+                    onSelectedCategoryId={categoryId => setAddFixedMappingCategory(categoryId)}
                     title={"Fixed mapping category"}
                 />
                 <IconButton size="large" onClick={addFixedAmountMapping}><AddIcon fontSize="inherit"/></IconButton>
             </div>
 
-            <CategorySearchBox
+            <CategorySearchBox2
                 includeIntermediate={true}
-                defaultCategoryId={config.categoryIdRemaining ?? ''}
-                onSelectedCategoryId={category => setConfig(({
+                value={config.categoryIdRemaining}
+                onSelectedCategoryId={categoryId => setConfig(({
                     ...config,
-                    categoryIdRemaining: category!.category.id
+                    categoryIdRemaining: categoryId!
                 }))}
                 title={"Main category"}
             />

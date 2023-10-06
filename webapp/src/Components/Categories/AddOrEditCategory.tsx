@@ -55,7 +55,7 @@ export const AddOrEditCategory = () => {
                 }
             }).then(() => navigate('/categories', {replace: true}))
         }
-    }, [userState, editCategory, name, parentCategoryId]);
+    }, [userState, editCategory, name, parentCategoryId, navigate]);
 
     const mergeAndExit = useCallback(() => {
         if (userState?.ledgerId && editCategory?.id && mergeIntoCategoryId) {
@@ -68,7 +68,7 @@ export const AddOrEditCategory = () => {
                 }
             }).then(() => navigate('/categories'))
         }
-    }, [userState, editCategory, name, mergeIntoCategoryId]);
+    }, [userState, editCategory, mergeIntoCategoryId, navigate]);
 
     return (
         <Container maxWidth="sm" className="App">

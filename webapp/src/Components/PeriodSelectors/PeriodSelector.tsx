@@ -37,7 +37,7 @@ export const PeriodSelector = ({periodLocationInUserState}: PeriodSelectorProps)
             currentObj[finalField] = p
             return {...clone};
         })
-    }, [periodLocationInUserState]);
+    }, [periodLocationInUserState, setUserState]);
 
 
     return (

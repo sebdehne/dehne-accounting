@@ -1,4 +1,3 @@
-import {SearchableCategory} from "../../Components/CategorySearchBox/CategorySearchBox";
 
 
 export type TransactionMatcherFilterType = 'startsWith'

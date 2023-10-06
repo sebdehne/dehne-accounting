@@ -26,7 +26,7 @@ export const ChooseLedger = () => {
         if (userState?.ledgerId) {
             navigate('/')
         }
-    }, [userState]);
+    }, [userState, navigate]);
 
     const openLedger = (ledgerId: string) => {
         setUserState(prev => ({

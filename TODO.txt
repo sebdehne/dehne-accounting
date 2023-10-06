@@ -1,5 +1,7 @@
 - matcher: filter editor - search bank accounts when transfer
 
+- edit amounts - not in cents
+
 Bank accounts:
 - add
 - edit
@@ -11,7 +13,6 @@ Users:
 - remove
 
 ==== lower priority ==== :
-- edit amounts - not in cents
 - bulk edit - how?
 - show general errors in client
 
