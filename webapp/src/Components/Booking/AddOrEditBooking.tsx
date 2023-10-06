@@ -86,7 +86,7 @@ export const AddOrEditBooking = () => {
     }
 
     return (
-        <Container maxWidth="sm" className="App">
+        <Container maxWidth="xs" className="App">
             <Header title={
                 (bookingId ? "Booking: " + editBooking?.id : "New booking") +
                     (ledger?.name ? " - Ledger: " + ledger.name : "")

@@ -2,7 +2,7 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.RequestType.*
-import com.dehnes.accounting.bank.TransactionMatchingService
+import com.dehnes.accounting.services.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.services.*

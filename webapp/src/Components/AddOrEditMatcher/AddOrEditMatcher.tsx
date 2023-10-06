@@ -11,6 +11,9 @@ import {ActionEditor} from "./ActionEditor";
 import {NameEditor} from "./NameEditor";
 import {useNavigate, useParams} from "react-router-dom";
 import Header from "../Header";
+import "./AddOrEditMatcher.css"
+import {BankAccountTransactionView} from "../../Websocket/types/banktransactions";
+import {BankTransaction} from "../BankTransactions/BankTransaction";
 
 
 const steps = [
@@ -31,6 +34,7 @@ export const AddOrEditMatcher = () => {
 
     const [origMatcher, setOrigMatcher] = useState<TransactionMatcher | undefined>();
     const [matcher, setMatcher] = useState<TransactionMatcher | undefined>();
+    const [bankTransaction, setBankTransaction] = useState<BankAccountTransactionView>();
 
     const [activeStep, setActiveStep] = React.useState(0);
 
@@ -82,6 +86,7 @@ export const AddOrEditMatcher = () => {
                 notify => {
                     if (!matcher) {
                         const bankTransaction = notify.readResponse.bankTransaction!;
+                        setBankTransaction(bankTransaction);
                         setMatcher((
                             {
                                 name: bankTransaction.description ?? '',
@@ -115,7 +120,7 @@ export const AddOrEditMatcher = () => {
 
             return () => WebsocketClient.unsubscribe(subId);
         }
-    }, [userState, matcher, setMatcher, matcherId]);
+    }, [userState, matcher, setMatcher, matcherId, setBankTransaction]);
 
     const handleNext = () => setActiveStep((prevActiveStep) => prevActiveStep + 1);
     const handleBack = () => setActiveStep((prevActiveStep) => prevActiveStep - 1);
@@ -130,10 +135,12 @@ export const AddOrEditMatcher = () => {
     };
 
     return (
-        <Container maxWidth="sm" className="App">
+        <Container maxWidth="xs" className="App">
             <Header
                 title={(origMatcher ? "Edit " : "Add ") + matcher?.name}
             />
+
+            {bankTransaction && <BankTransaction t={bankTransaction}/>}
 
             {matcher && <div>
 

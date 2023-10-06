@@ -35,7 +35,7 @@ export const ChooseLedger = () => {
         }))
     }
 
-    return (<Container maxWidth="sm" className="App">
+    return (<Container maxWidth="xs" className="App">
         {user && <h4>Welcome {user.name}</h4>}
 
         <div

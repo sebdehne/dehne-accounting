@@ -14,7 +14,10 @@
 .Booking {
     display: flex;
     flex-direction: column;
-    margin-top: 10px;
+    background-color: #252525;
+    border-radius: 15px;
+    margin: 10px;
+    padding: 10px;
 }
 
 .BookingHeader {
@@ -42,6 +45,7 @@
 
 .BookingRecords {
     list-style-type: none;
+    padding-left: 0;
 }
 
 .BookingRecord {
@@ -49,6 +53,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    padding-left: 0;
 }
 .BookingRecordLeft {
     display: flex;

@@ -1,9 +1,8 @@
-package com.dehnes.accounting.bank
+package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
-import com.dehnes.accounting.services.BookingReadService
 import com.dehnes.accounting.utils.DateTimeUtils.plusDays
 import java.sql.Connection
 import javax.sql.DataSource

@@ -2,7 +2,7 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
-import com.dehnes.accounting.bank.TransactionMatchingService
+import com.dehnes.accounting.services.TransactionMatchingService
 import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType

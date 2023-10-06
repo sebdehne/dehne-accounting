@@ -88,7 +88,7 @@ type ConfigEditorProps = {
 }
 
 const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
-    const {categoriesAsList, userState, ledger} = useGlobalState();
+    const {categoriesAsList, userState} = useGlobalState();
 
     const categoryName = useCallback((categoryId: string) =>
             categoriesAsList.find(c => c.id === categoryId)?.name,
@@ -120,14 +120,13 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
         <h4>{title} config</h4>
 
         <ul className="FixedAmountMapping">
-            {userState && ledger && Object.entries(config.categoryToFixedAmountMapping).map(([categoryId, amount]) => (
+            {userState && Object.entries(config.categoryToFixedAmountMapping).map(([categoryId, amount]) => (
                 <li key={categoryId} className="FixedAmountMappingEntry">
                     <div className="FixedAmountMappingEntrySummary">
                         <div>category: {categoryName(categoryId)}</div>
                         <div>Amount: {amountInCentsToString(
                             amount,
                             userState.locale,
-                            ledger.currency
                         )}</div>
                     </div>
                     <IconButton size="large" onClick={() => removeFixedAmountMapping(categoryId)}><DeleteIcon

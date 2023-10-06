@@ -43,7 +43,7 @@ export const BankTransactionsImporter = () => {
     }, [userState]);
 
     const fileChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e?.target?.files?.length ?? 0 > 0) {
+        if ((e?.target?.files?.length ?? 0) > 0) {
             setSelectedFile(e.target.files![0]);
         } else {
             setSelectedFile(undefined);
@@ -76,7 +76,7 @@ export const BankTransactionsImporter = () => {
 
 
     return (
-        <Container maxWidth="sm" className="App">
+        <Container maxWidth="xs" className="App">
             <Header
                 title={'Import  for: ' + bankAccount?.name ?? "..."}
             />

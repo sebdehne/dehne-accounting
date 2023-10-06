@@ -35,7 +35,7 @@ export const LedgerMain = () => {
     }
 
     return (
-        <Container maxWidth="sm" className="App">
+        <Container maxWidth="xs" className="App">
             <Header
                 title={"Ledger: " + ledger?.name ?? ""}
                 clickable={onHeaderClick}

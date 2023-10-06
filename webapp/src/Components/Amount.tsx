@@ -11,6 +11,6 @@ export const Amount = ({amountInCents}: AmountProps) => {
     const {userState} = useGlobalState();
 
     return (<>
-        {userState?.locale && amountInCentsToString(amountInCents, userState.locale, "NOK")}
+        {userState?.locale && amountInCentsToString(amountInCents, userState.locale)}
     </>);
 }

@@ -6,14 +6,12 @@ import {TransactionMatcher} from "../../Websocket/types/transactionMatcher";
 import WebsocketClient from "../../Websocket/websocketClient";
 import './BookTransaction.css'
 import {BankAccountTransactionView} from "../../Websocket/types/banktransactions";
-import {Amount} from "../Amount";
-import {formatLocatDayMonth} from "../../utils/formatting";
-import moment from "moment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import IconButton from "@mui/material/IconButton";
 import {useGlobalState} from "../../utils/userstate";
+import {BankTransaction} from "../BankTransactions/BankTransaction";
 
 export const BookTransaction = () => {
     const {userState} = useGlobalState();
@@ -41,16 +39,12 @@ export const BookTransaction = () => {
 
 
     return (
-        <Container maxWidth="sm" className="App">
+        <Container maxWidth="xs" className="App">
             <Header
                 title="Matching"
             />
 
-            {transaction && <div>
-                <div>{formatLocatDayMonth(moment(transaction.datetime))}</div>
-                <div><Amount amountInCents={transaction.amount}/></div>
-                <div>{transaction.description}</div>
-            </div>}
+            {transaction && <BankTransaction t={transaction}/>}
 
 
             {userState?.ledgerId && transaction &&

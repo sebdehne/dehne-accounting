@@ -1,7 +1,7 @@
 package com.dehnes.accounting
 
 import com.dehnes.accounting.api.ReadService
-import com.dehnes.accounting.bank.TransactionMatchingService
+import com.dehnes.accounting.services.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.database.Changelog
 import com.dehnes.accounting.database.Repository

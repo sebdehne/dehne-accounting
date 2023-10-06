@@ -71,7 +71,7 @@ export const AddOrEditCategory = () => {
     }, [userState, editCategory, mergeIntoCategoryId, navigate]);
 
     return (
-        <Container maxWidth="sm" className="App">
+        <Container maxWidth="xs" className="App">
             <Header
                 title={(editCategory ? "Edit: " : "Add: ") + name}
             />

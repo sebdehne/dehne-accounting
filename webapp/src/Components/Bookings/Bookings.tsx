@@ -70,20 +70,14 @@ export const Bookings = () => {
     }
 
     return (
-        <Container maxWidth="sm" className="App">
-            <Header title={"Bookings: " + ledger?.name ?? "..."}/>
+        <Container maxWidth="xs" className="App">
+            <Header title={"Bookings: " + (ledger?.name ?? "...") + (bookings.length > 0 ?(" (" + bookings.length + ")") : "")}/>
 
             <PeriodSelector periodLocationInUserState={['bookingsState', 'currentPeriod']}/>
 
+
             <div className="HeaderLine">
-                <div>Found: {bookings.length} bookings</div>
-                <div>
-                    {editMode && <Button
-                        variant={"outlined"}
-                        style={{margin: '10px'}}
-                        onClick={() => navigate('/booking')}
-                    ><AddIcon/> New booking </Button>}
-                    <FormControlLabel
+                <FormControlLabel
                     control={
                         <Switch
                             checked={editMode}
@@ -91,7 +85,13 @@ export const Bookings = () => {
                         />}
                     label="Edit mode"
                     labelPlacement="end"
-                /></div>
+                />
+                {editMode && <Button
+                    variant={"outlined"}
+                    style={{margin: '10px'}}
+                    onClick={() => navigate('/booking')}
+                ><AddIcon/> New booking </Button>}
+
             </div>
 
             <div>
@@ -122,7 +122,9 @@ export const Bookings = () => {
 
                     </div>
                     <ul className="BookingRecords">
-                        {b.records.map(r => (<li key={r.id} className="BookingRecord">
+                        {b.records
+                            .sort((a, b) => b.amount - a.amount)
+                            .map(r => (<li key={r.id} className="BookingRecord">
                             <div className="BookingRecordLeft">
                                 <div className="BookingRecordLeftCategory">
                                     <div className="BookingRecordLeftCategoryPath">

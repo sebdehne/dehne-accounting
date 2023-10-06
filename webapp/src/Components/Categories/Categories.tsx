@@ -49,7 +49,7 @@ export const Categories = () => {
     }, [categoriesAsTree, filter]);
 
     return (
-        <Container maxWidth="sm" className="App">
+        <Container maxWidth="xs" className="App">
             <Header
                 title={"Categories: " + ledger?.name ?? ""}
                 clickable={onHeaderClick}

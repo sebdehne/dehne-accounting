@@ -1,6 +1,7 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.dtos.TransactionMatcher
+import com.dehnes.accounting.api.dtos.TransactionMatcherActionType
 import com.dehnes.accounting.api.dtos.UserState
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.utils.SqlUtils
@@ -572,6 +573,12 @@ class Repository(
     }
 
     fun addOrReplaceMatcher(connection: Connection, userId: String, matcher: TransactionMatcher) {
+        check(matcher.filters.isNotEmpty()) { "Matcher has no filter rules" }
+        when (matcher.action.type) {
+            TransactionMatcherActionType.bankTransfer -> check(matcher.action.transferCategoryId != null) { "Transfer matcher must have a category" }
+            TransactionMatcherActionType.paymentOrIncome -> check(matcher.action.paymentOrIncomeConfig != null) { "Payment/income matcher must have valid config" }
+        }
+
         val updated =
             connection.prepareStatement("UPDATE bank_transaction_matchers SET name=?,filter_list=?, action=? WHERE id=?")
                 .use { preparedStatement ->
@@ -919,9 +926,11 @@ class Repository(
         check(booking.records.sumOf { it.amount } == 0L) { "Records to not accumulate to zero" }
 
         // delete records
-        connection.prepareStatement("""
+        connection.prepareStatement(
+            """
             DELETE FROM booking_record where ledger_id = ? and booking_id = ?
-        """.trimIndent()).use { preparedStatement ->
+        """.trimIndent()
+        ).use { preparedStatement ->
             preparedStatement.setString(1, booking.ledgerId)
             preparedStatement.setLong(2, booking.id)
             preparedStatement.executeUpdate()
@@ -929,7 +938,8 @@ class Repository(
 
         // re-add records
         booking.records.forEachIndexed { index, r ->
-            connection.prepareStatement("""
+            connection.prepareStatement(
+                """
                 INSERT INTO booking_record (
                     ledger_id, 
                     booking_id, 
@@ -938,7 +948,8 @@ class Repository(
                     category_id, 
                     amount
                 ) VALUES (?,?,?,?,?,?)
-            """.trimIndent()).use { preparedStatement ->
+            """.trimIndent()
+            ).use { preparedStatement ->
                 preparedStatement.setString(1, booking.ledgerId)
                 preparedStatement.setLong(2, booking.id)
                 preparedStatement.setLong(3, index.toLong())
@@ -950,9 +961,11 @@ class Repository(
         }
 
         // update description on booking
-        connection.prepareStatement("""
+        connection.prepareStatement(
+            """
             UPDATE booking set description = ?, datetime = ? WHERE ledger_id = ? AND id = ?
-        """.trimIndent()).use { preparedStatement ->
+        """.trimIndent()
+        ).use { preparedStatement ->
             preparedStatement.setString(1, booking.description)
             preparedStatement.setTimestamp(2, Timestamp.from(booking.datetime))
             preparedStatement.setString(3, booking.ledgerId)
@@ -1101,7 +1114,8 @@ class Repository(
         sourceCategoryId: String,
         destinationCategoryId: String,
     ) {
-        val updated = connection.prepareStatement("""
+        val updated = connection.prepareStatement(
+            """
             UPDATE booking_record SET 
                 category_id = ? 
             WHERE 
@@ -1109,7 +1123,8 @@ class Repository(
                 AND booking_id = ? 
                 AND id = ?
                 AND category_id = ?
-        """.trimIndent()).use { preparedStatement ->
+        """.trimIndent()
+        ).use { preparedStatement ->
             preparedStatement.setString(1, destinationCategoryId)
             preparedStatement.setString(2, ledgerId)
             preparedStatement.setLong(3, bookingId)
@@ -1118,11 +1133,13 @@ class Repository(
             preparedStatement.executeUpdate() > 0
         }
         if (updated) {
-            changelog.add(connection, userId, ChangeLogEventType.bookingChanged, mapOf(
-                "ledgerId" to ledgerId,
-                "bookingId" to bookingId,
-                "id" to bookingRecordId,
-            ))
+            changelog.add(
+                connection, userId, ChangeLogEventType.bookingChanged, mapOf(
+                    "ledgerId" to ledgerId,
+                    "bookingId" to bookingId,
+                    "id" to bookingRecordId,
+                )
+            )
         }
     }
 
@@ -1335,11 +1352,12 @@ class DateRangeFilter(
         )
     }
 }
+
 class CategoryFilter(
     private val categoryIds: List<String>,
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> =
-        "br.category_id in (${categoryIds.joinToString(",") {"?"}})" to categoryIds
+        "br.category_id in (${categoryIds.joinToString(",") { "?" }})" to categoryIds
 }
 
 class SingleBookingFilter(

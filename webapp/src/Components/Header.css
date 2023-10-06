@@ -7,3 +7,25 @@
 .HeaderNoLink {
     text-align: center;
 }
+
+.Header {
+    display: flex;
+    flex-direction: column;
+}
+
+.HeaderButtons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.HeaderButtonsLeft {
+}
+
+.HeaderButtonsRight {
+
+}
+
+.HeaderConnectionStatus {
+
+}

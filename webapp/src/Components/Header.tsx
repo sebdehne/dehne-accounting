@@ -28,49 +28,47 @@ const Header = ({title, clickable}: HeaderProps) => {
         navigate(-1);
     }
 
-    return <>
-        <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between"
-        }
-        }>
-            <div style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between"
-            }}>
-                <Button color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>Back</Button>
+    return <div className="Header">
+        <div className="HeaderButtons">
+            <div className="HeaderButtonsLeft">
+                <Button
+                    size={"small"}
+                    color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>Back</Button>
             </div>
-            <div>
-                {status === ConnectionStatus.connectedAndWorking &&
-                    <CircularProgress color="primary"/>
-                }
-                {displayStatus && <span>Server connection: {displayStatus}</span>}
-            </div>
-            <div>
+            <div className="HeaderButtonsRight">
                 <ButtonGroup>
-                    <Button style={{marginRight: '2px'}}
+                    <Button
+                    size={"small"}
+                        style={{marginRight: '2px'}}
                             color="primary"
                             variant="contained"
                             onClick={() => navigate('/')}>Home</Button>
-                    <Button style={{marginRight: '2px'}}
+                    <Button
+                        size={"small"}
+                        style={{marginRight: '2px'}}
                             color="primary"
                             variant="contained"
                             onClick={() => navigate('/bookings')}>Bookings</Button>
-                    <Button style={{marginRight: '2px'}}
+                    <Button
+                        size={"small"}
+                        style={{marginRight: '2px'}}
                             color="primary"
                             variant="contained"
                             onClick={() => navigate('/categories')}>Categories</Button>
                 </ButtonGroup>
             </div>
-
+        </div>
+        <div className="HeaderConnectionStatus">
+            {status === ConnectionStatus.connectedAndWorking &&
+                <CircularProgress color="primary"/>
+            }
+            {displayStatus && <span>Server connection: {displayStatus}</span>}
         </div>
 
         {clickable && <h2 className="HeaderAsLink" onClick={clickable}>{title}</h2>}
         {!clickable && <h2 className="HeaderNoLink">{title}</h2>}
 
-    </>
+    </div>
 };
 
 export default Header;

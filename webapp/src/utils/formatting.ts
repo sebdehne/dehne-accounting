@@ -56,10 +56,10 @@ export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId:
     return parts.length > 0 ? (parts.join(":") + (endDelimiter ? " > " : "")) : "";
 }
 
-export const amountInCentsToString = (amountInCentsToString: number, locale: string, currency: string) => {
+export const amountInCentsToString = (amountInCentsToString: number, locale: string) => {
     const formated = new Intl.NumberFormat(locale, {
         style: 'currency',
-        currency: currency,
+        currency: 'NOK',
         maximumFractionDigits: 2,
     })
         .format((amountInCentsToString) / 100)

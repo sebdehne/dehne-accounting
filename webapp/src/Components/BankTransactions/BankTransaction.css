@@ -1,0 +1,35 @@
+.Transaction {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #252525;
+    border-radius: 15px;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+
+.TransactionLeft {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.TransactionRight {
+    margin: 10px;
+}
+
+.TransactionUp {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+.TransactionDown {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    font-size: smaller;
+}
