@@ -1,7 +1,5 @@
 - matcher: filter editor - search bank accounts when transfer
 
-- edit amounts - not in cents
-
 Bank accounts:
 - add
 - edit
@@ -11,6 +9,9 @@ Users:
 - add
 - edit
 - remove
+
+User-profile:
+- change locate
 
 ==== lower priority ==== :
 - bulk edit - how?

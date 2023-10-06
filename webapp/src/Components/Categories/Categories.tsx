@@ -2,33 +2,22 @@ import Header from "../Header";
 import {Button, Container, FormControl, TextField} from "@mui/material";
 import React, {useEffect, useMemo, useState} from "react";
 import {useGlobalState} from "../../utils/userstate";
-import WebsocketService from "../../Websocket/websocketClient";
 import {useNavigate} from "react-router-dom";
-import {LedgerView} from "../../Websocket/types/ledgers";
 import {CategoryTree} from "../CategorySearchBox/CategoryTree";
 import './Categories.css'
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 
 export const Categories = () => {
-    const {userState, setUserState, categoriesAsTree} = useGlobalState();
-    const [ledger, setLedger] = useState<LedgerView>();
+    const {userState, ledger, setUserState, categoriesAsTree} = useGlobalState();
     const [filter, setFilter] = useState('');
-
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (userState?.ledgerId) {
-            const subId = WebsocketService.subscribe(
-                {type: "getLedgers"},
-                n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
-            );
-
-            return () => WebsocketService.unsubscribe(subId);
-        } else if (userState && !userState.ledgerId) {
+        if (userState && !userState.ledgerId) {
             navigate('/ledger', {replace: true});
         }
-    }, [setLedger, userState, navigate]);
+    }, [userState, navigate]);
 
     const onHeaderClick = () => {
         setUserState(prev => ({

@@ -15,11 +15,10 @@ import moment from "moment";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {removeItemWithSlice} from "../../utils/utils";
-import {LedgerView} from "../../Websocket/types/ledgers";
+import {AmountTextField} from "../AmountTextfield/AmountTextfield";
 
 export const AddOrEditBooking = () => {
-    const {userState} = useGlobalState();
-    const [ledger, setLedger] = useState<LedgerView>();
+    const {userState, ledger} = useGlobalState();
     const [editBooking, setEditBooking] = useState<BookingView | undefined>(undefined);
     const [recordsInEdit, setRecordsInEdit] = useState<number[]>([]);
 
@@ -28,14 +27,7 @@ export const AddOrEditBooking = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (userState?.ledgerId) {
-            const subId = WebsocketService.subscribe(
-                {type: "getLedgers"},
-                n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
-            );
-
-            return () => WebsocketService.unsubscribe(subId);
-        } else if (userState && !userState.ledgerId) {
+        if (userState && !userState.ledgerId) {
             navigate('/ledger', {replace: true});
         }
     }, [userState, navigate]);
@@ -235,19 +227,13 @@ const AddOrEditRecord = ({onDone, record: orig}: AddOrEditRecordProps) => {
                 value={record.categoryId}
             />
 
-            <FormControl sx={{m: 1, width: '100%'}}>
-                <TextField
-                    value={record.amount}
-                    label="Amount in cents"
-                    onChange={event => {
-                        const value = parseInt(event.target.value ?? '0');
-                        setRecord(prevState => ({
-                            ...prevState,
-                            amount: value
-                        }));
-                    }}
-                />
-            </FormControl>
+            <AmountTextField sx={{m: 1, width: '100%'}}
+                initialValue={record.amount}
+                setValue={newValue => setRecord(prevState => ({
+                    ...prevState,
+                    amount: newValue
+                }))}
+            />
         </div>
         <div className="RecordInEditRight">
             <Button onClick={() => onDone(record)}><SaveIcon></SaveIcon></Button>

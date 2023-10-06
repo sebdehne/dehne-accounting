@@ -55,3 +55,16 @@ export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId:
     }
     return parts.length > 0 ? (parts.join(":") + (endDelimiter ? " > " : "")) : "";
 }
+
+export const amountInCentsToString = (amountInCentsToString: number, locale: string, currency: string) => {
+    const formated = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        maximumFractionDigits: 2,
+    })
+        .format((amountInCentsToString) / 100)
+
+    // remove the currency symbol
+    const symbol = formated.split(" ", 1)[0];
+    return formated.replace(symbol + " ", "");
+}

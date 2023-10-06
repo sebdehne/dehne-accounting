@@ -17,23 +17,15 @@ import {PeriodSelector} from "../PeriodSelectors/PeriodSelector";
 import {useGlobalState} from "../../utils/userstate";
 
 export const LedgerMain = () => {
-    const {userState, setUserState} = useGlobalState();
-    const [ledger, setLedger] = useState<LedgerView>();
+    const {userState, ledger, setUserState} = useGlobalState();
 
     let navigate = useNavigate();
 
     useEffect(() => {
-        if (userState && userState.ledgerId) {
-            const subId = WebsocketService.subscribe(
-                {type: "getLedgers"},
-                n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
-            );
-
-            return () => WebsocketService.unsubscribe(subId);
-        } else if (userState && !userState.ledgerId) {
+        if (userState && !userState.ledgerId) {
             navigate('/ledger', {replace: true});
         }
-    }, [setLedger, userState, navigate]);
+    }, [userState, navigate]);
 
     const onHeaderClick = () => {
         setUserState(prev => ({

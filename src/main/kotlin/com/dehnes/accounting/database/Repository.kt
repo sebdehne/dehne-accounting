@@ -1218,6 +1218,7 @@ data class LedgerDto(
 }
 
 data class LedgerConfiguration(
+    val currency: String,
     val bookingsCounter: Long = 0,
     val categoryIdsForExpensesAndIncome: List<String> = emptyList(),
     val categoryIdsForBankAccounts: List<String> = emptyList(),

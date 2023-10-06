@@ -1,16 +1,16 @@
 import React from "react";
+import {useGlobalState} from "../utils/userstate";
+import {amountInCentsToString} from "../utils/formatting";
 
 
 export type AmountProps = {
     amountInCents: number;
 }
 
-export const Amount = ({amountInCents}: AmountProps) => (<div>
-    {
-        new Intl.NumberFormat('nb-NO', {
-            style: 'currency',
-            currency: 'NOK',
-            maximumFractionDigits: 2,
-        }).format((amountInCents) / 100).replace("kr", "")
-    }
-</div>)
+export const Amount = ({amountInCents}: AmountProps) => {
+    const {userState} = useGlobalState();
+
+    return (<>
+        {userState?.locale && amountInCentsToString(amountInCents, userState.locale, "NOK")}
+    </>);
+}

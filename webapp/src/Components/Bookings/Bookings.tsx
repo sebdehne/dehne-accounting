@@ -2,7 +2,6 @@ import Header from "../Header";
 import {Button, Container, FormControl, FormControlLabel, Switch, TextField} from "@mui/material";
 import React, {useCallback, useEffect, useState} from "react";
 import {useGlobalState} from "../../utils/userstate";
-import {LedgerView} from "../../Websocket/types/ledgers";
 import WebsocketService from "../../Websocket/websocketClient";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {BookingView} from "../../Websocket/types/bookings";
@@ -18,24 +17,12 @@ import {useNavigate} from "react-router-dom";
 import AddIcon from "@mui/icons-material/Add";
 
 export const Bookings = () => {
-    const {userState, categoriesAsList} = useGlobalState();
-    const [ledger, setLedger] = useState<LedgerView>();
+    const {userState, categoriesAsList, ledger} = useGlobalState();
     const [bookings, setBookings] = useState<BookingView[]>([]);
     const [editMode, setEditMode] = useState(false);
     const [filter, setFilter] = useState('');
 
     const navigate = useNavigate();
-
-    useEffect(() => {
-        if (userState?.ledgerId) {
-            const subId = WebsocketService.subscribe(
-                {type: "getLedgers"},
-                n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
-            );
-
-            return () => WebsocketService.unsubscribe(subId);
-        }
-    }, [setLedger, userState]);
 
     useEffect(() => {
         if (ledger && userState) {
@@ -52,7 +39,7 @@ export const Bookings = () => {
             )
             return () => WebsocketService.unsubscribe(subId);
         }
-    }, [setBookings, ledger, userState?.bookingsState]);
+    }, [setBookings, ledger, userState]);
 
     const deleteBooking = useCallback((bookingId: number) => {
         if (ledger) {

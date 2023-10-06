@@ -31,7 +31,7 @@ export const ChooseLedger = () => {
     const openLedger = (ledgerId: string) => {
         setUserState(prev => ({
             ...prev,
-            ledgerId
+            ledgerId,
         }))
     }
 

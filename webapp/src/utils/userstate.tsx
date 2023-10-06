@@ -4,12 +4,14 @@ import WebsocketClient from "../Websocket/websocketClient";
 import JSONObjectMerge from "json-object-merge";
 import {CategoryDto} from "../Websocket/types/categories";
 import {buildTree, CategoryTree} from "../Components/CategorySearchBox/CategoryTree";
+import {LedgerView} from "../Websocket/types/ledgers";
 
 type ContextType = {
     userState: UserStateFrontendState | undefined;
     setUserState: (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => Promise<void>;
     categoriesAsList: CategoryDto[];
     categoriesAsTree: CategoryTree[];
+    ledger: LedgerView | undefined;
 }
 
 const GlobalStateProviderContext = React.createContext({} as ContextType);
@@ -19,9 +21,10 @@ export type UserStateProviderProps = {
 }
 export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
 
-    const [userState, setUserState] = useState<UserStateFrontendState |undefined>(undefined);
+    const [userState, setUserState] = useState<UserStateFrontendState | undefined>(undefined);
     const [categoriesAsList, setCategoriesAsList] = useState<CategoryDto[]>([]);
     const [categoriesAsTree, setCategoriesAsTree] = useState<CategoryTree[]>([]);
+    const [ledger, setLedger] = useState<LedgerView>();
 
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
@@ -48,6 +51,18 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
         }
     }, [setCategoriesAsList, setCategoriesAsTree, userState?.ledgerId]);
 
+    useEffect(() => {
+        if (userState?.ledgerId) {
+            const subId = WebsocketClient.subscribe(
+                {type: "getLedgers"},
+                notify => {
+                    setLedger(notify.readResponse.ledgers!.find(l => l.id === userState.ledgerId))
+                }
+            );
+            return () => WebsocketClient.unsubscribe(subId);
+        }
+    }, [setLedger, userState?.ledgerId]);
+
     const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
         if (userState) {
             const updated = fn(userState);
@@ -68,7 +83,8 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
             userState,
             setUserState: updateState,
             categoriesAsList,
-            categoriesAsTree
+            categoriesAsTree,
+            ledger
         }}>
             {children}
         </GlobalStateProviderContext.Provider>
@@ -86,6 +102,7 @@ export const useGlobalState = () => {
 const createDefault = (input: any = {}): UserStateFrontendState => {
 
     const myDefault: UserStateFrontendState = {
+        locale: 'nb-NO',
         bankTransactionsState: {
             currentPeriod: {
                 type: "month",
@@ -117,6 +134,7 @@ export type UserState = {
 }
 
 export type UserStateFrontendState = {
+    locale: string;
     bankTransactionsState: BankTransactionsState;
     legderMainState: LegderMainState;
     bookingsState: BookingsState;

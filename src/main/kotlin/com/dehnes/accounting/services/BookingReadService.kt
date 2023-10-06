@@ -59,7 +59,8 @@ class BookingReadService(
                 l.id,
                 l.name,
                 l.description,
-                a.accessLevel
+                a.accessLevel,
+                l.configuration.currency,
             )
         }.filter { user.isAdmin || it.accessLevel.hasAccess(accessRequest) }
     }

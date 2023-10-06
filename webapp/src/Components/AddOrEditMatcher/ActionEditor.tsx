@@ -7,10 +7,12 @@ import React, {useCallback, useState} from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import IconButton from "@mui/material/IconButton";
-import {FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
+import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
 import "./ActionEditor.css";
 import {useGlobalState} from "../../utils/userstate";
 import {CategorySearchBox2} from "../CategorySearchBox/CategorySearchBox2";
+import {AmountTextField} from "../AmountTextfield/AmountTextfield";
+import {amountInCentsToString} from "../../utils/formatting";
 
 
 export type ActionEditorProps = {
@@ -31,7 +33,7 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
                 }
             }
         }))
-    }, [matcher]);
+    }, [setMatcher]);
 
     return (<div>
         <FormControl sx={{m: 1, minWidth: 120}}>
@@ -86,7 +88,7 @@ type ConfigEditorProps = {
 }
 
 const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
-    const {categoriesAsList} = useGlobalState();
+    const {categoriesAsList, userState, ledger} = useGlobalState();
 
     const categoryName = useCallback((categoryId: string) =>
             categoriesAsList.find(c => c.id === categoryId)?.name,
@@ -94,7 +96,7 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
     );
 
     const [addFixedMappingCategory, setAddFixedMappingCategory] = useState<string>();
-    const [addFixedMappingAmountInCents, setAddFixedMappingAmountInCents] = useState('');
+    const [addFixedMappingAmountInCents, setAddFixedMappingAmountInCents] = useState<number>(0);
 
     const removeFixedAmountMapping = useCallback((categoryId: string) => {
         const {[categoryId]: _, ...rest} = config.categoryToFixedAmountMapping;
@@ -102,27 +104,31 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
             ...config,
             categoryToFixedAmountMapping: rest
         }));
-    }, [setConfig]);
+    }, [setConfig, config]);
     const addFixedAmountMapping = useCallback(() => {
         const categoryId = addFixedMappingCategory!;
         setConfig(({
             ...config,
             categoryToFixedAmountMapping: {
                 ...config.categoryToFixedAmountMapping,
-                [categoryId]: parseInt(addFixedMappingAmountInCents)
+                [categoryId]: addFixedMappingAmountInCents
             }
         }))
-    }, [setConfig, addFixedMappingCategory]);
+    }, [setConfig, addFixedMappingCategory, addFixedMappingAmountInCents, config]);
 
     return (<div>
         <h4>{title} config</h4>
 
         <ul className="FixedAmountMapping">
-            {Object.entries(config.categoryToFixedAmountMapping).map(([categoryId, amount]) => (
+            {userState && ledger && Object.entries(config.categoryToFixedAmountMapping).map(([categoryId, amount]) => (
                 <li key={categoryId} className="FixedAmountMappingEntry">
                     <div className="FixedAmountMappingEntrySummary">
                         <div>category: {categoryName(categoryId)}</div>
-                        <div>Amount: {amount}</div>
+                        <div>Amount: {amountInCentsToString(
+                            amount,
+                            userState.locale,
+                            ledger.currency
+                        )}</div>
                     </div>
                     <IconButton size="large" onClick={() => removeFixedAmountMapping(categoryId)}><DeleteIcon
                         fontSize="inherit"/></IconButton>
@@ -131,11 +137,7 @@ const ConfigEditor = ({title, config, setConfig}: ConfigEditorProps) => {
 
         <div>
             <div style={{border: '1px white solid'}}>
-                <TextField
-                    value={addFixedMappingAmountInCents}
-                    label="Amount"
-                    onChange={event => setAddFixedMappingAmountInCents(event.target.value ?? '')}
-                />
+                <AmountTextField initialValue={addFixedMappingAmountInCents} setValue={newValue => setAddFixedMappingAmountInCents(newValue)}/>
                 <CategorySearchBox2
                     value={undefined}
                     includeIntermediate={true}

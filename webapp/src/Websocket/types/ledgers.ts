@@ -4,4 +4,5 @@ import {AccessLevel} from "./user";
 
 export interface LedgerView extends InformationElement {
     accessLevel: AccessLevel;
+    currency: string;
 }
