@@ -63,6 +63,8 @@ class SBankenCsvExportImporter: Importer {
                 val line = reader.readLine() ?: break
                 val parts = line.parseLine()
 
+                if (parts.size != detectedHeader.size) continue
+
                 val date = LocalDate.parse(getValue(parts, "BOKFØRINGSDATO"))
                 val text = getValue(parts, "TEKST")
 
