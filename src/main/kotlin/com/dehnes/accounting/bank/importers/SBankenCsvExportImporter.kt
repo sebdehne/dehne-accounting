@@ -65,7 +65,8 @@ class SBankenCsvExportImporter: Importer {
 
                 if (parts.size != detectedHeader.size) continue
 
-                val date = LocalDate.parse(getValue(parts, "BOKFØRINGSDATO"))
+                val datoStr = getValue(parts, "BOKFØRINGSDATO") ?: continue
+                val date = LocalDate.parse(datoStr)
                 val text = getValue(parts, "TEKST")
 
                 val debit = getValue(parts, "INN PÅ KONTO")?.parseAmount()
