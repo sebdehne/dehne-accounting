@@ -92,7 +92,6 @@ export const AddOrEditCategory = () => {
                 onSelectedCategoryId={s => setParentCategoryId(s)}
                 value={parentCategoryId}
                 title={"Parent category"}
-                allowEmpty={true}
             />}
             {!editCategory && <CategorySearchBox2
                 exclude={editCategoryId ? [editCategoryId] : []}
@@ -100,7 +99,6 @@ export const AddOrEditCategory = () => {
                 onSelectedCategoryId={s => setParentCategoryId(s)}
                 value={parentCategoryId}
                 title={"No parent category"}
-                allowEmpty={true}
             />}
 
             <div style={{marginTop: '20px'}}>
@@ -117,7 +115,6 @@ export const AddOrEditCategory = () => {
                         onSelectedCategoryId={s => setMergeIntoCategoryId(s)}
                         value={mergeIntoCategoryId}
                         title={"Merge destination"}
-                        allowEmpty={true}
                     />
                     <div style={{marginTop: '20px'}}>
                         <Button disabled={!mergeIntoCategoryId} variant={"contained"}

@@ -218,7 +218,6 @@ const AddOrEditRecord = ({onDone, record: orig}: AddOrEditRecordProps) => {
             </FormControl>
 
             <CategorySearchBox2
-                allowEmpty={false}
                 includeIntermediate={true}
                 onSelectedCategoryId={categoryId => setRecord(prevState => ({
                     ...prevState,

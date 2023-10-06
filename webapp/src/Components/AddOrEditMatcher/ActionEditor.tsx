@@ -35,7 +35,7 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
         }))
     }, [setMatcher]);
 
-    return (<div>
+    return <div>
         <FormControl sx={{m: 1, minWidth: 120}}>
             <InputLabel id="demo-simple-select-helper-label">Target type</InputLabel>
             <Select
@@ -43,13 +43,15 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
                 id="demo-simple-select-helper"
                 value={matcher.action.type}
                 label="Target type"
-                onChange={(event,) => setMatcher(prevState => ({
-                    ...prevState,
-                    target: {
-                        ...prevState.action,
-                        type: event.target.value as TransactionMatcherActionType
-                    }
-                }))}
+                onChange={(event,) => {
+                    setMatcher(prevState => ({
+                        ...prevState,
+                        action: {
+                            ...prevState.action,
+                            type: event.target.value as TransactionMatcherActionType
+                        }
+                    }));
+                }}
             >
                 <MenuItem value={'paymentOrIncome'}>Payment/income</MenuItem>
                 <MenuItem value={'bankTransfer'}>bank transfer</MenuItem>
@@ -68,7 +70,7 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
         </div>}
         {matcher.action.type === "bankTransfer" && <div>
             <CategorySearchBox2
-                value={matcher.action.transferCategoryId}
+                value={matcher.action.transferCategoryId ?? ''}
                 includeIntermediate={true}
                 onSelectedCategoryId={categoryId => setMatcher(prevState => ({
                 ...prevState,
@@ -78,7 +80,7 @@ export const ActionEditor = ({matcher, setMatcher}: ActionEditorProps) => {
                 }
             }))}/>
         </div>}
-    </div>);
+    </div>;
 }
 
 type ConfigEditorProps = {

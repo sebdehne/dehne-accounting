@@ -10,7 +10,15 @@ export type CategorySearchBoxProps2 = {
     title?: string;
     value: string | undefined;
     exclude?: string[];
-    allowEmpty?: boolean;
+}
+
+const dummyItem: SearchableCategory = {
+    category: {
+        id: "dummy",
+        name: "dummy",
+        children: []
+    },
+    parentsString: "dummy"
 }
 
 export const CategorySearchBox2 = ({
@@ -19,7 +27,6 @@ export const CategorySearchBox2 = ({
                                        value,
                                        title = "Search category",
                                        exclude = [],
-                                       allowEmpty = false,
                                    }: CategorySearchBoxProps2) => {
     const {categoriesAsTree} = useGlobalState();
     const searchList = useMemo(() =>
@@ -27,15 +34,31 @@ export const CategorySearchBox2 = ({
         [categoriesAsTree, includeIntermediate, exclude]
     );
 
+    const currentValue = useMemo(() => {
+        let result = searchList.find(c => c.category.id === value);
+        if (!result) {
+            if (searchList.length > 0) {
+                result = searchList[0];
+            } else {
+                result = dummyItem;
+            }
+        }
+
+        return result;
+    }, [value, searchList]);
+
+    if (currentValue === dummyItem) return null;
+
     return (<div>
         <FormControl sx={{m: 1, width: '100%'}}>
             <Autocomplete
-                disableClearable={!allowEmpty}
+                isOptionEqualToValue={(option, value1) => option.category.id === value1.category.id}
+                disableClearable={false}
                 onChange={(_, value) => onSelectedCategoryId(
-                    !!value ? (value as SearchableCategory).category.id : undefined
+                    value ? (value as SearchableCategory).category.id : undefined
                 )}
                 options={searchList}
-                value={searchList.find(c => c.category.id === value)}
+                value={currentValue}
                 getOptionLabel={(option) => (option as SearchableCategory).parentsString + ' -> ' + (option as SearchableCategory).category.name}
                 renderInput={(params) => (
                     <TextField
