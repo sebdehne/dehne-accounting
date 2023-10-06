@@ -1,8 +1,5 @@
 - matcher: filter editor - search bank accounts when transfer
 
-Bookings:
-- UI for add/edit booking
-
 Bank accounts:
 - add
 - edit
@@ -14,6 +11,7 @@ Users:
 - remove
 
 ==== lower priority ==== :
+- edit amounts - not in cents
 - bulk edit - how?
 - show general errors in client
 

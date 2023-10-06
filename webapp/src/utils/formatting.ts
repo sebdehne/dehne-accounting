@@ -53,5 +53,5 @@ export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId:
         parts.unshift(current.name);
         current = categories.find(c => c.id === current?.parentCategoryId);
     }
-    return parts.length > 0 ? (parts.join(" > ") + (endDelimiter ? " > " : "")) : "";
+    return parts.length > 0 ? (parts.join(":") + (endDelimiter ? " > " : "")) : "";
 }

@@ -1,5 +1,5 @@
 import {useMemo} from "react";
-import {Autocomplete, TextField} from "@mui/material";
+import {Autocomplete, FormControl, TextField} from "@mui/material";
 import {useGlobalState} from "../../utils/userstate";
 import {buildSearchList, SearchableCategory} from "./CategorySearchBox";
 
@@ -28,6 +28,7 @@ export const CategorySearchBox2 = ({
     );
 
     return (<div>
+        <FormControl sx={{m: 1, width: '100%'}}>
         <Autocomplete
             disableClearable={!allowEmpty}
             onChange={(_, value) => onSelectedCategoryId(
@@ -46,7 +47,7 @@ export const CategorySearchBox2 = ({
                     }}
                 />
             )}
-        />
+        /></FormControl>
     </div>);
 }
 

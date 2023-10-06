@@ -15,9 +15,11 @@ import moment from "moment";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {removeItemWithSlice} from "../../utils/utils";
+import {LedgerView} from "../../Websocket/types/ledgers";
 
 export const AddOrEditBooking = () => {
     const {userState} = useGlobalState();
+    const [ledger, setLedger] = useState<LedgerView>();
     const [editBooking, setEditBooking] = useState<BookingView | undefined>(undefined);
     const [recordsInEdit, setRecordsInEdit] = useState<number[]>([]);
 
@@ -26,7 +28,14 @@ export const AddOrEditBooking = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (userState && !userState.ledgerId) {
+        if (userState?.ledgerId) {
+            const subId = WebsocketService.subscribe(
+                {type: "getLedgers"},
+                n => setLedger(n.readResponse.ledgers?.find(l => l.id === userState.ledgerId))
+            );
+
+            return () => WebsocketService.unsubscribe(subId);
+        } else if (userState && !userState.ledgerId) {
             navigate('/ledger', {replace: true});
         }
     }, [userState, navigate]);
@@ -42,6 +51,16 @@ export const AddOrEditBooking = () => {
                 notify => setEditBooking(notify.readResponse.getBookingResponse)
             )
         }
+
+        if (userState?.ledgerId && !bookingId && !editBooking) {
+            setEditBooking(({
+                id: 0,
+                description: undefined,
+                datetime: formatIso(moment()),
+                records: [],
+                ledgerId: userState.ledgerId
+            }))
+        }
     }, [userState, bookingId, editBooking, setEditBooking]);
 
     const onRecordEditDone = (id: number, r: BookingRecordView) => {
@@ -55,14 +74,31 @@ export const AddOrEditBooking = () => {
     const sum = (editBooking?.records ?? [])
         .map(value => value.amount)
         .reduce((a, b) => a + b, 0);
+    const haveAmounts = (editBooking?.records ?? [])
+        .every(value => Math.abs(value.amount) > 0);
+    const haveCategories = (editBooking?.records ?? [])
+        .every(value => !!value.categoryId);
 
     const isValid = editBooking
         && sum === 0
-        && editBooking.datetime;
+        && haveAmounts
+        && haveCategories
+        && !!editBooking.datetime
+        && recordsInEdit.length === 0;
+
+    const saveAndExit = () => {
+        WebsocketService.rpc({
+            type: "addOrReplaceBooking",
+            addOrReplaceBooking: editBooking
+        }).then(() => navigate("/bookings", {replace: true}))
+    }
 
     return (
         <Container maxWidth="sm" className="App">
-            <Header title={editBooking ? "Booking: " + editBooking.id : "New booking"}/>
+            <Header title={
+                (bookingId ? "Booking: " + editBooking?.id : "New booking") +
+                    (ledger?.name ? " - Ledger: " + ledger.name : "")
+            }/>
 
             {editBooking && <>
 
@@ -90,8 +126,8 @@ export const AddOrEditBooking = () => {
                     />
                 </FormControl>
 
-                <ul>
-                    {editBooking.records.map((r, index) => (<li key={index}>
+                <ul className="RecordUl">
+                    {editBooking.records.map((r, index) => (<li key={index} className="RecordLi">
                         {recordsInEdit.includes(index) && <AddOrEditRecord
                             onDone={r => onRecordEditDone(index, r)}
                             record={r}
@@ -130,10 +166,10 @@ export const AddOrEditBooking = () => {
                 ><AddIcon/>Add record</Button>
             </>}
 
-            {sum !== 0 && <div>Sum record is not zero, but: {sum}</div>}
 
-            <div style={{marginTop: '20px'}}>
-                <Button disabled={!isValid} variant={"contained"}><SaveIcon/> Save & exit</Button>
+            <div style={{marginTop: '20px', display: "flex", flexDirection: "row", alignItems: "center"}}>
+                <Button disabled={!isValid} variant={"contained"} onClick={saveAndExit}><SaveIcon/> Save & exit</Button>
+                {sum !== 0 && <div style={{marginLeft: '20px'}}>Sum record is not zero, but: {sum}</div>}
             </div>
 
         </Container>
@@ -150,12 +186,19 @@ const RecordViewer = ({record, edit, deleteRecord}: RecordViewerProps) => {
 
     const c = categoriesAsList.find(c => c.id === record.categoryId);
 
-    return (<div onClick={edit}>
-        <div>description: {record.description}</div>
-        <div>Category: {categoryParentsPath(categoriesAsList, record.categoryId) + c?.name}</div>
-        <Amount amountInCents={record.amount}/>
-        <Button onClick={deleteRecord}><DeleteIcon/></Button>
-    </div>)
+    return (
+        <div className={record.amount > 0 ? "RecordInViewPositiveAmount" : "RecordInViewNegativeAmount"} onClick={edit}>
+            <div className="RecordInViewLeft">
+                <div>description: {record.description}</div>
+                <div>Category: {categoryParentsPath(categoriesAsList, record.categoryId) + c?.name}</div>
+                <div style={{display: "flex", flexDirection: "row"}}>Amount: <Amount amountInCents={record.amount}/>
+                </div>
+            </div>
+            <div className="RecordInViewRight">
+                <Button onClick={deleteRecord}><DeleteIcon/></Button>
+            </div>
+
+        </div>)
 }
 
 type AddOrEditRecordProps = {
@@ -167,45 +210,47 @@ const AddOrEditRecord = ({onDone, record: orig}: AddOrEditRecordProps) => {
         JSON.parse(JSON.stringify(orig)) as BookingRecordView
     );
 
-    return (<div>
+    return (<div className="RecordInEdit">
+        <div className="RecordInEditLeft">
+            <FormControl sx={{m: 1, width: '100%'}}>
+                <TextField
+                    value={record.description ?? ''}
+                    label="Description"
+                    onChange={event => {
+                        setRecord(prevState => ({
+                            ...prevState,
+                            description: event.target.value ?? undefined
+                        }));
+                    }}
+                />
+            </FormControl>
 
-        <FormControl sx={{m: 1, width: '100%'}}>
-            <TextField
-                value={record.description ?? ''}
-                label="Description"
-                onChange={event => {
-                    setRecord(prevState => ({
-                        ...prevState,
-                        description: event.target.value ?? undefined
-                    }));
-                }}
+            <CategorySearchBox2
+                allowEmpty={false}
+                includeIntermediate={true}
+                onSelectedCategoryId={categoryId => setRecord(prevState => ({
+                    ...prevState,
+                    categoryId: categoryId!
+                }))}
+                value={record.categoryId}
             />
-        </FormControl>
 
-        <CategorySearchBox2
-            allowEmpty={false}
-            includeIntermediate={true}
-            onSelectedCategoryId={categoryId => setRecord(prevState => ({
-                ...prevState,
-                categoryId: categoryId!
-            }))}
-            value={record.categoryId}
-        />
-
-        <FormControl sx={{m: 1, width: '100%'}}>
-            <TextField
-                value={record.amount}
-                label="Amount in cents"
-                onChange={event => {
-                    const value = parseInt(event.target.value ?? '0');
-                    setRecord(prevState => ({
-                        ...prevState,
-                        amount: value
-                    }));
-                }}
-            />
-        </FormControl>
-
-        <Button onClick={() => onDone(record)}><SaveIcon></SaveIcon></Button>
+            <FormControl sx={{m: 1, width: '100%'}}>
+                <TextField
+                    value={record.amount}
+                    label="Amount in cents"
+                    onChange={event => {
+                        const value = parseInt(event.target.value ?? '0');
+                        setRecord(prevState => ({
+                            ...prevState,
+                            amount: value
+                        }));
+                    }}
+                />
+            </FormControl>
+        </div>
+        <div className="RecordInEditRight">
+            <Button onClick={() => onDone(record)}><SaveIcon></SaveIcon></Button>
+        </div>
     </div>)
 }

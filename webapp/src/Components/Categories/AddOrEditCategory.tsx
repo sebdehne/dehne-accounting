@@ -1,6 +1,6 @@
 import Header from "../Header";
 import React, {useCallback, useEffect, useState} from "react";
-import {Button, Container, TextField} from "@mui/material";
+import {Button, Container, FormControl, TextField} from "@mui/material";
 import {useGlobalState} from "../../utils/userstate";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import WebsocketService from "../../Websocket/websocketClient";
@@ -77,11 +77,13 @@ export const AddOrEditCategory = () => {
             />
 
             <div style={{margin: '20px 0px 20px 0px'}}>
-                <TextField value={name || ''}
-                           label="Name"
-                           onChange={event => setName(event.target.value ?? '')}
-                           fullWidth={true}
-                />
+                <FormControl sx={{m: 1, width: '100%'}}>
+                    <TextField value={name || ''}
+                               label="Name"
+                               onChange={event => setName(event.target.value ?? '')}
+                               fullWidth={true}
+                    />
+                </FormControl>
             </div>
 
             {editCategory && <CategorySearchBox2
