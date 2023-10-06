@@ -1,4 +1,8 @@
 - matcher: filter editor - search bank accounts when transfer
+- matchers: show their actions
+- edit matcher doesnt work
+- matchers: OR-rules vs AND-rules
+
 
 Bank accounts:
 - add

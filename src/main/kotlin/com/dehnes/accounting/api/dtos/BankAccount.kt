@@ -49,3 +49,8 @@ data class BankAccountTransactionView(
     val balance: Long,
     val matched: Boolean,
 )
+
+data class BankTransactionsResponse(
+    val totalUnmatched: Long,
+    val transactions: List<BankAccountTransactionView>,
+)

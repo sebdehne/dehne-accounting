@@ -61,7 +61,7 @@ data class ReadResponse(
     val userView: UserView? = null,
     val bankAccounts: List<BankAccountView>? = null,
     val ledgerRapport: List<LedgerRapportNode>? = null,
-    val bankTransactions: List<BankAccountTransactionView>? = null,
+    val bankTransactions: BankTransactionsResponse? = null,
     val bankTransaction: BankAccountTransactionView? = null,
     val categories: List<CategoryDto>? = null,
     val userState: UserState? = null,

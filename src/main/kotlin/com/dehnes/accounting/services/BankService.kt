@@ -112,4 +112,14 @@ class BankService(
         return repository.getAllBankAccountsForLedger(conn, ledger.id)
     }
 
+    fun getTotalUnmatched(conn: Connection, userId: String, ledgerId: String, bankAccountId: String): Long {
+        bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.read)
+
+        return repository.getTotalUnmatched(
+            conn,
+            ledgerId,
+            bankAccountId
+        )
+    }
+
 }

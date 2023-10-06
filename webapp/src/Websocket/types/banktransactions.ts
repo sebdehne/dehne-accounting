@@ -13,3 +13,8 @@ export type  BankAccountTransactionView = {
     balance: number;
     matched: boolean;
 }
+
+export type BankTransactionsResponse = {
+    totalUnmatched: number;
+    transactions: BankAccountTransactionView[],
+}

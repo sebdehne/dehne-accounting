@@ -673,6 +673,27 @@ class Repository(
                 }
             }
 
+    fun getTotalUnmatched(conn: Connection, ledgerId: String, bankAccountId: String): Long {
+        return conn.prepareStatement("""
+            SELECT 
+                COUNT(*) count 
+            FROM 
+                bank_transaction 
+            where 
+                ledger_id = ? 
+                AND bank_account_id = ? 
+                AND matched_booking_id is null
+        """.trimIndent()).use { preparedStatement ->
+            preparedStatement.setString(1, ledgerId)
+            preparedStatement.setString(2, bankAccountId)
+            preparedStatement.executeQuery().use { rs ->
+                check(rs.next())
+                rs.getLong("count")
+            }
+        }
+    }
+
+
     private fun toBankTransaction(rs: ResultSet) = BankTransaction(
         rs.getLong("id"),
         rs.getString("description"),
@@ -1180,6 +1201,7 @@ class Repository(
             mapOf("userId" to userId)
         )
     }
+
 }
 
 enum class AccessLevel {

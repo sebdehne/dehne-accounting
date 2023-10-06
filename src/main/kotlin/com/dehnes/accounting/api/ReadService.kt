@@ -122,13 +122,24 @@ class ReadService(
 
             getBankTransactions -> {
                 val request = readRequest.bankTransactionsRequest!!
+                val list = bankService.getTransactions(
+                    connection,
+                    userId,
+                    readRequest.ledgerId!!,
+                    request.bankAccountId,
+                    BankTxDateRangeFilter(request.from, request.toExcluding)
+                )
+                val totalUnmatched = bankService.getTotalUnmatched(
+                    connection,
+                    userId,
+                    readRequest.ledgerId,
+                    request.bankAccountId
+                )
+
                 ReadResponse(
-                    bankTransactions = bankService.getTransactions(
-                        connection,
-                        userId,
-                        readRequest.ledgerId!!,
-                        request.bankAccountId,
-                        BankTxDateRangeFilter(request.from, request.toExcluding)
+                    bankTransactions = BankTransactionsResponse(
+                        totalUnmatched,
+                        list
                     )
                 )
             }

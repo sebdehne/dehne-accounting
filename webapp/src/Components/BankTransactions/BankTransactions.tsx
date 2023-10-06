@@ -16,6 +16,7 @@ export const BankTransactions = () => {
     const {userState, ledger} = useGlobalState();
     const [bankAccount, setBankAccount] = useState<BankAccountView>()
     const [transactions, setTransactions] = useState<BankAccountTransactionView[]>();
+    const [totalUnmatched, setTotalUnmatched] = useState(0);
     const [editMode, setEditMode] = useState(false);
 
     useEffect(() => {
@@ -46,7 +47,10 @@ export const BankTransactions = () => {
                         bankAccountId: bankAccount.id
                     }
                 },
-                notify => setTransactions(notify.readResponse.bankTransactions)
+                notify => {
+                    setTransactions(notify.readResponse.bankTransactions!.transactions);
+                    setTotalUnmatched(notify.readResponse.bankTransactions!.totalUnmatched)
+                }
             );
 
         return () => WebsocketClient.unsubscribe(subId);
@@ -70,7 +74,7 @@ export const BankTransactions = () => {
 
     return (
         <Container maxWidth="xs" className="App">
-            <Header title={bankAccount?.name ?? "Bank account: ..."}/>
+            <Header title={bankAccount ? (bankAccount.name + (totalUnmatched > 0 ? (" (" + totalUnmatched + ")"): "")): "Bank account: ..."}/>
 
             <div className="HeaderLine">
                 {editMode && <div>
