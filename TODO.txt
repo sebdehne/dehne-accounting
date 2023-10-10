@@ -2,10 +2,35 @@
 - matchers: show their actions
 - edit matcher doesnt work
 - matchers: OR-rules vs AND-rules
+- Bookings filter case insensitive
+- Link fra booking til bank TX
+- are you sure delete confirmation
+- matcher action: procent split?
+- only show back when there is something?
+- payees accounts or booking-attributes?
+- open/close balances?
+- bank-account vs payee vs expense-category?
+
+- show balance
+
+Re-write KMyMoneyIMporter to structure bookings like this
+Booking - buy some food:
+credit AP/Coop: 400
+debit  expense/food
+credit bank/tx
+debit  AP/Coop
+
+     -400 AP / 400 expense
+-400  400 settle
+
+-400 400 AP
+     -400
+
+
+Ledger-home: show total unmatched bank transactions, not only this period
 
 Bank accounts:
-- add
-- edit
+- add/edit
 
 Users:
 - list
@@ -19,6 +44,13 @@ User-profile:
 ==== lower priority ==== :
 - bulk edit - how?
 - show general errors in client
+
+- easy installation
+- docker?
+- welcome screen - admin-user creation
+- configure basepath /accounting
+- configure port
+- configure sql file location
 
 - add new matcher: automatic name generation picks the wrong side
 - are-you-sure-dialog on delete(s)?
