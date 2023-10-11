@@ -28,126 +28,105 @@ create table user
 );
 create unique index user_index1 on user (id);
 
-create table ledger
+create table realm
 (
-    id                 text not null,
-    name               text not null,
-    description        text,
-    configuration_json text not null,
+    id              text    not null,
+    name            text    not null,
+    description     text,
+    currency        text    not null,
+    last_booking_id integer not null,
     primary key (id)
 );
 
-create table user_ledger
+create table user_realm
 (
     user_id      text not null,
-    ledger_id    text not null,
+    realm_id     text not null,
     access_level text not null,
-    primary key (user_id, ledger_id),
+    primary key (user_id, realm_id),
     foreign key (user_id) references user (id),
-    foreign key (ledger_id) references ledger (id)
+    foreign key (realm_id) references realm (id)
 );
+
+
+create table account
+(
+    realm_id          text not null,
+    id                text not null,
+    name              text not null,
+    description       text,
+    parent_account_id text,
+    party_id          text,
+    primary key (id),
+    foreign key (realm_id) references realm (id),
+    foreign key (parent_account_id) references account (id),
+    foreign key (party_id) references party (id)
+);
+create unique index account_idx1 on account (realm_id, name, parent_account_id);
 
 create table bank_account
 (
-    id                            text    not null,
-    name                          text    not null,
-    description                   text,
-    ledger_id                     text    not null,
-    bank_id                       text    not null,
-    account_number                text    not null,
-    open_date                     date    not null,
-    close_date                    date,
-    category_id                   text    not null,
-    open_balance                  integer not null,
-    transactions_counter          integer not null,
-    transactions_counter_unbooked integer not null,
-    current_balance               integer not null,
-    primary key (id),
-    foreign key (bank_id) references bank (id),
-    foreign key (ledger_id) references ledger (id)
+    account_id                   text    not null,
+    bank_id                      text    not null,
+    account_number               text,
+    open_date                    date    not null,
+    close_date                   date,
+    last_unbooked_transaction_id integer not null,
+
+    primary key (account_id),
+    foreign key (account_id) references account (id),
+    foreign key (bank_id) references bank (id)
 );
 
-create table category
+create table unbooked_bank_transaction
 (
-    id                 text not null,
-    name               text not null,
-    description        text,
-    parent_category_id text,
-    ledger_id          text not null,
-    primary key (id, ledger_id),
-    foreign key (parent_category_id, ledger_id) references category (id, ledger_id),
-    foreign key (ledger_id) references ledger (id)
-);
--- enforce unique names for categories which share the same parent
-create unique index category_idx_001 on category (ledger_id, parent_category_id, name);
+    account_id           text      not null,
+    id                   integer   not null,
+    memo                 text,
+    datetime             timestamp not null,
+    amount_in_cents      integer   not null,
+    other_account_number text,
 
-create table changelog
-(
-    id                 INTEGER   not null PRIMARY KEY,
-    change_type        text      not null,
-    change_value       text      not null,
-    created            timestamp not null,
-    created_by_user_id text      not null,
-    FOREIGN KEY (created_by_user_id) REFERENCES user (id)
+    primary key (account_id, id),
+    foreign key (account_id) references account (id)
 );
 
 create table booking
 (
-    ledger_id   text      not null,
+    realm_id    text      not null,
     id          integer   not null,
     description text,
     datetime    timestamp not null,
-    primary key (ledger_id, id),
-    FOREIGN KEY (ledger_id) REFERENCES ledger (id)
+    primary key (realm_id, id),
+    FOREIGN KEY (realm_id) REFERENCES realm (id)
 );
 
-create table booking_record
+create table booking_entry
 (
-    ledger_id   text    not null,
-    booking_id  text    not null,
-    id          integer not null,
-    description text,
-    category_id text    not null,
-    amount      integer not null,
+    realm_id        text    not null,
+    booking_id      integer not null,
+    id              integer not null,
+    description     text,
+    account_id      text    not null,
+    amount_in_cents integer not null,
 
-    primary key (ledger_id, booking_id, id),
-    FOREIGN KEY (ledger_id, booking_id) REFERENCES booking (ledger_id, id),
-    FOREIGN KEY (ledger_id) REFERENCES ledger (id),
-    FOREIGN KEY (category_id, ledger_id) REFERENCES category (id, ledger_id)
-);
-
-create table bank_transaction
-(
-    bank_account_id    text      not null,
-    id                 INTEGER   not null,
-    description        text,
-    ledger_id          text      not null,
-    bank_id            text      not null,
-    datetime           timestamp not null,
-    amount             integer   not null,
-    balance            integer   not null,
-
-    matched_ledger_id  text,
-    matched_booking_id text,
-
-    primary key (bank_account_id, id),
-    foreign key (bank_id) references bank (id),
-    foreign key (ledger_id) references ledger (id),
-    foreign key (bank_account_id) references bank_account (id),
-    foreign key (matched_ledger_id, matched_booking_id) references booking (ledger_id, id)
+    primary key (realm_id, booking_id, id),
+    FOREIGN KEY (realm_id, booking_id) REFERENCES booking (realm_id, id),
+    FOREIGN KEY (realm_id) REFERENCES realm (id),
+    FOREIGN KEY (account_id) REFERENCES account (id)
 );
 
 create table bank_transaction_matchers
 (
+    realm_id    text      not null,
     id          text      not null,
     name        text      not null,
     filter_list text      not null,
     action      text      not null,
-    ledger_id   text      not null,
     last_used   timestamp not null,
 
     primary key (id),
-    foreign key (ledger_id) references ledger (id)
+    foreign key (realm_id) references realm (id)
 );
 
 create table user_state
@@ -158,10 +137,13 @@ create table user_state
     primary key (user_id)
 );
 
-insert into user (id, name, description, user_email, active, is_admin)
-VALUES ('dbf21a6c-16e2-4689-be24-1766777a70da',
-        'Sebastian Dehne',
-        null,
-        'sebas.dehne@gmail.com',
-        1,
-        1);
+
+create table party
+(
+    realm_id    text not null,
+    id          text not null,
+    name        text not null,
+    description text,
+    primary key (id),
+    foreign key (realm_id) references realm (id)
+)
