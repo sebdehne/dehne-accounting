@@ -11,6 +11,7 @@ import java.time.Instant
 interface BookingCreator {
     fun createBooking(
         realmId: String,
+        transactionId: String,
         datetime: Instant,
         mainSplit: KMyMoneyUtils.KTransactionSplit,
         otherSplits: Map<KMyMoneyUtils.KTransactionSplit, AccountWrapper>,

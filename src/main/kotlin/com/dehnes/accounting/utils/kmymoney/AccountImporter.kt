@@ -168,6 +168,6 @@ data class AccountWrapper(
     val accountDto: AccountDto,
 ) {
     fun isBankAccount(realmId: String): Boolean =
-        parentPath.last().id == StandardAccount.BankAccountAsset.toAccountId(realmId)
-                || parentPath.last().id == StandardAccount.BankAccountLiability.toAccountId(realmId)
+        parentPath.first().id == StandardAccount.Asset.toAccountId(realmId)
+                || parentPath.first().id == StandardAccount.Liability.toAccountId(realmId)
 }

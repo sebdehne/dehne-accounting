@@ -12,6 +12,7 @@ import java.time.Instant
 object TransferInsideRealmCreator : BookingCreator {
     override fun createBooking(
         realmId: String,
+        transactionId: String,
         datetime: Instant,
         mainSplit: KMyMoneyUtils.KTransactionSplit,
         otherSplits: Map<KMyMoneyUtils.KTransactionSplit, AccountWrapper>,
@@ -22,32 +23,39 @@ object TransferInsideRealmCreator : BookingCreator {
         connection: Connection
     ): List<AddBooking> {
 
-        val alreadyBooked = bookingRepository.getBookings(
-            connection, realmId, Int.MAX_VALUE, DateRangeFilter(
-                datetime, datetime.plusDays(1)
+        val bookings = bookingRepository.getBookings(
+            connection,
+            realmId,
+            Int.MAX_VALUE,
+            DateRangeFilter(
+                datetime,
+                datetime.plusDays(1)
             )
-        ).any { b ->
-            if (b.entries.size != 2) return@any false
-
-            val mainEntry = b.entries.firstOrNull { it.accountId == bankAccountDto.id } ?: return@any false
-            val otherEntry = b.entries.firstOrNull { it.accountId != bankAccountDto.id } ?: run {
-                TODO()
-            }
-
-            otherSplits.entries.single().value.accountDto.id == otherEntry.accountId && mainEntry.amountInCents == mainSplit.amountInCents
+        )
+        val alreadyBooked = bookings.filter { b ->
+            if (b.entries.size != 2) return@filter false
+            b.description?.contains(transactionId) == true
         }
 
-        return if (alreadyBooked) {
+        return if (alreadyBooked.isNotEmpty()) {
+            check(alreadyBooked.size == 1)
             emptyList()
         } else {
             listOf(
                 AddBooking(
-                    realmId, mainSplit.memo, datetime, listOf(
+                    realmId,
+                    listOfNotNull(mainSplit.memo,transactionId).joinToString(","),
+                    datetime,
+                    listOf(
                         AddBookingEntry(
-                            null, bankAccountDto.id, mainSplit.amountInCents
+                            null,
+                            bankAccountDto.id,
+                            mainSplit.amountInCents
                         ),
                         AddBookingEntry(
-                            null, otherSplits.entries.single().value.accountDto.id, mainSplit.amountInCents * -1
+                            null,
+                            otherSplits.entries.single().value.accountDto.id,
+                            mainSplit.amountInCents * -1
                         ),
                     )
                 )

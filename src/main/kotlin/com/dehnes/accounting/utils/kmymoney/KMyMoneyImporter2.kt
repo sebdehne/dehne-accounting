@@ -166,6 +166,7 @@ class KMyMoneyImporter2(
 
         type.bookingCreator.createBooking(
             realmId,
+            transaction.id,
             datetime,
             mainSplit,
             otherSplits,

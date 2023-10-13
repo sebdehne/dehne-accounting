@@ -37,7 +37,7 @@ class Configuration {
         val executorService = Executors.newCachedThreadPool()
         val objectMapper = objectMapper()
 
-        val datasource = datasourceSetup()
+        val datasource = datasourceSetup(dbFile())
         SchemaHandler.initSchema(datasource)
 
         val changelog = Changelog(objectMapper)
@@ -86,11 +86,9 @@ class Configuration {
     }
 }
 
-fun dbFile() = System.getProperty("SQLITE_FILE", "./sql.db")
+fun dbFile(path: String = ".") = System.getProperty("SQLITE_FILE", "$path/sql.db")
 
-fun datasourceSetup(): DataSource {
-
-    val sqliteFile = dbFile()
+fun datasourceSetup(sqliteFile: String): DataSource {
 
     val sqLiteConfig = SQLiteConfig()
     sqLiteConfig.enforceForeignKeys(true)
