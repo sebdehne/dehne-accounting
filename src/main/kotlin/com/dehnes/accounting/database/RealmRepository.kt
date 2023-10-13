@@ -13,7 +13,8 @@ class RealmRepository(
 
     fun insert(realm: Realm) {
         dataSource.writeTx { conn ->
-            conn.prepareStatement("""
+            conn.prepareStatement(
+                """
                 INSERT INTO realm (
                     id,
                     name,
@@ -21,7 +22,8 @@ class RealmRepository(
                     currency,
                     last_booking_id
                 ) VALUES (?,?,?,?,?)
-            """.trimIndent()).use { preparedStatement ->
+            """.trimIndent()
+            ).use { preparedStatement ->
                 preparedStatement.setString(1, realm.id)
                 preparedStatement.setString(2, realm.name)
                 preparedStatement.setString(3, realm.description)
@@ -31,26 +33,29 @@ class RealmRepository(
             }
 
             StandardAccount.entries.forEach { sa ->
-                accountsRepository.insert(conn, AccountDto(
-                    sa.toAccountId(realm.id),
-                    sa.name,
-                    null,
-                    realm.id,
-                    sa.parent?.toAccountId(realm.id),
-                    null,
-                ))
+                accountsRepository.insert(
+                    conn, AccountDto(
+                        sa.toAccountId(realm.id),
+                        sa.name,
+                        null,
+                        realm.id,
+                        sa.parent?.toAccountId(realm.id),
+                        null,
+                    )
+                )
             }
         }
     }
 
     fun getNextBookingId(connection: Connection, realmId: String): Long {
-        val lastBookingId = connection.prepareStatement("SELECT last_booking_id from realm where id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, realmId)
-            preparedStatement.executeQuery().use { rs ->
-                check(rs.next())
-                rs.getLong("last_booking_id")
+        val lastBookingId =
+            connection.prepareStatement("SELECT last_booking_id from realm where id = ?").use { preparedStatement ->
+                preparedStatement.setString(1, realmId)
+                preparedStatement.executeQuery().use { rs ->
+                    check(rs.next())
+                    rs.getLong("last_booking_id")
+                }
             }
-        }
 
         connection.prepareStatement("UPDATE realm set last_booking_id = ? WHERE id =  ?").use { preparedStatement ->
             preparedStatement.setLong(1, lastBookingId + 1)
@@ -61,6 +66,25 @@ class RealmRepository(
         return lastBookingId + 1
     }
 
+    fun getAll(connection: Connection): List<Realm> =
+        connection.prepareStatement("SELECT * FROM realm").use { preparedStatement ->
+            preparedStatement.executeQuery().use { rs ->
+                val l = mutableListOf<Realm>()
+                while (rs.next()) {
+                    l.add(
+                        Realm(
+                            id = rs.getString("id"),
+                            name = rs.getString("name"),
+                            description = rs.getString("description"),
+                            currency = rs.getString("currency"),
+                            lastBookingId = rs.getLong("last_booking_id"),
+                        )
+                    )
+                }
+                l
+            }
+        }
+
 }
 
 data class Realm(
@@ -69,5 +93,10 @@ data class Realm(
     override val description: String?,
     val currency: String,
     val lastBookingId: Long,
-): InformationElement()
+) : InformationElement()
 
+data class UserRealm(
+    val userId: String,
+    val ledgerId: String,
+    val accessLevel: AccessLevel,
+)

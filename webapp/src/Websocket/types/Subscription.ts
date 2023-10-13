@@ -7,6 +7,9 @@ import {CategoryDto} from "./categories";
 import {UserState} from "../../utils/userstate";
 import {GetMatchersRequest, GetMatchersResponse} from "./transactionMatcher";
 import {BookingView, GetBookingsRequest} from "./bookings";
+import {Realm} from "./realm";
+import {UserStateV2} from "./UserStateV2";
+import {OverviewRapportAccount} from "./OverviewRapportAccount";
 
 
 export type Subscribe = {
@@ -34,6 +37,9 @@ export type ReadRequestType = "userInfo"
     | 'getMatchers'
     | 'getBookings'
     | 'getBooking'
+    | 'getUserState'
+    | 'getAllRealms'
+    | 'getOverviewRapport'
     ;
 
 export type ReadRequest = {
@@ -48,6 +54,7 @@ export type ReadRequest = {
 }
 
 export type ReadResponse = {
+    realms?: Realm[];
     ledgers?: LedgerView[];
     userView?: UserView;
     bankAccounts?: BankAccountView[];
@@ -56,8 +63,10 @@ export type ReadResponse = {
     bankTransaction?: BankAccountTransactionView;
     categories?: CategoryDto[];
     userState?: UserState;
+    userStateV2?: UserStateV2;
     getMatchersResponse?: GetMatchersResponse;
     getBookingsResponse?: BookingView[];
     getBookingResponse?: BookingView;
+    overViewRapport?: OverviewRapportAccount[];
 }
 

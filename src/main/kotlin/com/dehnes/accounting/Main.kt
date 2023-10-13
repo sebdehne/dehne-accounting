@@ -1,6 +1,7 @@
 package com.dehnes.accounting
 
 import com.dehnes.accounting.api.WebSocketServer
+import com.dehnes.accounting.services.UserStateService
 import com.dehnes.accounting.utils.StaticFilesServlet
 import jakarta.websocket.HandshakeResponse
 import jakarta.websocket.server.HandshakeRequest
@@ -12,6 +13,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer
 import java.time.Duration
+import java.util.UUID
 
 val configuration = Configuration()
 
@@ -39,19 +41,37 @@ fun main() {
             ServerEndpointConfig.Builder
                 .create(WebSocketServer::class.java, "/api")
                 .configurator(object : ServerEndpointConfig.Configurator() {
+
+                    val userStateService = configuration.getBean<UserStateService>()
+
                     override fun modifyHandshake(
-                        sec: ServerEndpointConfig?,
-                        request: HandshakeRequest?,
+                        sec: ServerEndpointConfig,
+                        request: HandshakeRequest,
                         response: HandshakeResponse?
                     ) {
-                        val userEmail = request!!.headers.entries.firstOrNull {
+                        val userEmail = request.headers.entries.firstOrNull {
                             it.key.lowercase() == "x-email"
                         }?.value?.firstOrNull()
-                        val userId = request.headers.entries.firstOrNull {
-                            it.key.lowercase() == "x-user"
-                        }?.value?.firstOrNull()
-                        sec!!.userProperties!!["userEmail"] = userEmail
-                        sec.userProperties!!["userId"] = userId
+                        sec.userProperties!!["userEmail"] = userEmail
+
+                        if (userEmail != null) {
+                            val existingCookie = request.headers.entries
+                                .filter { it.key.lowercase() == "cookie" }
+                                .flatMap { it.value }
+                                .firstOrNull { it.startsWith("dehne-accounting=") }
+                                ?.split("=")
+                                ?.get(1)
+                                ?.trim()
+
+                            val sessionId = userStateService.getLatestSessionIdOrCreateNew(
+                                userEmail,
+                                existingCookie
+                            )
+
+                            response!!.headers["Set-Cookie"] = listOf("dehne-accounting=$sessionId; Secure,HttpOnly")
+                            sec.userProperties!!["sessionId"] = sessionId
+                        }
+
                         super.modifyHandshake(sec, request, response)
                     }
                 })

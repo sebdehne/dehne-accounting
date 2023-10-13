@@ -1,0 +1,16 @@
+
+.OverviewRapportViewerAccounts {
+    list-style-type: none;
+    padding: 0;
+}
+
+.OverviewRapportViewerAccount {
+}
+
+.LabeledNumberRow {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 20px;
+    justify-content: space-between;
+    align-items: center;
+}

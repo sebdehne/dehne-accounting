@@ -1,11 +1,8 @@
 package com.dehnes.accounting
 
 import com.dehnes.accounting.api.ReadService
-import com.dehnes.accounting.services.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
-import com.dehnes.accounting.database.Changelog
-import com.dehnes.accounting.database.Repository
-import com.dehnes.accounting.database.SchemaHandler
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.rapports.RapportService
 import com.dehnes.accounting.services.*
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -31,7 +28,6 @@ fun objectMapper() = jacksonObjectMapper()
 class Configuration {
     var beans = mutableMapOf<KClass<*>, Any>()
 
-
     fun init() {
 
         val executorService = Executors.newCachedThreadPool()
@@ -40,7 +36,7 @@ class Configuration {
         val datasource = datasourceSetup(dbFile())
         SchemaHandler.initSchema(datasource)
 
-        val changelog = Changelog(objectMapper)
+        val changelog = Changelog()
         val repository = Repository(changelog, objectMapper)
         val categoryReadService = CategoryReadService(repository, datasource)
         val userService = UserService(datasource)
@@ -49,7 +45,12 @@ class Configuration {
         val rapportService = RapportService(repository, categoryReadService)
         val bankTransactionImportService = BankTransactionImportService(datasource, repository, bookingReadService)
         val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
-        val userStateService = UserStateService(datasource, repository)
+        val userStateRepository = UserStateRepository(objectMapper, changelog)
+        val userRepository = UserRepository(datasource, objectMapper)
+        val userStateService = UserStateService(datasource, repository, userStateRepository, userService)
+        val accountsRepository = AccountsRepository(datasource)
+        val realmRepository = RealmRepository(datasource, accountsRepository)
+        val bookingRepository = BookingRepository(realmRepository)
         val readService = ReadService(
             bookingReadService,
             bankService,
@@ -59,7 +60,9 @@ class Configuration {
             categoryReadService,
             userStateService,
             transactionMatchingService,
-            datasource
+            datasource,
+            AuthorizationService(userRepository, realmRepository),
+            OverviewRapportService(datasource, bookingRepository, accountsRepository)
         )
         val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService, categoryReadService)
 

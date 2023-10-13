@@ -131,10 +131,20 @@ create table bank_transaction_matchers
 
 create table user_state
 (
-    user_id        text not null,
-    frontend_state text not null,
+    id            text      not null,
+    user_id       text      not null,
+    user_state    text      not null,
+    last_modified timestamp not null,
 
     primary key (user_id)
+);
+
+create table user_state_session
+(
+    id            text      not null,
+    user_state_id text      not null,
+    last_used     timestamp not null,
+    primary key (id)
 );
 
 

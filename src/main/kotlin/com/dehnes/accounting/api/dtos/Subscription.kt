@@ -1,9 +1,13 @@
 package com.dehnes.accounting.api.dtos
 
+import com.dehnes.accounting.api.*
 import com.dehnes.accounting.database.BookingView
 import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.ChangeLogEventType
 import com.dehnes.accounting.database.ChangeLogEventType.*
+import com.dehnes.accounting.database.Realm
+import com.dehnes.accounting.services.OverviewRapportAccount
+import kotlin.reflect.KClass
 
 
 data class Subscribe(
@@ -21,28 +25,34 @@ data class Notify(
 )
 
 enum class ReadRequestType(
-    vararg listensOn: ChangeLogEventType,
+    val listensOn: List<ChangeLogEventType>,
+    val listensOnV2: List<KClass<out ChangeLogEventTypeV2>> = emptyList(),
 ) {
-    userInfo(userUpdated),
-    getLedgers(legderUpdated, legderRemoved, legderAdded, userLedgerAccessChanged),
-    getBankAccounts(bankAdded, bankUpdated, bankRemoved, bankAccountAdded, bankAccountUpdated, bankAccountRemoved),
+    userInfo(listOf(userUpdated)),
+    getLedgers(listOf(legderUpdated, legderRemoved, legderAdded, userLedgerAccessChanged)),
+    getBankAccounts(listOf(bankAdded, bankUpdated, bankRemoved, bankAccountAdded, bankAccountUpdated, bankAccountRemoved)),
 
-    ledgerRapport(bookingAdded, bookingRemoved, bookingChanged),
-    getBankTransactions(bankTransactionAdded, bankTransactionRemoveLast),
-    getBankTransaction(bankTransactionAdded, bankTransactionRemoveLast),
+    ledgerRapport(listOf(bookingAdded, bookingRemoved, bookingChanged)),
+    getBankTransactions(listOf(bankTransactionAdded, bankTransactionRemoveLast)),
+    getBankTransaction(listOf(bankTransactionAdded, bankTransactionRemoveLast)),
 
-    allCategories(categoryAdded, categoryUpdated, categoryRemoved),
+    allCategories(listOf(categoryAdded, categoryUpdated, categoryRemoved)),
 
-    userState(userStateUpdated),
+    userState(listOf(userStateUpdated)),
 
-    getMatchers(matcherAdded, matcherUpdated, matcherRemoved),
+    getMatchers(listOf(matcherAdded, matcherUpdated, matcherRemoved)),
 
-    getBookings(bookingAdded, bookingRemoved, bookingChanged),
-    getBooking(bookingAdded, bookingRemoved, bookingChanged),
+    getBookings(listOf(bookingAdded, bookingRemoved, bookingChanged)),
+    getBooking(listOf(bookingAdded, bookingRemoved, bookingChanged)),
+
+
+    // V2s
+    getUserState(emptyList(), listOf(UserStateUpdated::class)),
+    getAllRealms(emptyList(), listOf(RealmChanged::class)),
+    getOverviewRapport(emptyList(), listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
 
     ;
 
-    val events = listensOn.toList()
 }
 
 data class ReadRequest(
@@ -57,6 +67,7 @@ data class ReadRequest(
 )
 
 data class ReadResponse(
+    val realms: List<Realm>? = null,
     val ledgers: List<LedgerView>? = null,
     val userView: UserView? = null,
     val bankAccounts: List<BankAccountView>? = null,
@@ -65,7 +76,9 @@ data class ReadResponse(
     val bankTransaction: BankAccountTransactionView? = null,
     val categories: List<CategoryDto>? = null,
     val userState: UserState? = null,
+    val userStateV2: UserStateV2? = null,
     val getMatchersResponse: GetMatchersResponse? = null,
     val getBookingsResponse: List<BookingView>? = null,
     val getBookingResponse: BookingView? = null,
+    val overViewRapport: List<OverviewRapportAccount>? = null,
 )

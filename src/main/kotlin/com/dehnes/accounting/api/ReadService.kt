@@ -2,7 +2,6 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
-import com.dehnes.accounting.services.TransactionMatchingService
 import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.BankTxDateRangeFilter
 import com.dehnes.accounting.database.ChangeLogEventType
@@ -30,6 +29,8 @@ class ReadService(
     private val userStateService: UserStateService,
     private val transactionMatchingService: TransactionMatchingService,
     private val dataSource: DataSource,
+    private val authorizationService: AuthorizationService,
+    private val overviewRapportService: OverviewRapportService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -61,7 +62,11 @@ class ReadService(
     }
 
     fun onChangelogEvent(changeLogEventType: ChangeLogEventType?, subId: String? = null) {
-        threadLocalChangeLog.get()?.add(ChangeEvent(changeLogEventType, subId))
+        threadLocalChangeLog.get()?.add(ChangeEvent(changeLogEventType, null, subId))
+    }
+
+    fun onChangelogEvent(changeEvent: ChangeEvent) {
+        threadLocalChangeLog.get()?.add(changeEvent)
     }
 
     private fun sendOutNotifies(changeEvent: Collection<ChangeEvent>) {
@@ -69,18 +74,36 @@ class ReadService(
 
         executorService.submit(wrap(logger) {
 
+            val cache = mutableMapOf<String, UserStateV2?>()
+
             dataSource.readTx { conn ->
                 compressed.forEach { changeEvent ->
 
                     listeners.values
                         .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
-                        .filter { changeEvent.changeLogEventType == null || changeEvent.changeLogEventType in it.readRequest.type.events }
+                        .filter {
+                            (changeEvent.changeLogEventType == null
+                                    || changeEvent.changeLogEventType in it.readRequest.type.listensOn)
+                                    || (changeEvent.changeLogEventTypeV2 == null
+                                    || (changeEvent.changeLogEventTypeV2::class in it.readRequest.type.listensOnV2
+                                    && changeEvent.changeLogEventTypeV2.triggerNotify(it.readRequest, it.sessionId)))
+                        }
                         .forEach { sub ->
+
+                            val userState = cache.getOrPut(sub.userId) {
+                                userStateService.getUserStateV2(conn, sub.sessionId)
+                            }
+
                             try {
                                 sub.onEvent(
                                     Notify(
                                         sub.subscriptionId,
-                                        handleRequest(conn, sub.userId, sub.readRequest)
+                                        handleRequest(
+                                            conn,
+                                            sub.userId,
+                                            sub.readRequest,
+                                            userState,
+                                        )
                                     )
                                 )
                             } catch (e: Throwable) {
@@ -98,9 +121,32 @@ class ReadService(
     fun handleRequest(
         connection: Connection,
         userId: String,
-        readRequest: ReadRequest
+        readRequest: ReadRequest,
+        userStateV2: UserStateV2?,
     ): ReadResponse =
         when (readRequest.type) {
+
+            getAllRealms -> ReadResponse(
+                realms = authorizationService.getAuthorizedRealms(
+                    connection,
+                    userId,
+                    AccessRequest.read
+                )
+            )
+
+            getUserState -> ReadResponse(userStateV2 = userStateV2)
+
+            getOverviewRapport -> {
+                ReadResponse(
+                    overViewRapport = if (userStateV2?.rangeFilter != null && userStateV2.selectedRealm != null) {
+                        overviewRapportService.createRapport(
+                            userStateV2.selectedRealm,
+                            userStateV2.rangeFilter
+                        )
+                    } else emptyList()
+                )
+            }
+
             userInfo -> ReadResponse(userView = UserView.fromUser(userService.getUserById(connection, userId)!!))
 
             userState -> {
@@ -110,7 +156,12 @@ class ReadService(
 
             getLedgers -> ReadResponse(ledgers = bookingReadService.listLedgers(connection, userId, AccessRequest.read))
 
-            allCategories -> ReadResponse(categories = categoryReadService.get(connection, readRequest.ledgerId!!).asList)
+            allCategories -> ReadResponse(
+                categories = categoryReadService.get(
+                    connection,
+                    readRequest.ledgerId!!
+                ).asList
+            )
 
             getBankAccounts -> ReadResponse(
                 bankAccounts = bankService.getAllAccountsFor(
@@ -225,16 +276,44 @@ class ReadService(
                 ReadResponse(getBookingsResponse = r)
             }
 
-            getBooking -> ReadResponse(getBookingResponse = bookingReadService.getBooking(
-                connection,
-                readRequest.ledgerId!!,
-                readRequest.getBookingId!!
-            ))
+            getBooking -> ReadResponse(
+                getBookingResponse = bookingReadService.getBooking(
+                    connection,
+                    readRequest.ledgerId!!,
+                    readRequest.getBookingId!!
+                )
+            )
         }
 
 }
 
 data class ChangeEvent(
     val changeLogEventType: ChangeLogEventType?,
+    val changeLogEventTypeV2: ChangeLogEventTypeV2?,
     val subId: String?,
 )
+
+sealed class ChangeLogEventTypeV2 {
+    abstract fun triggerNotify(readRequest: ReadRequest, sessionId: String): Boolean
+}
+
+data class UserStateUpdated(
+    val affectedSessionsId: List<String>
+) : ChangeLogEventTypeV2() {
+    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = sessionId in affectedSessionsId
+}
+
+data class RealmChanged(
+    val realmId: String
+) : ChangeLogEventTypeV2() {
+    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = readRequest.type == getAllRealms
+}
+
+object AccountsChanged : ChangeLogEventTypeV2() {
+    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
+}
+
+object BookingsChanged : ChangeLogEventTypeV2() {
+    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
+}
+

@@ -1364,8 +1364,8 @@ interface BookingsFilter : QueryFilter
 interface BankAccountTransactionsFilter : QueryFilter
 
 class DateRangeFilter(
-    private val from: Instant,
-    private val toExclusive: Instant,
+    val from: Instant,
+    val toExclusive: Instant,
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> {
         return "b.datetime >= ? AND b.datetime < ?" to listOf(

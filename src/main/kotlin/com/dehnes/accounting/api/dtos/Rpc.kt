@@ -25,6 +25,8 @@ enum class RequestType {
     addOrReplaceCategory,
     mergeCategories,
 
+    setUserStateV2,
+
 }
 
 data class RpcRequest(
@@ -42,6 +44,7 @@ data class RpcRequest(
     val addOrReplaceCategory: CategoryDto?,
     val mergeCategoriesRequest: MergeCategoriesRequest?,
     val addOrReplaceBooking: BookingView?,
+    val userStateV2: UserStateV2?,
 )
 
 data class RpcResponse(

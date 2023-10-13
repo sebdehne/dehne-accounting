@@ -13,7 +13,15 @@ object SqlUtils {
             when {
                 any is Long -> preparedStatement.setLong(index + 1, any)
                 any is String -> preparedStatement.setString(index + 1, any)
-                any is Instant -> preparedStatement.setTimestamp(index + 1, Timestamp.from(any))
+                any is Instant -> {
+                    if (any == Instant.MIN) {
+                        preparedStatement.setLong(index + 1, 0)
+                    } else if (any == Instant.MAX) {
+                        preparedStatement.setLong(index + 1, Long.MAX_VALUE)
+                    } else {
+                        preparedStatement.setTimestamp(index + 1, Timestamp.from(any))
+                    }
+                }
                 else -> error("Unsupported type $any")
             }
         }

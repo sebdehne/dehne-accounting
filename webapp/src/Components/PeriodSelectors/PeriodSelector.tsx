@@ -1,5 +1,5 @@
-import React, {useCallback, useMemo, useState} from "react";
-import {formatIso, formatMonth, formatYear, monthDelta, yearDelta} from "../../utils/formatting";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
+import {formatIso, formatMonth, formatYear, monthDelta, startOfCurrentMonth, yearDelta} from "../../utils/formatting";
 import IconButton from "@mui/material/IconButton";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
@@ -92,4 +92,38 @@ const MonthPeriodSelector = ({period, setPeriod}: MonthPeriodSelectorProps) => {
                 fontSize="inherit"/></IconButton>
         </div>
     )
+}
+
+export const PeriodSelectorV2 = () => {
+    const {userStateV2, setUserStateV2} = useGlobalState();
+
+    useEffect(() => {
+        if (!userStateV2?.rangeFilter || !userStateV2?.periodType) {
+            setUserStateV2(prev => ({
+                ...prev,
+                rangeFilter: {
+                    from: formatIso(startOfCurrentMonth()),
+                    toExclusive: formatIso(monthDelta(startOfCurrentMonth(), 1)),
+                },
+                periodType: "month"
+            }))
+        }
+    }, [userStateV2]);
+
+    return (
+        <>
+            {userStateV2?.rangeFilter && userStateV2.periodType === "month" && <MonthPeriodSelector
+                period={[moment(userStateV2.rangeFilter.from), moment(userStateV2.rangeFilter.toExclusive)]}
+                setPeriod={p => setUserStateV2(prev => ({
+                    ...prev,
+                    rangeFilter: {
+                        from: formatIso(p[0]),
+                        toExclusive: formatIso(p[1]),
+                    },
+                    periodType: 'month'
+                }))}
+            />}
+        </>
+    );
+
 }

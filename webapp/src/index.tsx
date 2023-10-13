@@ -23,6 +23,8 @@ import {AddOrEditBooking} from "./Components/Booking/AddOrEditBooking";
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 import 'moment/locale/nb';
+import {ChooseRealm} from "./Components/ChooseRealm/ChooseRealm";
+import {RealmMain} from "./Components/RealmMain/RealmMain";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -35,8 +37,8 @@ root.render(
                     <CssBaseline/>
                     <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
                         <Routes>
-                            <Route path="/" element={<LedgerMain/>}/>
-                            <Route path="/ledger" element={<ChooseLedger/>}/>
+                            <Route path="/" element={<RealmMain/>}/>
+                            <Route path="/realm" element={<ChooseRealm/>}/>
 
                             <Route path="/categories" element={<Categories/>}/>
                             <Route path="/category" element={<AddOrEditCategory/>}/>

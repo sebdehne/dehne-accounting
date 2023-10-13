@@ -37,6 +37,7 @@ class WebSocketServer : Endpoint() {
 
     override fun onOpen(sess: Session, p1: EndpointConfig?) {
         logger.info("$instanceId Socket connected: $sess")
+
         sess.addMessageHandler(String::class.java) { msg -> onWebSocketText(sess, msg) }
     }
 
@@ -51,7 +52,9 @@ class WebSocketServer : Endpoint() {
 
     fun onWebSocketText(argSession: Session, argMessage: String) {
         val userEmail = (argSession.userProperties["userEmail"] as String?) ?: error("user missing")
+        val sessionId = (argSession.userProperties["sessionId"] as String?) ?: error("sessionId missing")
         val user = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
+        val userStateV2 = userStateService.getUserStateV2(sessionId)
 
         val websocketMessage: WebsocketMessage = objectMapper.readValue(argMessage)
 
@@ -67,7 +70,7 @@ class WebSocketServer : Endpoint() {
 
                 synchronized(subscriptions) {
                     subscriptions[subscriptionId]?.close()
-                    val sub = Subscription(subscriptionId, argSession, user.id, subscribe.readRequest)
+                    val sub = Subscription(subscriptionId, argSession, user.id, subscribe.readRequest, sessionId)
                     subscriptions[subscriptionId] = sub
                     readService.addSubscription(sub)
                 }
@@ -82,6 +85,12 @@ class WebSocketServer : Endpoint() {
                 subscriptions.remove(subscriptionId)?.close()
                 logger.info { "$instanceId Removed subscription id=$subscriptionId" }
                 RpcResponse(subscriptionRemoved = true)
+            }
+
+            setUserStateV2 -> readService.doWithNotifies {
+                check(rpcRequest.userStateV2!!.id == userStateV2.id)
+                userStateService.setUserStateV2(user.id, rpcRequest.userStateV2)
+                RpcResponse()
             }
 
             setUserState -> readService.doWithNotifies {
@@ -212,6 +221,7 @@ class WebSocketServer : Endpoint() {
         val sess: Session,
         val userId: String,
         val readRequest: ReadRequest,
+        val sessionId: String,
     ) : Closeable {
         fun onEvent(n: Notify) {
             sess.basicRemote.sendText(
