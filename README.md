@@ -8,4 +8,8 @@ Webapp (backend and frontend) for personal accounting.
 - Import bank transactions
 - SQL-based, currently [SQLite](https://www.sqlite.org/index.html)
 
+## Installation
 
+### Compiling
+You need to download & compile [sebdehne/dehne-kmymoney-utils](https://github.com/sebdehne/dehne-kmymoney-utils) 
+before building this repository.
