@@ -1,5 +1,4 @@
-import React, {useEffect, useState} from "react";
-import {BankAccountView} from "../../Websocket/types/bankaccount";
+import React, {useState} from "react";
 import WebsocketClient from "../../Websocket/websocketClient";
 import Header from "../Header";
 import {Button, Checkbox, Container, FormControlLabel, styled} from "@mui/material";
@@ -7,6 +6,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {arrayBufferToBase64} from "../../utils/formatting";
 import {ImportBankTransactionsResult} from "../../Websocket/types/Rpc";
 import {useGlobalState} from "../../utils/userstate";
+import {useParams} from "react-router-dom";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -22,25 +22,15 @@ const VisuallyHiddenInput = styled('input')({
 
 
 export const BankTransactionsImporter = () => {
-    const {userState, } = useGlobalState();
-    const [bankAccount, setBankAccount] = useState<BankAccountView>()
+    const {accountId} = useParams();
+    const {accountsAsList, userStateV2} = useGlobalState();
+
+    const account = accountsAsList.find(a => a.id == accountId)
+
     const [selectedFile, setSelectedFile] = useState<File>();
     const [importResult, setImportResult] = useState<ImportBankTransactionsResult>();
     const [importError, setImportError] = useState<string | undefined>(undefined);
     const [ignoreDescriptionDuringImport, setIgnoreDescriptionDuringImport] = useState(false);
-
-    useEffect(() => {
-        if (userState?.ledgerId && userState.bankAccountId) {
-            const subId = WebsocketClient
-                .subscribe(
-                    {type: "getBankAccounts", ledgerId: userState.ledgerId},
-                    notify => setBankAccount(notify.readResponse.bankAccounts?.find(b => b.id === userState.bankAccountId))
-                );
-
-            return () => WebsocketClient.unsubscribe(subId);
-        }
-
-    }, [userState]);
 
     const fileChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
         if ((e?.target?.files?.length ?? 0) > 0) {
@@ -49,8 +39,9 @@ export const BankTransactionsImporter = () => {
             setSelectedFile(undefined);
         }
     }
+
     const importNow = () => {
-        if (selectedFile && bankAccount && userState?.ledgerId) {
+        if (selectedFile && account && userStateV2?.selectedRealm) {
             const fr = new FileReader();
             fr.onload = () => {
                 const data: ArrayBuffer = fr.result as ArrayBuffer;
@@ -62,8 +53,7 @@ export const BankTransactionsImporter = () => {
                         dataBase64: base64,
                         filename: selectedFile.name,
                         duplicationHandlerType: ignoreDescriptionDuringImport ? "sameDateAndAmount" : "sameDateAmountAndDescription",
-                        bankAccountId: bankAccount.id,
-                        ledgerId: userState.ledgerId!,
+                        accountId: account.id,
                     }
                 }).then(resp => {
                     setImportResult(resp.importBankTransactionsResult);
@@ -78,7 +68,7 @@ export const BankTransactionsImporter = () => {
     return (
         <Container maxWidth="xs" className="App">
             <Header
-                title={'Import  for: ' + bankAccount?.name ?? "..."}
+                title={'Import  for: ' + account?.name ?? "..."}
             />
 
             <div>

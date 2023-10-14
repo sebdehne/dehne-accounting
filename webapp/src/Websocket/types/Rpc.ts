@@ -49,8 +49,7 @@ export type RpcResponse = {
 }
 
 export type ImportBankTransactionsRequest = {
-    ledgerId: string;
-    bankAccountId: string;
+    accountId: string;
     filename: string;
     dataBase64: string;
     duplicationHandlerType: DuplicationHandlerType;

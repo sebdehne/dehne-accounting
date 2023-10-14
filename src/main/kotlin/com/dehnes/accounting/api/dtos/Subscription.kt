@@ -1,12 +1,11 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.api.*
-import com.dehnes.accounting.database.BookingView
-import com.dehnes.accounting.database.CategoryDto
-import com.dehnes.accounting.database.ChangeLogEventType
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.ChangeLogEventType.*
-import com.dehnes.accounting.database.Realm
 import com.dehnes.accounting.services.OverviewRapportAccount
+import com.dehnes.accounting.services.bank.BankAccountTransaction
+import com.dehnes.accounting.services.bank.BankWithAccounts
 import kotlin.reflect.KClass
 
 
@@ -49,14 +48,17 @@ enum class ReadRequestType(
     // V2s
     getUserState(emptyList(), listOf(UserStateUpdated::class)),
     getAllRealms(emptyList(), listOf(RealmChanged::class)),
+    getAllAccounts(emptyList(), listOf(AccountsChanged::class)),
     getOverviewRapport(emptyList(), listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
-
+    getBanksAndAccountsOverview(emptyList(), listOf(AccountsChanged::class, BookingsChanged::class, UnbookedTransactionsChanged::class)),
+    getBankAccountTransactions(emptyList(), listOf(BookingsChanged::class, UnbookedTransactionsChanged::class)),
     ;
 
 }
 
 data class ReadRequest(
     val type: ReadRequestType,
+    val accountId: String? = null,
     val ledgerId: String? = null,
     val ledgerRapportRequest: LedgerRapportRequest? = null,
     val bankTransactionsRequest: BankTransactionsRequest? = null,
@@ -81,4 +83,7 @@ data class ReadResponse(
     val getBookingsResponse: List<BookingView>? = null,
     val getBookingResponse: BookingView? = null,
     val overViewRapport: List<OverviewRapportAccount>? = null,
+    val banksAndAccountsOverview: List<BankWithAccounts>? = null,
+    val getBankAccountTransactions: List<BankAccountTransaction>? = null,
+    val allAccounts: List<AccountDto>? = null,
 )

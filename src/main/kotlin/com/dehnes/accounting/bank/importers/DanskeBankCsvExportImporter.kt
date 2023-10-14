@@ -75,6 +75,7 @@ class DanskeBankCsvExportImporter : Importer {
                         text,
                         date.atStartOfDay().atZone(zoneId).toInstant(),
                         amount,
+                        null,
                     )
                 )
             }

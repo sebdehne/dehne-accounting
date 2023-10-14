@@ -1,0 +1,46 @@
+
+.BankAccounts {
+    list-style-type: none;
+    padding: 0;
+}
+
+.BankAccount {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+    background-color: #3f3f3f;
+    align-items: center;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.BankAccountLeft {
+    display: flex;
+    flex-direction: column;
+}
+.BankAccountRight {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+}
+
+.BankAccountLeftFirst {
+    font-size: smaller;
+}
+.BankAccountLeftSecond {
+    font-size: x-large;
+    font-weight: bold;
+}
+.BankAccountLeftThird {
+    font-size: smaller;
+}
+
+.BankAccountRightFirst {
+    font-size: x-large;
+    font-weight: bold;
+}
+.BankAccountRightSecond {
+    font-size: smaller;
+}

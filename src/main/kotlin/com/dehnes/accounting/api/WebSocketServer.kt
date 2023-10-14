@@ -104,8 +104,8 @@ class WebSocketServer : Endpoint() {
                 val (result, errorMsg) = logAndGetError(logger) {
                     bankTransactionImportService.doImport(
                         user.id,
-                        request.ledgerId,
-                        request.bankAccountId,
+                        userStateV2.selectedRealm!!,
+                        request.accountId,
                         ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
                         request.filename,
                         request.duplicationHandlerType.duplicationHandler

@@ -43,7 +43,7 @@ class BankAccountImporter(
 
         val accountDtoWrapper = accountImporter.getImported(connection, account.id)
 
-        val bankAccount = bankAccountRepository.insert(
+        val bankAccount = bankAccountRepository.insertBankAccount(
             connection,
             accountDtoWrapper.accountDto,
             bank.id,

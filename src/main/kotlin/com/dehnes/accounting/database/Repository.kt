@@ -1364,8 +1364,8 @@ interface BookingsFilter : QueryFilter
 interface BankAccountTransactionsFilter : QueryFilter
 
 class DateRangeFilter(
-    val from: Instant,
-    val toExclusive: Instant,
+    val from: Instant = Instant.MIN,
+    val toExclusive: Instant = Instant.MAX,
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> {
         return "b.datetime >= ? AND b.datetime < ?" to listOf(
@@ -1382,6 +1382,14 @@ class CategoryFilter(
         "br.category_id in (${categoryIds.joinToString(",") { "?" }})" to categoryIds
 }
 
+class AccountIdFilter(
+    private val accountId: String,
+    private val realmId: String,
+) : BookingsFilter {
+    override fun whereAndParams(): Pair<String, List<Any>> =
+        "b.id in (SELECT distinct booking_id from booking_entry WHERE realm_id = ? AND account_id = ?)" to listOf(realmId, accountId)
+}
+
 class SingleBookingFilter(
     private val bookingId: Long,
 ) : BookingsFilter {
@@ -1390,8 +1398,8 @@ class SingleBookingFilter(
 }
 
 class BankTxDateRangeFilter(
-    private val from: Instant,
-    private val toExclusive: Instant,
+    private val from: Instant = Instant.MIN,
+    private val toExclusive: Instant = Instant.MAX,
 ) : BankAccountTransactionsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> {
         return "datetime >= ? AND datetime < ?" to listOf(

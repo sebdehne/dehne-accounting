@@ -1,6 +1,5 @@
 package com.dehnes.accounting.database
 
-import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
 import java.sql.Connection
 import javax.sql.DataSource
@@ -9,17 +8,23 @@ class BankRepository(
     private val dataSource: DataSource
 ) {
 
-    fun getByName(connection: Connection, name: String) = connection.prepareStatement("SELECT * FROM bank WHERE name = ?").use { preparedStatement ->
-        preparedStatement.setString(1, name)
-        preparedStatement.executeQuery().use { rs ->
-            if (rs.next()) BankDto(
-                rs.getString("id"),
-                rs.getString("name"),
-                rs.getString("description"),
-                rs.getString("transaction_import_function")
-            ) else null
+    fun getByName(connection: Connection, name: String) = getAll(connection).firstOrNull { it.name == name }
+
+    fun getAll(connection: Connection) =
+        connection.prepareStatement("SELECT * FROM bank").use { preparedStatement ->
+            preparedStatement.executeQuery().use { rs ->
+                val l = mutableListOf<BankDto>()
+                while (rs.next()) l.add(
+                    BankDto(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getString("transaction_import_function")
+                    )
+                )
+                l
+            }
         }
-    }
 
     fun insert(bank: BankDto) {
         dataSource.writeTx { conn ->

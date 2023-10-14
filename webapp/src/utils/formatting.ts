@@ -56,7 +56,7 @@ export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId:
     return parts.length > 0 ? (parts.join(":") + (endDelimiter ? " > " : "")) : "";
 }
 
-export const amountInCentsToString = (amountInCentsToString: number, locale: string) => {
+export const amountInCentsToString = (amountInCentsToString: number, locale: string = "nb-NO") => {
     const formated = new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: 'NOK',

@@ -7,9 +7,8 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
-class SBankenCsvExportImporter: Importer {
+class SBankenCsvExportImporter : Importer {
 
     val supportedHeaderLines = listOf(
         listOf(
@@ -37,7 +36,7 @@ class SBankenCsvExportImporter: Importer {
 
             var detectedHeader: List<String>? = null
 
-            while(true) {
+            while (true) {
                 val readLine = reader.readLine() ?: break
                 val headerLine = readLine.parseLine()
 
@@ -59,7 +58,7 @@ class SBankenCsvExportImporter: Importer {
             }
 
 
-            while(true) {
+            while (true) {
                 val line = reader.readLine() ?: break
                 val parts = line.parseLine()
 
@@ -76,7 +75,8 @@ class SBankenCsvExportImporter: Importer {
                     BankTransactionImportRecord(
                         text,
                         date.atStartOfDay().atZone(DateTimeUtils.zoneId).toInstant(),
-                        debit ?: (credit!! * -1L)
+                        debit ?: (credit!! * -1L),
+                        getValue(parts, "MOTKONTO")
                     )
                 )
             }

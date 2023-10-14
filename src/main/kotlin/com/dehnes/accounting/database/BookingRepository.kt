@@ -9,6 +9,55 @@ class BookingRepository(
     private val realmRepository: RealmRepository
 ) {
 
+    fun getSum(conn: Connection, accountId: String, realmId: String, dateRangeFilter: DateRangeFilter): Long {
+        val (wheres, whereParams) = dateRangeFilter.whereAndParams()
+        return conn.prepareStatement(
+            """
+            SELECT 
+                sum(be.amount_in_cents) 
+            from 
+                booking b, booking_entry be 
+            where 
+                b.id = be.booking_id
+                AND be.account_id = ?
+                AND b.realm_id = ?
+                AND $wheres
+        """.trimIndent()
+        ).use { preparedStatement ->
+            val params = mutableListOf<Any>()
+            params.add(accountId)
+            params.add(realmId)
+            params.addAll(whereParams)
+
+            SqlUtils.setSqlParams(preparedStatement, params)
+
+            preparedStatement.executeQuery().use { rs ->
+                check(rs.next())
+                rs.getLong(1)
+            }
+        }
+    }
+
+    fun getLastKnownBookingDate(conn: Connection, accountId: String, realmId: String): Instant? = conn.prepareStatement(
+        """
+        SELECT 
+            max(b.datetime) 
+        from 
+            booking b, booking_entry be 
+        where 
+            b.id = be.booking_id
+            AND be.account_id = ?
+            AND b.realm_id = ?
+    """.trimIndent()
+    ).use { preparedStatement ->
+        preparedStatement.setString(1, accountId)
+        preparedStatement.setString(2, realmId)
+        preparedStatement.executeQuery().use { rs ->
+            check(rs.next())
+            rs.getTimestamp(1)?.toInstant()
+        }
+    }
+
     fun getBookings(
         connection: Connection,
         realmId: String,
@@ -24,8 +73,7 @@ class BookingRepository(
         val wheres = filterData.map { it.first }.joinToString(" AND ") { "($it)" }
         filterData.map { it.second }.forEach { params.addAll(it) }
 
-        val records = connection.prepareStatement(
-            """
+        val finalQuery = """
             SELECT 
                 b.id, 
                 b.description, 
@@ -43,7 +91,8 @@ class BookingRepository(
             ORDER BY b.datetime, b.id , beId
             LIMIT $limit
         """.trimIndent()
-        ).use { preparedStatement ->
+
+        val records = connection.prepareStatement(finalQuery).use { preparedStatement ->
             SqlUtils.setSqlParams(preparedStatement, params)
 
             preparedStatement.executeQuery().use { rs ->

@@ -1,8 +1,13 @@
 import {LedgerView} from "./ledgers";
 import {UserView} from "./user";
-import {BankAccountView, BankTransactionRequest} from "./bankaccount";
+import {BankAccountView, BankTransactionRequest, BankWithAccounts} from "./bankaccount";
 import {LedgerRapportNode, LedgerRapportRequest} from "./ledger_rapport";
-import {BankAccountTransactionView, BankTransactionsRequest, BankTransactionsResponse} from "./banktransactions";
+import {
+    BankAccountTransaction,
+    BankAccountTransactionView,
+    BankTransactionsRequest,
+    BankTransactionsResponse
+} from "./banktransactions";
 import {CategoryDto} from "./categories";
 import {UserState} from "../../utils/userstate";
 import {GetMatchersRequest, GetMatchersResponse} from "./transactionMatcher";
@@ -10,6 +15,7 @@ import {BookingView, GetBookingsRequest} from "./bookings";
 import {Realm} from "./realm";
 import {UserStateV2} from "./UserStateV2";
 import {OverviewRapportAccount} from "./OverviewRapportAccount";
+import {AccountDto} from "./accounts";
 
 
 export type Subscribe = {
@@ -40,11 +46,15 @@ export type ReadRequestType = "userInfo"
     | 'getUserState'
     | 'getAllRealms'
     | 'getOverviewRapport'
+    | 'getBanksAndAccountsOverview'
+    | 'getBankAccountTransactions'
+    | 'getAllAccounts'
     ;
 
 export type ReadRequest = {
     type: ReadRequestType;
     ledgerId?: string;
+    accountId?: string;
     ledgerRapportRequest?: LedgerRapportRequest;
     bankTransactionsRequest?: BankTransactionsRequest;
     bankTransactionRequest?: BankTransactionRequest;
@@ -68,5 +78,9 @@ export type ReadResponse = {
     getBookingsResponse?: BookingView[];
     getBookingResponse?: BookingView;
     overViewRapport?: OverviewRapportAccount[];
+
+    banksAndAccountsOverview?: BankWithAccounts[];
+    getBankAccountTransactions?: BankAccountTransaction[];
+    allAccounts?: AccountDto[];
 }
 

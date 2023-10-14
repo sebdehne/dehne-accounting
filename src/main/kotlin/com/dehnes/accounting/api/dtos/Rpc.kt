@@ -10,7 +10,6 @@ enum class RequestType {
     subscribe,
     unsubscribe,
 
-    importBankTransactions,
     removeLastBankTransaction,
 
     addOrReplaceMatcher,
@@ -25,7 +24,9 @@ enum class RequestType {
     addOrReplaceCategory,
     mergeCategories,
 
+    // V2
     setUserStateV2,
+    importBankTransactions,
 
 }
 
@@ -57,14 +58,13 @@ data class RpcResponse(
 )
 
 data class ImportBankTransactionsRequest(
-    val ledgerId: String,
-    val bankAccountId: String,
+    val accountId: String,
     val filename: String,
     val dataBase64: String,
     val duplicationHandlerType: DuplicationHandlerType,
 )
 
 enum class DuplicationHandlerType(val duplicationHandler: DuplicationHandler) {
-    sameDateAndAmount({ a, b -> a.datetime == b.datetime && a.amount == b.amountInCents }),
-    sameDateAmountAndDescription({ a, b -> a.datetime == b.datetime && a.amount == b.amountInCents && a.description == b.description }),
+    sameDateAndAmount({ a, b -> a.datetime == b.datetime && a.amountInCents == b.amountInCents }),
+    sameDateAmountAndDescription({ a, b -> a.datetime == b.datetime && a.amountInCents == b.amountInCents && a.memo == b.description }),
 }

@@ -13,6 +13,7 @@ object SqlUtils {
             when {
                 any is Long -> preparedStatement.setLong(index + 1, any)
                 any is String -> preparedStatement.setString(index + 1, any)
+                any is NullString -> preparedStatement.setString(index + 1, null)
                 any is Instant -> {
                     if (any == Instant.MIN) {
                         preparedStatement.setLong(index + 1, 0)
@@ -28,3 +29,5 @@ object SqlUtils {
     }
 
 }
+
+object NullString

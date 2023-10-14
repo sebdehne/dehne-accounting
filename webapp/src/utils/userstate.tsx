@@ -7,6 +7,7 @@ import {buildTree, CategoryTree} from "../Components/CategorySearchBox/CategoryT
 import {LedgerView} from "../Websocket/types/ledgers";
 import {UserStateV2} from "../Websocket/types/UserStateV2";
 import {Realm} from "../Websocket/types/realm";
+import {AccountDto} from "../Websocket/types/accounts";
 
 type ContextType = {
     userState: UserStateFrontendState | undefined;
@@ -17,6 +18,7 @@ type ContextType = {
     categoriesAsTree: CategoryTree[];
     ledger: LedgerView | undefined;
     realm: Realm | undefined;
+    accountsAsList: AccountDto[];
 }
 
 const GlobalStateProviderContext = React.createContext({} as ContextType);
@@ -32,6 +34,7 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
     const [categoriesAsTree, setCategoriesAsTree] = useState<CategoryTree[]>([]);
     const [ledger, setLedger] = useState<LedgerView>();
     const [realm, setRealm] = useState<Realm>();
+    const [accountsAsList, setAccountsAsList] = useState<AccountDto[]>([]);
 
     useEffect(() => {
         if (userStateV2?.selectedRealm) {
@@ -54,6 +57,15 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
         )
         return () => WebsocketClient.unsubscribe(subId);
     }, [setUserStateV2]);
+    useEffect(() => {
+        const subId = WebsocketClient.subscribe(
+            {type: 'getAllAccounts'},
+            notify => {
+                return setAccountsAsList(notify.readResponse.allAccounts!);
+            }
+        )
+        return () => WebsocketClient.unsubscribe(subId);
+    }, [setAccountsAsList]);
 
     const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
         if (userState) {
@@ -93,7 +105,8 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
             categoriesAsTree,
             ledger,
             userStateV2,
-            realm
+            realm,
+            accountsAsList
         }}>
             {children}
         </GlobalStateProviderContext.Provider>

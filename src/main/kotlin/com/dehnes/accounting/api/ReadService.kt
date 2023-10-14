@@ -2,15 +2,13 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
-import com.dehnes.accounting.database.AccessRequest
-import com.dehnes.accounting.database.BankTxDateRangeFilter
-import com.dehnes.accounting.database.ChangeLogEventType
-import com.dehnes.accounting.database.DateRangeFilter
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.rapports.RapportLeaf
 import com.dehnes.accounting.rapports.RapportRequest
 import com.dehnes.accounting.rapports.RapportService
 import com.dehnes.accounting.services.*
+import com.dehnes.accounting.services.bank.BankAccountService
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
 import java.sql.Connection
@@ -31,6 +29,8 @@ class ReadService(
     private val dataSource: DataSource,
     private val authorizationService: AuthorizationService,
     private val overviewRapportService: OverviewRapportService,
+    private val bankAccountService: BankAccountService,
+    private val accountsRepository: AccountsRepository,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -125,6 +125,26 @@ class ReadService(
         userStateV2: UserStateV2?,
     ): ReadResponse =
         when (readRequest.type) {
+
+            getAllAccounts -> ReadResponse(allAccounts = dataSource.readTx {
+                accountsRepository.getAll(
+                    it,
+                    userStateV2!!.selectedRealm!!
+                )
+            })
+
+            getBanksAndAccountsOverview -> ReadResponse(
+                banksAndAccountsOverview = bankAccountService.getOverview(userId, userStateV2!!.selectedRealm!!)
+            )
+
+            getBankAccountTransactions -> ReadResponse(
+                getBankAccountTransactions = bankAccountService.getBankAccountTransactions(
+                    userId,
+                    userStateV2!!.selectedRealm!!,
+                    readRequest.accountId!!,
+                    userStateV2.rangeFilter!!
+                )
+            )
 
             getAllRealms -> ReadResponse(
                 realms = authorizationService.getAuthorizedRealms(
@@ -314,6 +334,10 @@ object AccountsChanged : ChangeLogEventTypeV2() {
 }
 
 object BookingsChanged : ChangeLogEventTypeV2() {
+    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
+}
+
+object UnbookedTransactionsChanged : ChangeLogEventTypeV2() {
     override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
 }
 

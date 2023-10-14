@@ -24,5 +24,6 @@ data class BankTransactionImportRecord(
     val description: String?,
     val datetime: Instant,
     val amountInCents: Long,
+    val otherAccountNumber: String?,
 )
 

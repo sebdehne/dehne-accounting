@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
-import {Button, ButtonGroup, CircularProgress} from "@mui/material";
+import {Button, ButtonGroup, CircularProgress, Divider, Menu, MenuItem, MenuList} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import "./Header.css"
@@ -8,9 +8,10 @@ import "./Header.css"
 type HeaderProps = {
     title: string;
     clickable?: () => void;
+    extraMenuOptions?: [string, string][];
 }
 
-const Header = ({title, clickable}: HeaderProps) => {
+const Header = ({title, clickable, extraMenuOptions}: HeaderProps) => {
     const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
     const navigate = useNavigate();
 
@@ -36,26 +37,7 @@ const Header = ({title, clickable}: HeaderProps) => {
                     color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>Back</Button>
             </div>
             <div className="HeaderButtonsRight">
-                <ButtonGroup>
-                    <Button
-                    size={"small"}
-                        style={{marginRight: '2px'}}
-                            color="primary"
-                            variant="contained"
-                            onClick={() => navigate('/')}>Home</Button>
-                    <Button
-                        size={"small"}
-                        style={{marginRight: '2px'}}
-                            color="primary"
-                            variant="contained"
-                            onClick={() => navigate('/bookings')}>Bookings</Button>
-                    <Button
-                        size={"small"}
-                        style={{marginRight: '2px'}}
-                            color="primary"
-                            variant="contained"
-                            onClick={() => navigate('/categories')}>Categories</Button>
-                </ButtonGroup>
+                <BasicMenu extraMenuOptions={extraMenuOptions ?? []}/>
             </div>
         </div>
         <div className="HeaderConnectionStatus">
@@ -72,3 +54,55 @@ const Header = ({title, clickable}: HeaderProps) => {
 };
 
 export default Header;
+
+
+type BasicMenuProps = {
+    extraMenuOptions: [string, string][];
+}
+const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const navigate = useNavigate();
+    const handleClose = (url?: string) => {
+        setAnchorEl(null);
+        if (url) {
+            navigate(url);
+        }
+    };
+
+    return (
+        <div>
+            <Button
+                id="basic-button"
+                aria-controls={open ? 'basic-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                onClick={handleClick}
+                color="primary" variant="contained"
+            >
+                Menu
+            </Button>
+            <Menu
+                id="basic-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={() => handleClose()}
+                MenuListProps={{
+                    'aria-labelledby': 'basic-button',
+                }}
+            >
+                <MenuItem onClick={() => handleClose('/')}>Home</MenuItem>
+                <MenuItem onClick={() => handleClose('/bankaccounts')}>Bank accounts</MenuItem>
+                {extraMenuOptions.length > 0 && <MenuList>
+                    <Divider />
+                    {extraMenuOptions.map(([name, link]) => (
+                        <MenuItem key={name} onClick={() => handleClose(link)}>{name}</MenuItem>
+                    ))}
+                </MenuList>}
+            </Menu>
+        </div>
+    );
+}

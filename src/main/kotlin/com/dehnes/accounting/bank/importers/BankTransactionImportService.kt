@@ -2,32 +2,37 @@ package com.dehnes.accounting.bank.importers
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
-import com.dehnes.accounting.services.BookingReadService
+import com.dehnes.accounting.services.AuthorizationService
+import com.dehnes.accounting.services.bank.BankAccountService
+import com.dehnes.accounting.services.bank.BankAccountTransaction
 import com.dehnes.accounting.utils.DateTimeUtils.plusDays
 import java.io.InputStream
 import javax.sql.DataSource
 
 class BankTransactionImportService(
     private val dataSource: DataSource,
-    private val repository: Repository,
-    private val bookingReadService: BookingReadService,
+    private val authorizationService: AuthorizationService,
+    private val bankAccountRepository: BankAccountRepository,
+    private val bankAccountService: BankAccountService,
+    private val unbookedTransactionRepository: UnbookedTransactionRepository,
+    private val bankRepository: BankRepository,
 ) {
     fun doImport(
         userId: String,
-        ledgerId: String,
-        bankAccountId: String,
+        realmId: String,
+        accountId: String,
         data: InputStream,
         filename: String,
         duplicationHandler: DuplicationHandler,
     ) = dataSource.writeTx { conn ->
 
-        val ledger = bookingReadService.getLedgerAuthorized(conn, userId, ledgerId, AccessRequest.write)
+        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 
         val bankAccount =
-            repository.getAllBankAccountsForLedger(conn, ledger.id).firstOrNull { it.id == bankAccountId }
-                ?: error("No such bank account $bankAccountId")
+            bankAccountRepository.getAllBankAccounts(conn, realmId).firstOrNull { it.accountId == accountId }
+                ?: error("No such bank account $accountId")
 
-        val bankDto = repository.getAllBanks(conn).firstOrNull { it.id == bankAccount.bankId }
+        val bankDto = bankRepository.getAll(conn).firstOrNull { it.id == bankAccount.bankId }
             ?: error("No such bank ${bankAccount.bankId}")
 
         val importer = bankDto.transactionImportFunction?.let {
@@ -46,11 +51,11 @@ class BankTransactionImportService(
         ) { record ->
 
             if (overlapping) {
-                val existingRecords = repository.getBankTransactions(
-                    connection = conn,
-                    bankAccountId = bankAccountId,
-                    limit = Int.MAX_VALUE,
-                    BankTxDateRangeFilter(
+                val existingRecords = bankAccountService.getBankAccountTransactions(
+                    conn,
+                    realmId,
+                    accountId,
+                    DateRangeFilter(
                         record.datetime,
                         record.datetime.plusDays(1)
                     )
@@ -64,16 +69,15 @@ class BankTransactionImportService(
                 }
             }
 
-            repository.addBankTransaction(
+            unbookedTransactionRepository.insert(
                 conn,
-                userId,
-                BankTransactionAdd(
+                UnbookedTransaction(
+                    accountId,
+                    0,
                     record.description,
-                    bankAccount.ledgerId,
-                    bankAccount.bankId,
-                    bankAccount.id,
                     record.datetime,
                     record.amountInCents,
+                    record.otherAccountNumber
                 )
             )
             imported++
@@ -84,7 +88,6 @@ class BankTransactionImportService(
             skipped,
         )
     }
-
 }
 
 
@@ -93,5 +96,5 @@ data class ImportResult(
     val skipped: Long,
 )
 
-typealias DuplicationHandler = (existing: BankTransaction, record: BankTransactionImportRecord) -> Boolean
+typealias DuplicationHandler = (existing: BankAccountTransaction, record: BankTransactionImportRecord) -> Boolean
 

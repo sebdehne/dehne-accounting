@@ -25,6 +25,8 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 import 'moment/locale/nb';
 import {ChooseRealm} from "./Components/ChooseRealm/ChooseRealm";
 import {RealmMain} from "./Components/RealmMain/RealmMain";
+import {BanksAndAccounts} from "./Components/BanksAndAccounts/BanksAndAccounts";
+import {BankTransactionsV2} from "./Components/BankTransactionsV2/BankTransactionsV2";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -39,6 +41,9 @@ root.render(
                         <Routes>
                             <Route path="/" element={<RealmMain/>}/>
                             <Route path="/realm" element={<ChooseRealm/>}/>
+                            <Route path="/bankaccounts" element={<BanksAndAccounts/>}/>
+                            <Route path="/bankaccount/:accountId" element={<BankTransactionsV2/>}/>
+                            <Route path="/bankaccount/:accountId/import" element={<BankTransactionsImporter/>}/>
 
                             <Route path="/categories" element={<Categories/>}/>
                             <Route path="/category" element={<AddOrEditCategory/>}/>
