@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
-import {Button, ButtonGroup, CircularProgress, Divider, Menu, MenuItem, MenuList} from "@mui/material";
+import {Button, CircularProgress, Divider, Menu, MenuItem, MenuList} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import "./Header.css"
@@ -8,7 +8,7 @@ import "./Header.css"
 type HeaderProps = {
     title: string;
     clickable?: () => void;
-    extraMenuOptions?: [string, string][];
+    extraMenuOptions?: [string, () => void][];
 }
 
 const Header = ({title, clickable, extraMenuOptions}: HeaderProps) => {
@@ -57,7 +57,7 @@ export default Header;
 
 
 type BasicMenuProps = {
-    extraMenuOptions: [string, string][];
+    extraMenuOptions: [string, () => void][];
 }
 const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -66,12 +66,20 @@ const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
         setAnchorEl(event.currentTarget);
     };
     const navigate = useNavigate();
-    const handleClose = (url?: string) => {
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+    const onNavigate = (url: string) => {
         setAnchorEl(null);
         if (url) {
             navigate(url);
         }
     };
+
+    const onExtraClicked = (fn: () => void) => {
+        setAnchorEl(null);
+        fn()
+    }
 
     return (
         <div>
@@ -89,17 +97,17 @@ const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
                 id="basic-menu"
                 anchorEl={anchorEl}
                 open={open}
-                onClose={() => handleClose()}
+                onClose={handleClose}
                 MenuListProps={{
                     'aria-labelledby': 'basic-button',
                 }}
             >
-                <MenuItem onClick={() => handleClose('/')}>Home</MenuItem>
-                <MenuItem onClick={() => handleClose('/bankaccounts')}>Bank accounts</MenuItem>
+                <MenuItem onClick={() => onNavigate('/')}>Home</MenuItem>
+                <MenuItem onClick={() => onNavigate('/bankaccounts')}>Bank accounts</MenuItem>
                 {extraMenuOptions.length > 0 && <MenuList>
-                    <Divider />
-                    {extraMenuOptions.map(([name, link]) => (
-                        <MenuItem key={name} onClick={() => handleClose(link)}>{name}</MenuItem>
+                    <Divider/>
+                    {extraMenuOptions.map(([name, onClick]) => (
+                        <MenuItem key={name} onClick={() => onExtraClicked(onClick)}>{name}</MenuItem>
                     ))}
                 </MenuList>}
             </Menu>

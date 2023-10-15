@@ -2,6 +2,7 @@ package com.dehnes.accounting.services.bank
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
+import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.services.AuthorizationService
 import java.sql.Connection
@@ -17,6 +18,14 @@ class BankAccountService(
     private val authorizationService: AuthorizationService,
     private val unbookedTransactionRepository: UnbookedTransactionRepository,
 ) {
+
+    fun deleteAllUnbookedTransactions(userId: String, realmId: String, accountId: String) {
+        dataSource.writeTx { conn ->
+            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
+
+            unbookedTransactionRepository.deleteAll(conn, accountId)
+        }
+    }
 
     fun getOverview(userId: String, realmId: String) = dataSource.readTx { conn ->
         authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)

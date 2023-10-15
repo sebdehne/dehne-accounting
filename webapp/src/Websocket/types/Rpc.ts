@@ -18,6 +18,7 @@ export type RequestType = "subscribe"
     | 'addOrReplaceCategory'
     | 'mergeCategories'
     | 'setUserStateV2'
+    | 'deleteAllUnbookedTransactions'
     ;
 
 export type RpcRequest = {
@@ -27,6 +28,7 @@ export type RpcRequest = {
 
     ledgerId?: string;
     bankAccountId?: string;
+    accountId?: string;
     importBankTransactionsRequest?: ImportBankTransactionsRequest;
     addOrReplaceMatcherRequest?: TransactionMatcher;
     executeMatcherRequest?: ExecuteMatcherRequest;

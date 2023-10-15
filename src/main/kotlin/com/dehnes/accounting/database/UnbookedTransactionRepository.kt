@@ -1,12 +1,27 @@
 package com.dehnes.accounting.database
 
+import com.dehnes.accounting.api.UnbookedTransactionsChanged
 import com.dehnes.accounting.utils.NullString
 import com.dehnes.accounting.utils.SqlUtils
 import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
 
-class UnbookedTransactionRepository {
+class UnbookedTransactionRepository(
+    private val changelog: Changelog
+) {
+
+    fun deleteAll(conn: Connection, accountId: String) {
+        conn.prepareStatement(
+            """
+            delete from unbooked_bank_transaction where account_id = ?
+        """.trimIndent()
+        ).use { preparedStatement ->
+            preparedStatement.setString(1, accountId)
+            preparedStatement.executeUpdate()
+        }
+        changelog.addV2(UnbookedTransactionsChanged)
+    }
 
     fun insert(conn: Connection, unbookedTransaction: UnbookedTransaction): Long {
 
@@ -65,14 +80,16 @@ class UnbookedTransactionRepository {
         rangeFilter: BankTxDateRangeFilter
     ): Long {
         val (where, whereParams) = rangeFilter.whereAndParams()
-        return conn.prepareStatement("""
+        return conn.prepareStatement(
+            """
             SELECT 
                 sum(amount_in_cents) 
             from 
                 unbooked_bank_transaction 
             where 
                 account_id = ? AND $where
-        """.trimIndent()).use { preparedStatement ->
+        """.trimIndent()
+        ).use { preparedStatement ->
             val params = mutableListOf<Any>()
             params.add(accountId)
             params.addAll(whereParams)

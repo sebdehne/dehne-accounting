@@ -46,7 +46,6 @@ export const RealmMain = () => {
             />
 
             <PeriodSelectorV2/>
-
             {overviewRapport && <OverviewRapportViewer overviewRapport={overviewRapport}/>}
 
         </Container>
@@ -65,7 +64,8 @@ const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) =>
             label={""}
             first={<div style={{fontWeight: 'bold'}}>Open balance</div>}
             second={<div style={{fontWeight: 'bold'}}>This period</div>}
-            onClick={() => {}}
+            onClick={() => {
+            }}
         />
 
         <ul className="OverviewRapportViewerAccounts">
@@ -88,7 +88,8 @@ type OverviewRapportViewerAccountProps = {
 const OverviewRapportViewerAccount = ({account, showOpen, level}: OverviewRapportViewerAccountProps) => {
     const [expanded, setExpanded] = useState(false);
 
-    return (<li className="OverviewRapportViewerAccount" style={(expanded && account.children.length > 0) ? {backgroundColor: toColor(2960941 + (level * 50))} : {}}>
+    return (<li className="OverviewRapportViewerAccount"
+                style={(expanded && account.children.length > 0) ? {backgroundColor: toColor(2960941 + (level * 50))} : {}}>
         <LabeledNumberRow
             label={account.name}
             first={showOpen && <Amount amountInCents={account.openBalance}/>}

@@ -6,6 +6,7 @@ import com.dehnes.accounting.services.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.services.*
+import com.dehnes.accounting.services.bank.BankAccountService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.websocket.CloseReason
@@ -27,6 +28,7 @@ class WebSocketServer : Endpoint() {
     private val userService = configuration.getBean<UserService>()
     private val readService = configuration.getBean<ReadService>()
     private val bankService = configuration.getBean<BankService>()
+    private val bankAccountService = configuration.getBean<BankAccountService>()
     private val categoryWriteService = configuration.getBean<CategoryWriteService>()
     private val userStateService = configuration.getBean<UserStateService>()
     private val transactionMatchingService = configuration.getBean<TransactionMatchingService>()
@@ -85,6 +87,11 @@ class WebSocketServer : Endpoint() {
                 subscriptions.remove(subscriptionId)?.close()
                 logger.info { "$instanceId Removed subscription id=$subscriptionId" }
                 RpcResponse(subscriptionRemoved = true)
+            }
+
+            deleteAllUnbookedTransactions -> readService.doWithNotifies {
+                bankAccountService.deleteAllUnbookedTransactions(user.id, userStateV2.selectedRealm!!, rpcRequest.accountId!!)
+                RpcResponse()
             }
 
             setUserStateV2 -> readService.doWithNotifies {
@@ -167,7 +174,7 @@ class WebSocketServer : Endpoint() {
                     bankService.removeLastBankTransactions(
                         user.id,
                         rpcRequest.ledgerId!!,
-                        rpcRequest.bankAccountId!!
+                        rpcRequest.accountId!!
                     )
                 }
                 RpcResponse(error = errorMsg)

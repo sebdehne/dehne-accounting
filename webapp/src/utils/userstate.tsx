@@ -121,35 +121,7 @@ export const useGlobalState = () => {
     return context;
 };
 
-const createDefault = (input: any = {}): UserStateFrontendState => {
 
-    const myDefault: UserStateFrontendState = {
-        locale: 'nb-NO',
-        bankTransactionsState: {
-            currentPeriod: {
-                type: "month",
-                startDateTime: formatIso(startOfCurrentMonth()),
-                endDateTime: formatIso(monthDelta(startOfCurrentMonth(), 1))
-            }
-        },
-        legderMainState: {
-            currentPeriod: {
-                type: "month",
-                startDateTime: formatIso(startOfCurrentMonth()),
-                endDateTime: formatIso(monthDelta(startOfCurrentMonth(), 1))
-            }
-        },
-        bookingsState: {
-            currentPeriod: {
-                type: "month",
-                startDateTime: formatIso(startOfCurrentMonth()),
-                endDateTime: formatIso(monthDelta(startOfCurrentMonth(), 1))
-            }
-        }
-    };
-
-    return JSONObjectMerge(myDefault, input) as UserStateFrontendState;
-}
 
 export type UserState = {
     frontendState: UserStateFrontendState;

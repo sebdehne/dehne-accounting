@@ -1,9 +1,6 @@
 package com.dehnes.accounting.services
 
-import com.dehnes.accounting.database.AccountsRepository
-import com.dehnes.accounting.database.BookingRepository
-import com.dehnes.accounting.database.DateRangeFilter
-import com.dehnes.accounting.database.RealmRepository
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.datasourceSetup
 import com.dehnes.accounting.dbFile
 import com.dehnes.accounting.utils.DateTimeUtils.zoneId
@@ -19,7 +16,7 @@ class OverviewRapportServiceTest {
     @Test
     fun test() {
         val dataSource = datasourceSetup(dbFile())
-        val accountsRepository = AccountsRepository(dataSource)
+        val accountsRepository = AccountsRepository(dataSource, Changelog())
         val overviewRapportService = OverviewRapportService(
             dataSource,
             BookingRepository(RealmRepository(dataSource, accountsRepository)),

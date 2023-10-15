@@ -54,7 +54,7 @@ class Configuration {
         val authorizationService = AuthorizationService(userRepository, realmRepository)
         val bankRepository = BankRepository(datasource)
         val bankAccountRepository = BankAccountRepository()
-        val unbookedTransactionRepository = UnbookedTransactionRepository()
+        val unbookedTransactionRepository = UnbookedTransactionRepository(changelog)
 
         val bankAccountService = BankAccountService(
             bookingRepository,
@@ -100,6 +100,7 @@ class Configuration {
         beans[UserStateService::class] = userStateService
         beans[BookingWriteService::class] = bookingWriteService
         beans[CategoryWriteService::class] = CategoryWriteService(repository, datasource, bookingReadService)
+        beans[BankAccountService::class] = bankAccountService
     }
 
     inline fun <reified T> getBeanNull(): T? {
