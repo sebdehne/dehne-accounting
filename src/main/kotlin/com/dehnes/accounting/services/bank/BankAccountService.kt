@@ -136,6 +136,7 @@ class BankAccountService(
 
         val unbookedTransactions = unbookedTransactionRepository.getUnbookedTransactions(
             conn,
+            realmId,
             accountId,
             dateRangeFilter
         ).map {

@@ -1,0 +1,21 @@
+
+
+.AccountActionEditor {
+}
+
+.ExtraSplits {
+    list-style-type: none;
+    padding: 0;
+}
+
+.ExtraSplit {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.Filters {
+    list-style-type: none;
+    padding: 0;
+}
+

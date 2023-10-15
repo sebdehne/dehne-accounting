@@ -73,6 +73,11 @@ class Configuration {
             unbookedTransactionRepository,
             bankRepository
         )
+        val unbookedBankTransactionMatcherRepository = UnbookedBankTransactionMatcherRepository(objectMapper, changelog)
+        val unbookedBankTransactionMatcherService = UnbookedBankTransactionMatcherService(
+            unbookedTransactionRepository, authorizationService,
+            unbookedBankTransactionMatcherRepository, datasource
+        )
         val readService = ReadService(
             bookingReadService,
             bankService,
@@ -86,7 +91,8 @@ class Configuration {
             authorizationService,
             OverviewRapportService(datasource, bookingRepository, accountsRepository),
             bankAccountService,
-            accountsRepository
+            accountsRepository,
+            unbookedBankTransactionMatcherService
         )
         val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService, categoryReadService)
 
@@ -101,6 +107,7 @@ class Configuration {
         beans[BookingWriteService::class] = bookingWriteService
         beans[CategoryWriteService::class] = CategoryWriteService(repository, datasource, bookingReadService)
         beans[BankAccountService::class] = bankAccountService
+        beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
     }
 
     inline fun <reified T> getBeanNull(): T? {

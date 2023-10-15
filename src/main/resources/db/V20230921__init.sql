@@ -116,14 +116,12 @@ create table booking_entry
     FOREIGN KEY (account_id) REFERENCES account (id)
 );
 
-create table bank_transaction_matchers
+create table unbooked_bank_transaction_matcher
 (
-    realm_id    text      not null,
-    id          text      not null,
-    name        text      not null,
-    filter_list text      not null,
-    action      text      not null,
-    last_used   timestamp not null,
+    realm_id  text      not null,
+    id        text      not null,
+    json      text      not null,
+    last_used timestamp not null,
 
     primary key (id),
     foreign key (realm_id) references realm (id)

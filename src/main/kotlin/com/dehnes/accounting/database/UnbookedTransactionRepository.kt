@@ -103,14 +103,26 @@ class UnbookedTransactionRepository(
 
     fun getUnbookedTransactions(
         conn: Connection,
+        realmId: String,
         accountId: String,
         dateRangeFilter: DateRangeFilter
     ): List<UnbookedTransaction> =
-        conn.prepareStatement("SELECT * FROM unbooked_bank_transaction WHERE account_id = ? AND datetime >= ? AND datetime < ?")
+        conn.prepareStatement("""
+            SELECT * 
+            FROM 
+                unbooked_bank_transaction ut,
+                 account a
+            WHERE 
+                a.id = ut.account_id 
+                AND a.realm_id = ? 
+                AND account_id = ? 
+                AND datetime >= ? AND datetime < ?
+        """.trimIndent())
             .use { preparedStatement ->
-                preparedStatement.setString(1, accountId)
-                preparedStatement.setTimestamp(2, Timestamp.from(dateRangeFilter.from))
-                preparedStatement.setTimestamp(3, Timestamp.from(dateRangeFilter.toExclusive))
+                preparedStatement.setString(1, realmId)
+                preparedStatement.setString(2, accountId)
+                preparedStatement.setTimestamp(3, Timestamp.from(dateRangeFilter.from))
+                preparedStatement.setTimestamp(4, Timestamp.from(dateRangeFilter.toExclusive))
                 preparedStatement.executeQuery().use { rs ->
                     val l = mutableListOf<UnbookedTransaction>()
                     while (rs.next()) {
@@ -126,6 +138,40 @@ class UnbookedTransactionRepository(
                         )
                     }
                     l
+                }
+            }
+
+    fun getUnbookedTransaction(
+        conn: Connection,
+        realmId: String,
+        accountId: String,
+        unbookedTransactionId: Long,
+    ) =
+        conn.prepareStatement("""
+            SELECT * 
+            FROM 
+                unbooked_bank_transaction ut, 
+                account a 
+            WHERE 
+                a.id = ut.account_id 
+                AND a.realm_id = ?
+                AND ut.account_id = ? 
+                AND ut.id = ? 
+        """.trimIndent())
+            .use { preparedStatement ->
+                preparedStatement.setString(1, realmId)
+                preparedStatement.setString(2, accountId)
+                preparedStatement.setLong(3, unbookedTransactionId)
+                preparedStatement.executeQuery().use { rs ->
+                    check(rs.next())
+                    UnbookedTransaction(
+                        rs.getString("account_id"),
+                        rs.getLong("id"),
+                        rs.getString("memo"),
+                        rs.getTimestamp("datetime").toInstant(),
+                        rs.getLong("amount_in_cents"),
+                        rs.getString("other_account_number")
+                    )
                 }
             }
 

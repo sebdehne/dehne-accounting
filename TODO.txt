@@ -1,3 +1,22 @@
+UnbookedTransactionMatcher
+- filter
+- action
+-- type:
+
+--- transfer
+---- accountId
+
+--- account payable
+---- payee accountId
+---- expense accountId
+---- optional: otherSplits
+
+--- account receivable
+---- payee accountId
+---- income accountId
+---- optional: otherSplits
+
+
 Bookings UI
 - list/search
 - new bookings

@@ -26,6 +26,8 @@ import {RealmMain} from "./Components/RealmMain/RealmMain";
 import {BanksAndAccounts} from "./Components/BanksAndAccounts/BanksAndAccounts";
 import {BankTransactionsV2} from "./Components/BankTransactionsV2/BankTransactionsV2";
 import {DialogsProvider} from "./utils/dialogs";
+import {TransactionMatchingV2} from "./Components/TransactionMatchingV2/TransactionMatchingV2";
+import {AddOrEditMatcherV2} from "./Components/TransactionMatchingV2/AddOrEditMatcherV2";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -43,9 +45,17 @@ root.render(
                             <Routes>
                                 <Route path="/" element={<RealmMain/>}/>
                                 <Route path="/realm" element={<ChooseRealm/>}/>
+
                                 <Route path="/bankaccounts" element={<BanksAndAccounts/>}/>
                                 <Route path="/bankaccount/:accountId" element={<BankTransactionsV2/>}/>
                                 <Route path="/bankaccount/:accountId/import" element={<BankTransactionsImporter/>}/>
+                                <Route path="/matchers" element={<TransactionMatchingV2/>}/>
+                                <Route path="/matchers/:accountId/:txId" element={<TransactionMatchingV2/>}/>
+                                <Route path="/matcher/:matcherId" element={<AddOrEditMatcherV2/>}/> {/* Edit */}
+                                <Route path="/matcher" element={<AddOrEditMatcherV2/>}/> {/* Add new */}
+                                <Route path="/matcher/:accountId/:txId" element={<AddOrEditMatcherV2/>}/> {/* Add new based on unbooked TX */}
+
+
 
                                 <Route path="/categories" element={<Categories/>}/>
                                 <Route path="/category" element={<AddOrEditCategory/>}/>

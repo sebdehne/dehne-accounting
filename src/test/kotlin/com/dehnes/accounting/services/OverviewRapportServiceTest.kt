@@ -3,10 +3,12 @@ package com.dehnes.accounting.services
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.datasourceSetup
 import com.dehnes.accounting.dbFile
+import com.dehnes.accounting.objectMapper
 import com.dehnes.accounting.utils.DateTimeUtils.zoneId
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
@@ -31,6 +33,27 @@ class OverviewRapportServiceTest {
             )
         )
 
+        println()
+    }
+
+    @Test
+    fun test2() {
+        val objectMapper = objectMapper()
+
+        val m = UnbookedBankTransactionMatcher(
+            UUID.randomUUID().toString(),
+            "realmId",
+            null,
+            AndFilters(listOf(
+                ContainsFilter("contains")
+            )) ,
+            TransferAction,
+            "",
+            "",
+            Instant.now()
+        )
+
+        val json = objectMapper.writeValueAsString(m)
         println()
     }
 }

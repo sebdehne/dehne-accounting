@@ -23,9 +23,9 @@ const VisuallyHiddenInput = styled('input')({
 
 export const BankTransactionsImporter = () => {
     const {accountId} = useParams();
-    const {accountsAsList, userStateV2} = useGlobalState();
+    const {accounts, userStateV2} = useGlobalState();
 
-    const account = accountsAsList.find(a => a.id == accountId)
+    const account = accounts.getById(accountId!);
 
     const [selectedFile, setSelectedFile] = useState<File>();
     const [importResult, setImportResult] = useState<ImportBankTransactionsResult>();

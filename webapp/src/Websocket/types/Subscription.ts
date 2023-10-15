@@ -16,6 +16,11 @@ import {Realm} from "./realm";
 import {UserStateV2} from "./UserStateV2";
 import {OverviewRapportAccount} from "./OverviewRapportAccount";
 import {AccountDto} from "./accounts";
+import {
+    MatchedUnbookedBankTransactionMatcher,
+    UnbookedBankTransactionReference,
+    UnbookedTransaction
+} from "./unbookedTransactions";
 
 
 export type Subscribe = {
@@ -49,6 +54,8 @@ export type ReadRequestType = "userInfo"
     | 'getBanksAndAccountsOverview'
     | 'getBankAccountTransactions'
     | 'getAllAccounts'
+    | 'getUnbookedBankTransactionMatchers'
+    | 'getUnbookedBankTransaction'
     ;
 
 export type ReadRequest = {
@@ -61,6 +68,7 @@ export type ReadRequest = {
     getMatchersRequest?: GetMatchersRequest;
     getBookingsRequest?: GetBookingsRequest;
     getBookingId?: number;
+    unbookedBankTransactionReference?: UnbookedBankTransactionReference;
 }
 
 export type ReadResponse = {
@@ -82,5 +90,7 @@ export type ReadResponse = {
     banksAndAccountsOverview?: BankWithAccounts[];
     getBankAccountTransactions?: BankAccountTransaction[];
     allAccounts?: AccountDto[];
+    unbookedBankTransactionMatchers?: MatchedUnbookedBankTransactionMatcher[];
+    unbookedTransaction?: UnbookedTransaction;
 }
 

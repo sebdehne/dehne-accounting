@@ -1,13 +1,11 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {formatIso, monthDelta, startOfCurrentMonth} from "./formatting";
 import WebsocketClient from "../Websocket/websocketClient";
-import JSONObjectMerge from "json-object-merge";
 import {CategoryDto} from "../Websocket/types/categories";
-import {buildTree, CategoryTree} from "../Components/CategorySearchBox/CategoryTree";
+import {CategoryTree} from "../Components/CategorySearchBox/CategoryTree";
 import {LedgerView} from "../Websocket/types/ledgers";
 import {UserStateV2} from "../Websocket/types/UserStateV2";
 import {Realm} from "../Websocket/types/realm";
-import {AccountDto} from "../Websocket/types/accounts";
+import {Accounts} from "./accounts";
 
 type ContextType = {
     userState: UserStateFrontendState | undefined;
@@ -18,7 +16,7 @@ type ContextType = {
     categoriesAsTree: CategoryTree[];
     ledger: LedgerView | undefined;
     realm: Realm | undefined;
-    accountsAsList: AccountDto[];
+    accounts: Accounts;
 }
 
 const GlobalStateProviderContext = React.createContext({} as ContextType);
@@ -27,14 +25,13 @@ export type UserStateProviderProps = {
     children?: React.ReactNode;
 }
 export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
-
     const [userState, setUserState] = useState<UserStateFrontendState | undefined>(undefined);
     const [userStateV2, setUserStateV2] = useState<UserStateV2 | undefined>();
     const [categoriesAsList, setCategoriesAsList] = useState<CategoryDto[]>([]);
     const [categoriesAsTree, setCategoriesAsTree] = useState<CategoryTree[]>([]);
     const [ledger, setLedger] = useState<LedgerView>();
     const [realm, setRealm] = useState<Realm>();
-    const [accountsAsList, setAccountsAsList] = useState<AccountDto[]>([]);
+    const [accounts, setAccounts] = useState<Accounts>(new Accounts([]));
 
     useEffect(() => {
         if (userStateV2?.selectedRealm) {
@@ -52,20 +49,21 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
         const subId = WebsocketClient.subscribe(
             {type: 'getUserState'},
             notify => {
-                return setUserStateV2(notify.readResponse.userStateV2);
+                setUserStateV2(notify.readResponse.userStateV2);
             }
         )
         return () => WebsocketClient.unsubscribe(subId);
     }, [setUserStateV2]);
+
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
             {type: 'getAllAccounts'},
             notify => {
-                return setAccountsAsList(notify.readResponse.allAccounts!);
+                setAccounts(new Accounts(notify.readResponse.allAccounts!));
             }
         )
         return () => WebsocketClient.unsubscribe(subId);
-    }, [setAccountsAsList]);
+    }, [setAccounts]);
 
     const updateState = (fn: (prev: UserStateFrontendState) => UserStateFrontendState) => {
         if (userState) {
@@ -106,7 +104,7 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
             ledger,
             userStateV2,
             realm,
-            accountsAsList
+            accounts
         }}>
             {children}
         </GlobalStateProviderContext.Provider>
@@ -120,7 +118,6 @@ export const useGlobalState = () => {
     }
     return context;
 };
-
 
 
 export type UserState = {

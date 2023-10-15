@@ -4,6 +4,8 @@ import com.dehnes.accounting.bank.importers.DuplicationHandler
 import com.dehnes.accounting.bank.importers.ImportResult
 import com.dehnes.accounting.database.BookingView
 import com.dehnes.accounting.database.CategoryDto
+import com.dehnes.accounting.database.UnbookedBankTransactionMatcher
+import com.dehnes.accounting.services.MatchedUnbookedBankTransactionMatcher
 
 
 enum class RequestType {
@@ -28,6 +30,7 @@ enum class RequestType {
     setUserStateV2,
     importBankTransactions,
     deleteAllUnbookedTransactions,
+    addUnbookedTransactionMatcher,
 
 }
 
@@ -47,6 +50,7 @@ data class RpcRequest(
     val mergeCategoriesRequest: MergeCategoriesRequest?,
     val addOrReplaceBooking: BookingView?,
     val userStateV2: UserStateV2?,
+    val unbookedBankTransactionMatcher: UnbookedBankTransactionMatcher?,
 )
 
 data class RpcResponse(

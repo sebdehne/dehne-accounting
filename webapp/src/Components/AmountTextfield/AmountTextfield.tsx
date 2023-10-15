@@ -35,7 +35,7 @@ export const AmountTextField = ({
 
     const isValid = isValidAmount(text);
 
-    return (<FormControl sx={sx}>
+    return (<FormControl sx={sx} fullWidth={true}>
         <TextField
             label={label}
             error={!isValid}

@@ -17,9 +17,9 @@ import {useDialogs} from "../../utils/dialogs";
 export const BankTransactionsV2 = () => {
     const {accountId} = useParams();
     const [transactions, setTransactions] = useState<BankAccountTransaction[]>([]);
-    const {accountsAsList} = useGlobalState();
+    const {accounts} = useGlobalState();
 
-    const account = accountsAsList.find(a => a.id == accountId)
+    const account = accounts.getById(accountId!);
 
     useEffect(() => {
         if (accountId) {
@@ -33,8 +33,8 @@ export const BankTransactionsV2 = () => {
     }, [setTransactions, accountId]);
 
     const getOtherAccount = useCallback(
-        (accountId: string) => accountsAsList.find(a => a.id == accountId),
-        [accountId, accountsAsList]
+        (accountId: string) => accounts.getById(accountId),
+        [accountId, accounts]
     );
 
     const formatText = useCallback((text?: string) => {
@@ -46,6 +46,10 @@ export const BankTransactionsV2 = () => {
 
     const onImport = () => {
         navigate('/bankaccount/' + accountId + '/import');
+    }
+
+    const book = (txId: number) => {
+        navigate('/matchers/' + accountId + '/' + txId);
     }
 
     const {showConfirmationDialog} = useDialogs();
@@ -71,7 +75,8 @@ export const BankTransactionsV2 = () => {
 
                 <div className="TransactionLeft">
                     <div className="TransactionUp">
-                        {transaction.bookingReference && <div>{getOtherAccount(transaction.bookingReference.otherAccountId)!.name} {formatText(transaction.memo)}</div>}
+                        {transaction.bookingReference &&
+                            <div>{getOtherAccount(transaction.bookingReference.otherAccountId)!.name} {formatText(transaction.memo)}</div>}
                         {!transaction.bookingReference && <div>{transaction.memo}</div>}
 
                         <div>{amountInCentsToString(transaction.amountInCents)}</div>
@@ -84,7 +89,7 @@ export const BankTransactionsV2 = () => {
                 <div className="TransactionRight">
                     {transaction.bookingReference && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
                     {transaction.unbookedReference && <div style={{width: '24px', height: '30px'}}>
-                        <IconButton>
+                        <IconButton onClick={() => book(transaction.unbookedReference!.unbookedId)}>
                             <InputIcon fontSize="inherit"/>
                         </IconButton>
                     </div>}

@@ -31,6 +31,7 @@ class ReadService(
     private val overviewRapportService: OverviewRapportService,
     private val bankAccountService: BankAccountService,
     private val accountsRepository: AccountsRepository,
+    private val unbookedBankTransactionMatcherService: UnbookedBankTransactionMatcherService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -125,6 +126,20 @@ class ReadService(
         userStateV2: UserStateV2?,
     ): ReadResponse =
         when (readRequest.type) {
+
+            getUnbookedBankTransaction -> ReadResponse(
+                unbookedTransaction = unbookedBankTransactionMatcherService.getUnbookedBankTransaction(
+                    userId,
+                    userStateV2!!.selectedRealm!!,
+                    readRequest.unbookedBankTransactionReference!!
+                )
+            )
+
+            getUnbookedBankTransactionMatchers -> ReadResponse(unbookedBankTransactionMatchers = unbookedBankTransactionMatcherService.getMatchers(
+                userId,
+                userStateV2!!.selectedRealm!!,
+                readRequest.unbookedBankTransactionReference
+            ))
 
             getAllAccounts -> ReadResponse(allAccounts = dataSource.readTx {
                 accountsRepository.getAll(
@@ -338,6 +353,10 @@ object BookingsChanged : ChangeLogEventTypeV2() {
 }
 
 object UnbookedTransactionsChanged : ChangeLogEventTypeV2() {
+    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
+}
+
+object UnbookedTransactionMatchersChanged : ChangeLogEventTypeV2() {
     override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
 }
 
