@@ -75,8 +75,11 @@ class Configuration {
         )
         val unbookedBankTransactionMatcherRepository = UnbookedBankTransactionMatcherRepository(objectMapper, changelog)
         val unbookedBankTransactionMatcherService = UnbookedBankTransactionMatcherService(
-            unbookedTransactionRepository, authorizationService,
-            unbookedBankTransactionMatcherRepository, datasource
+            unbookedTransactionRepository,
+            authorizationService,
+            unbookedBankTransactionMatcherRepository,
+            datasource,
+            changelog
         )
         val readService = ReadService(
             bookingReadService,

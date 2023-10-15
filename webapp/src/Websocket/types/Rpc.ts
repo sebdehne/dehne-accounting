@@ -21,6 +21,7 @@ export type RequestType = "subscribe"
     | 'setUserStateV2'
     | 'deleteAllUnbookedTransactions'
     | 'addUnbookedTransactionMatcher'
+    | 'removeUnbookedTransactionMatcher'
     ;
 
 export type RpcRequest = {
@@ -42,6 +43,7 @@ export type RpcRequest = {
     addOrReplaceBooking?: BookingView;
     userStateV2?: UserStateV2;
     unbookedBankTransactionMatcher?: UnbookedBankTransactionMatcher;
+    removeUnbookedTransactionMatcherId?: string;
 }
 
 export type RpcResponse = {

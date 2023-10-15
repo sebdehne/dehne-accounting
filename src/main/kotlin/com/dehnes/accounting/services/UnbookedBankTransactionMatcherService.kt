@@ -1,5 +1,6 @@
 package com.dehnes.accounting.services
 
+import com.dehnes.accounting.api.UnbookedTransactionMatchersChanged
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
@@ -11,7 +12,29 @@ class UnbookedBankTransactionMatcherService(
     private val authorizationService: AuthorizationService,
     private val unbookedBankTransactionMatcherRepository: UnbookedBankTransactionMatcherRepository,
     private val dataSource: DataSource,
+    private val changelog: Changelog,
 ) {
+
+
+
+    fun removeMatcher(
+        userId: String,
+        realmId: String,
+        matcherId: String
+    ) {
+        dataSource.writeTx { conn ->
+            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
+
+            unbookedBankTransactionMatcherRepository.remove(
+                conn,
+                matcherId,
+                realmId
+            )
+
+            changelog.addV2(UnbookedTransactionMatchersChanged)
+        }
+    }
+
 
     fun addMatcher(
         userId: String,
@@ -27,6 +50,8 @@ class UnbookedBankTransactionMatcherService(
                 conn,
                 matcher.copy(lastUsed = Instant.now())
             )
+
+            changelog.addV2(UnbookedTransactionMatchersChanged)
         }
     }
 

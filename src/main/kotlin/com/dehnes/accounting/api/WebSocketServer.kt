@@ -90,6 +90,15 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(subscriptionRemoved = true)
             }
 
+            removeUnbookedTransactionMatcher -> readService.doWithNotifies {
+                unbookedBankTransactionMatcherService.removeMatcher(
+                    user.id,
+                    userStateV2.selectedRealm!!,
+                    rpcRequest.removeUnbookedTransactionMatcherId!!
+                )
+                RpcResponse()
+            }
+
             addUnbookedTransactionMatcher -> readService.doWithNotifies {
                 unbookedBankTransactionMatcherService.addMatcher(
                     user.id,

@@ -31,6 +31,7 @@ enum class RequestType {
     importBankTransactions,
     deleteAllUnbookedTransactions,
     addUnbookedTransactionMatcher,
+    removeUnbookedTransactionMatcher,
 
 }
 
@@ -51,6 +52,7 @@ data class RpcRequest(
     val addOrReplaceBooking: BookingView?,
     val userStateV2: UserStateV2?,
     val unbookedBankTransactionMatcher: UnbookedBankTransactionMatcher?,
+    val removeUnbookedTransactionMatcherId: String?,
 )
 
 data class RpcResponse(

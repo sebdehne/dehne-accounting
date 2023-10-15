@@ -1,7 +1,6 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.UnbookedTransactionMatchersChanged
-import com.dehnes.accounting.api.UnbookedTransactionsChanged
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -51,6 +50,14 @@ class UnbookedBankTransactionMatcherRepository(
                 l.add(objectMapper.readValue(rs.getString("json")))
             }
             l
+        }
+    }
+
+    fun remove(conn: Connection, matcherId: String, realmId: String) {
+        conn.prepareStatement("DELETE FROM unbooked_bank_transaction_matcher where  id = ? AND realm_id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, matcherId)
+            preparedStatement.setString(2, realmId)
+            preparedStatement.executeUpdate()
         }
     }
 }

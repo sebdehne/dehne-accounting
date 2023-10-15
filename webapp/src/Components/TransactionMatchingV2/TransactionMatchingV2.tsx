@@ -11,6 +11,10 @@ import Header from "../Header";
 import AddIcon from "@mui/icons-material/Add";
 import {TransactionView} from "../BankTransactionsV2/BankTransactionsV2";
 import moment from "moment/moment";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import IconButton from "@mui/material/IconButton";
+import {useDialogs} from "../../utils/dialogs";
 
 export const TransactionMatchingV2 = () => {
     const {accountId, txId} = useParams();
@@ -54,6 +58,22 @@ export const TransactionMatchingV2 = () => {
     const navigate = useNavigate();
     const addUrl = unbookedTransactionId ? '/matcher/' + accountId + '/' + unbookedTransactionId : '/matcher'
 
+    const {showConfirmationDialog} = useDialogs();
+
+    const deleteMatcher = (m: UnbookedBankTransactionMatcher) => {
+        showConfirmationDialog({
+            header: "Delete matcher" + m.name + "?",
+            confirmButtonText: "Delete",
+            onConfirmed: () => {
+                WebsocketClient.rpc({
+                    type: "removeUnbookedTransactionMatcher",
+                    removeUnbookedTransactionMatcherId: m.id
+                })
+            },
+            content: "This cannot be undone"
+        })
+    }
+
     return (<Container maxWidth="xs">
 
         <Header title={'Book'}/>
@@ -89,9 +109,21 @@ export const TransactionMatchingV2 = () => {
             <Button onClick={() => navigate(addUrl)}><AddIcon/>Add</Button>
         </div>
 
-        <ul>
-            {matchers.filter(m => !m.matcher).map(m => (
-                <MatcherView key={m.matcher.id} matcher={m.matcher}/>
+        <ul className="Matchers">
+            {matchers.map(m => (
+                <li style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: '0'
+                }}>
+                    <MatcherView key={m.matcher.id} matcher={m.matcher}/>
+                    <div>
+                        <IconButton><EditIcon/></IconButton>
+                        <IconButton onClick={() => deleteMatcher(m.matcher)}><DeleteIcon/></IconButton>
+                    </div>
+                </li>
             ))}
         </ul>
 
