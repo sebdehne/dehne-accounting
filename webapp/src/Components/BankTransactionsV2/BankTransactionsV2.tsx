@@ -32,24 +32,10 @@ export const BankTransactionsV2 = () => {
 
     }, [setTransactions, accountId]);
 
-    const getOtherAccount = useCallback(
-        (accountId: string) => accounts.getById(accountId),
-        [accountId, accounts]
-    );
-
-    const formatText = useCallback((text?: string) => {
-        if (text?.includes("T0000")) return ""
-        return text ? " - " + text : "";
-    }, []);
-
     const navigate = useNavigate();
 
     const onImport = () => {
         navigate('/bankaccount/' + accountId + '/import');
-    }
-
-    const book = (txId: number) => {
-        navigate('/matchers/' + accountId + '/' + txId);
     }
 
     const {showConfirmationDialog} = useDialogs();
@@ -71,33 +57,76 @@ export const BankTransactionsV2 = () => {
         <PeriodSelectorV2/>
 
         <ul className="TransactionsV2">
-            {transactions.map((transaction, index) => (<li className="TransactionV2" key={index}>
-
-                <div className="TransactionLeft">
-                    <div className="TransactionUp">
-                        {transaction.bookingReference &&
-                            <div>{getOtherAccount(transaction.bookingReference.otherAccountId)!.name} {formatText(transaction.memo)}</div>}
-                        {!transaction.bookingReference && <div>{transaction.memo}</div>}
-
-                        <div>{amountInCentsToString(transaction.amountInCents)}</div>
-                    </div>
-                    <div className="TransactionDown">
-                        <div>{formatLocatDayMonth(moment(transaction.datetime))}</div>
-                        <div>{amountInCentsToString(transaction.balance)}</div>
-                    </div>
-                </div>
-                <div className="TransactionRight">
-                    {transaction.bookingReference && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
-                    {transaction.unbookedReference && <div style={{width: '24px', height: '30px'}}>
-                        <IconButton onClick={() => book(transaction.unbookedReference!.unbookedId)}>
-                            <InputIcon fontSize="inherit"/>
-                        </IconButton>
-                    </div>}
-                </div>
-
+            {transactions.map((transaction, index) => (<li key={index} style={{padding: '0'}}>
+                <TransactionView
+                    showRightAccountId={transaction.unbookedReference ? accountId : undefined}
+                    otherAccountName={transaction.bookingReference?.otherAccountId ? accounts.getById(transaction.bookingReference?.otherAccountId).name : undefined}
+                    balance={transaction.balance}
+                    amountInCents={transaction.amountInCents}
+                    memo={transaction.memo}
+                    datetime={moment(transaction.datetime)}
+                    unbookedId={transaction.unbookedReference?.unbookedId}
+                />
             </li>))}
         </ul>
 
     </Container>)
 }
 
+
+export type TransactionViewProps = {
+    showRightAccountId?: string;
+    otherAccountName?: string;
+    balance?: number;
+    unbookedId?: number;
+    amountInCents: number;
+    memo: string | undefined;
+    datetime: moment.Moment;
+}
+export const TransactionView = ({
+                                    showRightAccountId,
+                                    otherAccountName,
+                                    balance,
+                                    unbookedId,
+                                    amountInCents,
+                                    memo,
+                                    datetime
+                                }: TransactionViewProps) => {
+    const navigate = useNavigate();
+
+    const formatText = useCallback((text: string | undefined) => {
+        if (text?.includes("T0000")) return ""
+        return text ? " - " + text : "";
+    }, []);
+
+    const book = (txId: number) => {
+        navigate('/matchers/' + showRightAccountId + '/' + txId);
+    }
+
+    return (<div className="TransactionV2">
+
+        <div className="TransactionLeft">
+            <div className="TransactionUp">
+                {otherAccountName &&
+                    <div>{otherAccountName} {formatText(memo)}</div>}
+                {!otherAccountName && <div>{memo}</div>}
+
+                <div>{amountInCentsToString(amountInCents)}</div>
+            </div>
+            <div className="TransactionDown">
+                <div>{formatLocatDayMonth(datetime)}</div>
+                {balance && <div>{amountInCentsToString(balance)}</div>}
+            </div>
+        </div>
+        {showRightAccountId && <div className="TransactionRight">
+            {!unbookedId && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
+            {unbookedId && <div style={{width: '24px', height: '30px'}}>
+                <IconButton onClick={() => book(unbookedId)}>
+                    <InputIcon fontSize="inherit"/>
+                </IconButton>
+            </div>}
+        </div>}
+
+
+    </div>)
+}

@@ -64,16 +64,14 @@ class UnbookedBankTransactionMatcherService(
         userId: String,
         realmId: String,
         unbookedBankTransactionReference: UnbookedBankTransactionReference
-    ): UnbookedTransaction {
-        return dataSource.readTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
-            unbookedTransactionRepository.getUnbookedTransaction(
-                conn,
-                realmId,
-                unbookedBankTransactionReference.accountId,
-                unbookedBankTransactionReference.unbookedTransactionId
-            )
-        }
+    ) = dataSource.readTx { conn ->
+        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
+        unbookedTransactionRepository.getUnbookedTransaction(
+            conn,
+            realmId,
+            unbookedBankTransactionReference.accountId,
+            unbookedBankTransactionReference.unbookedTransactionId
+        )
     }
 }
 

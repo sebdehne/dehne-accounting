@@ -18,7 +18,7 @@ import {
     ContainsFilter,
     FilterType,
     OrFilter,
-    TransferAction,
+    TransferAction, UnbookedTransaction,
     UnbookedTransactionMatcherFilter
 } from "../../Websocket/types/unbookedTransactions";
 import {BorderedSection} from "../borderedSection/borderedSection";
@@ -32,12 +32,14 @@ import {v4 as uuidv4} from "uuid";
 import moment from "moment";
 import {formatIso} from "../../utils/formatting";
 import {removeItemWithSlice} from "../../utils/utils";
+import {TransactionView} from "../BankTransactionsV2/BankTransactionsV2";
 
 export const AddOrEditMatcherV2 = () => {
     const {userStateV2, accounts} = useGlobalState();
     const {matcherId, accountId, txId} = useParams();
     const unbookedTransactionId = txId ? parseInt(txId) : undefined;
 
+    const [unbookedTransaction, setUnbookedTransaction] = useState<UnbookedTransaction>();
     const [initialized, setInitialized] = useState(false);
     const [name, setName] = useState<string>();
     const [actionMemo, setActionMemo] = useState<string>();
@@ -94,6 +96,7 @@ export const AddOrEditMatcherV2 = () => {
                 },
                 notify => {
                     const unbookedTransaction = notify.readResponse.unbookedTransaction!;
+                    setUnbookedTransaction(unbookedTransaction);
                     setName(unbookedTransaction.memo);
                     setFilter({
                         '@c': '.ContainsFilter',
@@ -117,6 +120,7 @@ export const AddOrEditMatcherV2 = () => {
         setActionAccountId,
         setAccountActionPayable,
         setAccountActionReceivable,
+        setUnbookedTransaction,
     ]);
 
     const type: ActionType = useMemo(() => {
@@ -182,7 +186,19 @@ export const AddOrEditMatcherV2 = () => {
 
         {!initialized && <div>Loading...</div>}
 
+        {unbookedTransaction && <>
+            <TransactionView
+                amountInCents={unbookedTransaction.amountInCents}
+                memo={unbookedTransaction.memo}
+                datetime={moment(unbookedTransaction.datetime)}
+                unbookedId={unbookedTransaction.id}
+            />
+            <Spacer/>
+        </>}
+
         {initialized && <>
+
+
             <TextField
                 style={{width: '100%'}}
                 label="Name"
@@ -191,7 +207,9 @@ export const AddOrEditMatcherV2 = () => {
             />
 
             <Spacer/>
+
             <FilterEditor filter={filter} setFilter={setFilter}/>
+
             <Spacer/>
 
             <AccountSearchBox
