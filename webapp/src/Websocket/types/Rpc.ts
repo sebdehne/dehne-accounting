@@ -20,7 +20,7 @@ export type RequestType = "subscribe"
     | 'mergeCategories'
     | 'setUserStateV2'
     | 'deleteAllUnbookedTransactions'
-    | 'addUnbookedTransactionMatcher'
+    | 'addOrReplaceUnbookedTransactionMatcher'
     | 'removeUnbookedTransactionMatcher'
     ;
 

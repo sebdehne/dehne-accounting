@@ -4,3 +4,38 @@
     padding: 0;
 }
 
+.MatcherView {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: #252525;
+    border-radius: 15px;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+
+.MatcherViewSummary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.MatcherViewSummaryName {
+    font-weight: bold;
+}
+.MatcherViewSummaryType {
+    color: darkkhaki;
+}
+
+.MatcherViewAccountType {
+    color: #989898;
+}
+
+.MatcherViewAccountAccountName {
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+.MatcherViewAccount {
+    display: flex;
+    flex-direction: row;
+}

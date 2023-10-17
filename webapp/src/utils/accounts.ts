@@ -10,6 +10,10 @@ export class Accounts {
         this.accountsExpanded = accounts.map(a => buildAccountExpanded(accounts, a));
     }
 
+    hasData(): boolean {
+        return this.accounts.length > 0;
+    }
+
     getById(id: string): AccountDto {
         return this.accounts.find(a => a.id === id)!
     }

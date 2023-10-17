@@ -99,8 +99,8 @@ class WebSocketServer : Endpoint() {
                 RpcResponse()
             }
 
-            addUnbookedTransactionMatcher -> readService.doWithNotifies {
-                unbookedBankTransactionMatcherService.addMatcher(
+            addOrReplaceUnbookedTransactionMatcher -> readService.doWithNotifies {
+                unbookedBankTransactionMatcherService.addOrReplaceMatcher(
                     user.id,
                     userStateV2.selectedRealm!!,
                     rpcRequest.unbookedBankTransactionMatcher!!

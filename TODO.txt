@@ -1,6 +1,4 @@
-nice(er) viewer for UnbookedTransactionMatcher
 execute matcher
-
 
 Bookings UI
 - list/search

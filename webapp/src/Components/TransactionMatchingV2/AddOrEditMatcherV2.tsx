@@ -161,7 +161,7 @@ export const AddOrEditMatcherV2 = () => {
     const submit = useCallback(() => {
         if (userStateV2?.selectedRealm) {
             WebsocketClient.rpc({
-                type: "addUnbookedTransactionMatcher",
+                type: "addOrReplaceUnbookedTransactionMatcher",
                 unbookedBankTransactionMatcher: {
                     id: matcherId ?? uuidv4(),
                     name,
@@ -170,15 +170,12 @@ export const AddOrEditMatcherV2 = () => {
                     actionAccountId: actionAccountId!,
                     actionMemo,
                     lastUsed: formatIso(moment()),
-                    filter: {
-                        "@c": ".ContainsFilter",
-                        value: ""
-                    } as ContainsFilter
+                    filter
                 }
             }).then(() => unbookedTransactionId ? navigate('/matchers/' + accountId + '/' + unbookedTransactionId) : navigate('/matchers'))
         }
 
-    }, [name, actionAccountId, type, accountActionPayable, accountActionReceivable]);
+    }, [matcherId, name, userStateV2?.selectedRealm, actionAccountId, actionMemo, type, accountActionPayable, accountActionReceivable, filter]);
 
 
     return (<Container maxWidth="xs">
@@ -358,9 +355,6 @@ const FilterEditor = ({filter, setFilter, titlePostfix = ""}: FilterEditorProps)
         setFilter(prevState => ({
             ...prevState,
             "@c": type,
-            filters: [],
-            from: 0,
-            toExcluding: 0
         }))
     }
 
@@ -434,7 +428,7 @@ const FilterEditor = ({filter, setFilter, titlePostfix = ""}: FilterEditorProps)
         {valueFilters.includes(filter["@c"]) &&
             <TextField
                 value={(filter as ContainsFilter).value}
-                onChange={event => setValue(event.target.value)}
+                onChange={event => setValue(event.target.value ?? '')}
                 style={{width: '100%'}}
             />}
 

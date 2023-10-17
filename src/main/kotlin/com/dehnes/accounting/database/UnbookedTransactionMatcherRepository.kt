@@ -26,8 +26,8 @@ class UnbookedBankTransactionMatcherRepository(
         changelog.addV2(UnbookedTransactionMatchersChanged)
     }
 
-    fun update(connection: Connection, matcher: UnbookedBankTransactionMatcher) {
-        connection.prepareStatement(
+    fun update(connection: Connection, matcher: UnbookedBankTransactionMatcher): Boolean {
+        val updated = connection.prepareStatement(
             """
             UPDATE unbooked_bank_transaction_matcher set json = ?, last_used = ? WHERE id = ?
         """.trimIndent()
@@ -35,9 +35,12 @@ class UnbookedBankTransactionMatcherRepository(
             preparedStatement.setString(1, objectMapper.writeValueAsString(matcher))
             preparedStatement.setTimestamp(2, Timestamp.from(matcher.lastUsed))
             preparedStatement.setString(3, matcher.id)
-            preparedStatement.executeUpdate()
+            preparedStatement.executeUpdate() > 0
         }
-        changelog.addV2(UnbookedTransactionMatchersChanged)
+        if (updated) {
+            changelog.addV2(UnbookedTransactionMatchersChanged)
+        }
+        return updated
     }
 
     fun getAll(connection: Connection, realmId: String) = connection.prepareStatement(
@@ -79,15 +82,15 @@ sealed class UnbookedTransactionMatcherFilter {
 }
 
 data class ContainsFilter(val value: String) : UnbookedTransactionMatcherFilter() {
-    override fun matches(t: UnbookedTransaction): Boolean = t.memo?.contains(value) ?: false
+    override fun matches(t: UnbookedTransaction): Boolean = t.memo?.lowercase()?.contains(value.lowercase()) ?: false
 }
 
 data class StartsWith(val value: String) : UnbookedTransactionMatcherFilter() {
-    override fun matches(t: UnbookedTransaction): Boolean = t.memo?.startsWith(value) ?: false
+    override fun matches(t: UnbookedTransaction): Boolean = t.memo?.lowercase()?.startsWith(value.lowercase()) ?: false
 }
 
 data class EndsWith(val value: String) : UnbookedTransactionMatcherFilter() {
-    override fun matches(t: UnbookedTransaction): Boolean = t.memo?.endsWith(value) ?: false
+    override fun matches(t: UnbookedTransaction): Boolean = t.memo?.lowercase()?.endsWith(value.lowercase()) ?: false
 }
 
 data class AmountBetween(val from: Long, val toExcluding: Long) : UnbookedTransactionMatcherFilter() {

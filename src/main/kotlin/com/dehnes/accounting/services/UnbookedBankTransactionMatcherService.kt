@@ -36,7 +36,7 @@ class UnbookedBankTransactionMatcherService(
     }
 
 
-    fun addMatcher(
+    fun addOrReplaceMatcher(
         userId: String,
         realmId: String,
         matcher: UnbookedBankTransactionMatcher
@@ -46,10 +46,17 @@ class UnbookedBankTransactionMatcherService(
 
             check(matcher.realmId == realmId)
 
-            unbookedBankTransactionMatcherRepository.insert(
+            val updated = unbookedBankTransactionMatcherRepository.update(
                 conn,
                 matcher.copy(lastUsed = Instant.now())
             )
+            if (!updated) {
+                unbookedBankTransactionMatcherRepository.insert(
+                    conn,
+                    matcher.copy(lastUsed = Instant.now())
+                )
+            }
+
 
             changelog.addV2(UnbookedTransactionMatchersChanged)
         }
