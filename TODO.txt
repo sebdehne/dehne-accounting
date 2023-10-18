@@ -1,16 +1,15 @@
-- one-liner view of matcher (click to expand view)
-
-Bookings UI
-- list/search
-- new bookings
-- remove bookings
-
 Accounts
 - list/search
 - add new
 - edit
 - remove
 - merge
+
+Bookings UI
+- list/search
+- new bookings
+- remove bookings
+
 
 
 - matcher: filter editor - search bank accounts when transfer

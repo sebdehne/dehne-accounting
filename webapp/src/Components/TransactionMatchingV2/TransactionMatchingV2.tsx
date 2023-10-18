@@ -140,11 +140,14 @@ export const TransactionMatchingV2 = () => {
         <ul className="Matchers">
             {matchers.filter(m => !filter || m.matcher.name.toLowerCase().includes(filter.toLowerCase())).map(m => (
                 <li key={m.matcher.id}>
-                    <MatcherView key={m.matcher.id} matcher={m.matcher} buttons={
+                    <MatcherView
+                        key={m.matcher.id}
+                        initialCollapsed={true}
+                        matcher={m.matcher} buttons={
                         <div>
                             {m.matches &&
-                                <Button variant={"contained"} onClick={() => bookNow(m.matcher)}>Book
-                                    now <CheckIcon/></Button>}
+                                <Button variant={"contained"} onClick={() => bookNow(m.matcher)}>
+                                    <CheckIcon/></Button>}
                             <IconButton onClick={() => navigate('/matcher/' + m.matcher.id)}><EditIcon/></IconButton>
                             <IconButton onClick={() => deleteMatcher(m.matcher)}><DeleteIcon/></IconButton>
                         </div>

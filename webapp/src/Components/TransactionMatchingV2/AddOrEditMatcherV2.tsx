@@ -150,10 +150,10 @@ export const AddOrEditMatcherV2 = () => {
         if (type === "payable") {
             if (!accountActionPayable.mainAccountId) return false;
         }
-        if (type === "income") {
+        else if (type === "income") {
             if (!accountActionReceivable.mainAccountId) return false;
         }
-        if (type === "undecided") return false;
+        else if (type === "undecided") return false;
 
         return true;
     }, [name, actionAccountId, type, accountActionPayable, accountActionReceivable]);

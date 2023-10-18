@@ -1,20 +1,28 @@
 import {
-    AccountAction, AmountBetween, AndFilters, ContainsFilter, EndsWith, OrFilter, StartsWith,
+    AccountAction,
+    AmountBetween,
+    AndFilters,
+    ContainsFilter,
+    EndsWith,
+    OrFilter,
+    StartsWith,
     UnbookedBankTransactionMatcher,
     UnbookedTransactionMatcherFilter
 } from "../../Websocket/types/unbookedTransactions";
-import React from "react";
+import React, {useState} from "react";
 import {useGlobalState} from "../../utils/userstate";
 import {BorderedSection} from "../borderedSection/borderedSection";
 import {Amount} from "../Amount";
 import "./MatcherView.css"
 
 export type MatcherViewProps = {
-    matcher: UnbookedBankTransactionMatcher,
-    buttons: React.ReactNode
+    matcher: UnbookedBankTransactionMatcher;
+    buttons: React.ReactNode;
+    initialCollapsed?: boolean;
 }
-export const MatcherView = ({matcher, buttons}: MatcherViewProps) => {
-    const {accounts} = useGlobalState()
+export const MatcherView = ({matcher, buttons, initialCollapsed = false}: MatcherViewProps) => {
+    const {accounts} = useGlobalState();
+    const [collapsed, setCollapsed] = useState(initialCollapsed);
 
     if (!accounts.hasData()) return null;
 
@@ -31,34 +39,37 @@ export const MatcherView = ({matcher, buttons}: MatcherViewProps) => {
         : undefined;
 
 
-    return <div className="MatcherView">
+    return (<div className="MatcherView" onClick={() => setCollapsed(!collapsed)}>
         <div className="MatcherViewSummary">
             <div className="MatcherViewSummaryName">{matcher.name}</div>
             {buttons}
         </div>
-        <BorderedSection title={"Filter:"}>
-            <FilterView filter={matcher.filter}/>
-        </BorderedSection>
-        <BorderedSection title={"Action: " + type}>
-            <div className="MatcherViewAccount">
-                <div className="MatcherViewAccountType">
-                    {type == "Transfer" && "To: "}
-                    {type == "Payment" && "Pay to: "}
-                    {type == "Income" && "From: "}
+        {!collapsed && <>
+            <BorderedSection title={"Filter:"}>
+                <FilterView filter={matcher.filter}/>
+            </BorderedSection>
+            <BorderedSection title={"Action: " + type}>
+                <div className="MatcherViewAccount">
+                    <div className="MatcherViewAccountType">
+                        {type == "Transfer" && "To: "}
+                        {type == "Payment" && "Pay to: "}
+                        {type == "Income" && "From: "}
+                    </div>
+                    <div className="MatcherViewAccountAccountName">
+                        {account.name}
+                    </div>
                 </div>
-                <div className="MatcherViewAccountAccountName">
-                    {account.name}
-                </div>
+                {mainAccount && <div>
+                    {accounts.generateParentsString(mainAccount.id)} {'->'} {mainAccount.name}
+                </div>}
+            </BorderedSection>
+            <div style={{marginTop: '10px'}}>
+                {matcher.actionMemo && 'Memo: ' + matcher.actionMemo}
             </div>
-            {mainAccount && <div>
-                {accounts.generateParentsString(mainAccount.id)} {'->'} {mainAccount.name}
-            </div>}
-        </BorderedSection>
-        <div style={{marginTop: '10px'}}>
-            {matcher.actionMemo && 'Memo: ' + matcher.actionMemo}
-        </div>
+        </>}
 
-    </div>
+
+    </div>)
 }
 
 
