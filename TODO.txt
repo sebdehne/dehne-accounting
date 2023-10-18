@@ -1,3 +1,11 @@
+- show total unmatched on home screen
+- show total unmatched on bank-accounts screen
+
+Bookings UI
+- list/search
+- new bookings
+- remove bookings
+
 Accounts
 - list/search
 - add new
@@ -5,43 +13,7 @@ Accounts
 - remove
 - merge
 
-Bookings UI
-- list/search
-- new bookings
-- remove bookings
-
-
-
-- matcher: filter editor - search bank accounts when transfer
-- matchers: show their actions
-- edit matcher doesnt work
-- matchers: OR-rules vs AND-rules
-- Bookings filter case insensitive
-- Link fra booking til bank TX
-- are you sure delete confirmation
 - matcher action: procent split?
-- only show back when there is something?
-- payees accounts or booking-attributes?
-- open/close balances?
-- bank-account vs payee vs expense-category?
-
-- show balance
-
-Re-write KMyMoneyIMporter to structure bookings like this
-Booking - buy some food:
-credit AP/Coop: 400
-debit  expense/food
-credit bank/tx
-debit  AP/Coop
-
-     -400 AP / 400 expense
--400  400 settle
-
--400 400 AP
-     -400
-
-
-Ledger-home: show total unmatched bank transactions, not only this period
 
 Bank accounts:
 - add/edit
@@ -66,18 +38,11 @@ User-profile:
 - configure port
 - configure sql file location
 
-- add new matcher: automatic name generation picks the wrong side
-- are-you-sure-dialog on delete(s)?
-
-Balance-sheet:
-- configure which categories go where
-
 Backups:
 - list
 - remove
 - take backup
 
-- kMyMoney import via GUI, RootCategory enum configurable
-- Error screen when no user-header is detected
+- kMyMoney import via GUI?
 - first time user screen, create admin-user
 
