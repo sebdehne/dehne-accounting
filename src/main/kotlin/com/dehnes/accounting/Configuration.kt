@@ -79,7 +79,8 @@ class Configuration {
             authorizationService,
             unbookedBankTransactionMatcherRepository,
             datasource,
-            changelog
+            changelog,
+            bookingRepository
         )
         val readService = ReadService(
             bookingReadService,

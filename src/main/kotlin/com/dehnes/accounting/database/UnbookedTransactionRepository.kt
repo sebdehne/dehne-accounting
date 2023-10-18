@@ -175,6 +175,14 @@ class UnbookedTransactionRepository(
                 }
             }
 
+    fun delete(conn: Connection, accountId: String, id: Long) {
+        conn.prepareStatement("DELETE FROM unbooked_bank_transaction WHERE account_id = ? AND id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, accountId)
+            preparedStatement.setLong(2, id)
+            preparedStatement.executeUpdate()
+        }
+    }
+
 }
 
 data class UnbookedTransaction(

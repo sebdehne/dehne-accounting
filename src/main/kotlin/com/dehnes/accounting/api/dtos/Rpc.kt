@@ -5,6 +5,7 @@ import com.dehnes.accounting.bank.importers.ImportResult
 import com.dehnes.accounting.database.BookingView
 import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.UnbookedBankTransactionMatcher
+import com.dehnes.accounting.services.UnbookedBankTransactionMatcherService
 
 
 enum class RequestType {
@@ -31,6 +32,7 @@ enum class RequestType {
     deleteAllUnbookedTransactions,
     addOrReplaceUnbookedTransactionMatcher,
     removeUnbookedTransactionMatcher,
+    executeMatcherUnbookedTransactionMatcher,
 
 }
 

@@ -4,7 +4,7 @@ import {UserState} from "../../utils/userstate";
 import {CategoryDto, MergeCategoriesRequest} from "./categories";
 import {BookingView} from "./bookings";
 import {UserStateV2} from "./UserStateV2";
-import {UnbookedBankTransactionMatcher} from "./unbookedTransactions";
+import {UnbookedBankTransactionMatcher, UnbookedBankTransactionReference} from "./unbookedTransactions";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
@@ -22,6 +22,7 @@ export type RequestType = "subscribe"
     | 'deleteAllUnbookedTransactions'
     | 'addOrReplaceUnbookedTransactionMatcher'
     | 'removeUnbookedTransactionMatcher'
+    | 'executeMatcherUnbookedTransactionMatcher'
     ;
 
 export type RpcRequest = {

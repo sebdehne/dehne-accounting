@@ -59,7 +59,7 @@ export const BankTransactionsV2 = () => {
         <ul className="TransactionsV2">
             {transactions.map((transaction, index) => (<li key={index} style={{padding: '0'}}>
                 <TransactionView
-                    showRightAccountId={transaction.unbookedReference ? accountId : undefined}
+                    showRightAccountId={accountId}
                     otherAccountName={transaction.bookingReference?.otherAccountId ? accounts.getById(transaction.bookingReference?.otherAccountId).name : undefined}
                     balance={transaction.balance}
                     amountInCents={transaction.amountInCents}

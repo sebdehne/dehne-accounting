@@ -54,7 +54,7 @@ export type MatchedUnbookedBankTransactionMatcher = {
 export type UnbookedBankTransactionMatcher = {
     id: string;
     realmId: string;
-    name?: string;
+    name: string;
     filter: UnbookedTransactionMatcherFilter;
     action: UnbookedTransactionMatcherAction;
     actionAccountId: string;

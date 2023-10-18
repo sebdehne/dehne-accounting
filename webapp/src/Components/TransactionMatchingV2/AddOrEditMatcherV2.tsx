@@ -41,7 +41,7 @@ export const AddOrEditMatcherV2 = () => {
 
     const [unbookedTransaction, setUnbookedTransaction] = useState<UnbookedTransaction>();
     const [initialized, setInitialized] = useState(false);
-    const [name, setName] = useState<string>();
+    const [name, setName] = useState<string>('');
     const [actionMemo, setActionMemo] = useState<string>();
     const [actionAccountId, setActionAccountId] = useState<string>();
     const [accountActionPayable, setAccountActionPayable] = useState<AccountAction>({
@@ -97,7 +97,7 @@ export const AddOrEditMatcherV2 = () => {
                 notify => {
                     const unbookedTransaction = notify.readResponse.unbookedTransaction!;
                     setUnbookedTransaction(unbookedTransaction);
-                    setName(unbookedTransaction.memo);
+                    setName(unbookedTransaction.memo ?? '');
                     setFilter({
                         '@c': '.ContainsFilter',
                         value: unbookedTransaction.memo
@@ -172,7 +172,7 @@ export const AddOrEditMatcherV2 = () => {
                     lastUsed: formatIso(moment()),
                     filter
                 }
-            }).then(() => unbookedTransactionId ? navigate('/matchers/' + accountId + '/' + unbookedTransactionId) : navigate('/matchers'))
+            }).then(() => navigate(-1))
         }
 
     }, [matcherId, name, userStateV2?.selectedRealm, actionAccountId, actionMemo, type, accountActionPayable, accountActionReceivable, filter]);
@@ -355,6 +355,7 @@ const FilterEditor = ({filter, setFilter, titlePostfix = ""}: FilterEditorProps)
         setFilter(prevState => ({
             ...prevState,
             "@c": type,
+            filters: []
         }))
     }
 

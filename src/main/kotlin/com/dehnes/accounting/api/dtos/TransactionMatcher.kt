@@ -84,10 +84,10 @@ data class GetMatchersResponse(
     val macherIdsWhichMatched: List<String>,
 )
 
+// V2
 data class ExecuteMatcherRequest(
-    val ledgerId: String,
-    val bankAccountId: String,
+    val accountId: String,
     val transactionId: Long,
     val matcherId: String,
-    val memoText: String?,
+    val overrideMemo: String?,
 )

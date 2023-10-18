@@ -1,4 +1,4 @@
-execute matcher
+- one-liner view of matcher (click to expand view)
 
 Bookings UI
 - list/search

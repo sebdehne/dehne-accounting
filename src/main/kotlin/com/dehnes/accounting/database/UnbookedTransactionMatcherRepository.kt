@@ -68,7 +68,7 @@ class UnbookedBankTransactionMatcherRepository(
 data class UnbookedBankTransactionMatcher(
     val id: String,
     val realmId: String,
-    val name: String?,
+    val name: String,
     val filter: UnbookedTransactionMatcherFilter,
     val action: UnbookedTransactionMatcherAction,
     val actionAccountId: String,

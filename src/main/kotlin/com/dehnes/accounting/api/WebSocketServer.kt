@@ -90,6 +90,15 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(subscriptionRemoved = true)
             }
 
+            executeMatcherUnbookedTransactionMatcher -> readService.doWithNotifies {
+                unbookedBankTransactionMatcherService.executeMatcher(
+                    user.id,
+                    userStateV2.selectedRealm!!,
+                    rpcRequest.executeMatcherRequest!!
+                )
+                RpcResponse()
+            }
+
             removeUnbookedTransactionMatcher -> readService.doWithNotifies {
                 unbookedBankTransactionMatcherService.removeMatcher(
                     user.id,
@@ -161,22 +170,7 @@ class WebSocketServer : Endpoint() {
                 RpcResponse()
             }
 
-            executeMatcher -> readService.doWithNotifies {
-                val matcherRequest = rpcRequest.executeMatcherRequest!!
-
-                val (_, error) = logAndGetError(logger) {
-                    transactionMatchingService.executeMatch(
-                        user.id,
-                        matcherRequest.ledgerId,
-                        matcherRequest.bankAccountId,
-                        matcherRequest.transactionId,
-                        matcherRequest.matcherId,
-                        matcherRequest.memoText?.ifBlank { null },
-                    )
-                }
-
-                RpcResponse(error = error)
-            }
+            executeMatcher -> error("Removed V1")
 
             removeBooking -> readService.doWithNotifies {
                 bookingWriteService.removeLast(

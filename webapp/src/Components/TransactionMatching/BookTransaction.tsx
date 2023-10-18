@@ -105,16 +105,7 @@ const MatchersSelector = ({
     }, [ledgerId, bankAccountId, transactionId, setAllMatchers, setMacherIdsWhichMatched]);
 
     const bookNow = (c: TransactionMatcher) => {
-        WebsocketClient.rpc({
-            type: "executeMatcher",
-            executeMatcherRequest: {
-                matcherId: c.id,
-                transactionId,
-                ledgerId,
-                bankAccountId,
-                memoText,
-            }
-        }).then(onDone)
+
     }
 
     let navigate = useNavigate();

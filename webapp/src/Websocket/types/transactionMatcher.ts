@@ -64,11 +64,11 @@ export type GetMatchersResponse = {
 }
 
 
+// V2
 export type ExecuteMatcherRequest = {
-    ledgerId: string;
-    bankAccountId: string;
+    accountId: string;
     transactionId: number;
     matcherId: string;
-    memoText?: string;
+    overrideMemo?: string;
 }
 
