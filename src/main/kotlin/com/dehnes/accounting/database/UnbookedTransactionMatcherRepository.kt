@@ -23,7 +23,7 @@ class UnbookedBankTransactionMatcherRepository(
                 preparedStatement.executeUpdate()
             }
 
-        changelog.addV2(UnbookedTransactionMatchersChanged)
+        changelog.add(UnbookedTransactionMatchersChanged)
     }
 
     fun update(connection: Connection, matcher: UnbookedBankTransactionMatcher): Boolean {
@@ -38,7 +38,7 @@ class UnbookedBankTransactionMatcherRepository(
             preparedStatement.executeUpdate() > 0
         }
         if (updated) {
-            changelog.addV2(UnbookedTransactionMatchersChanged)
+            changelog.add(UnbookedTransactionMatchersChanged)
         }
         return updated
     }

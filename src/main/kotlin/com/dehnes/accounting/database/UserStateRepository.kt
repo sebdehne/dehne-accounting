@@ -39,7 +39,7 @@ class UserStateRepository(
             }
         }
 
-        changelog.addV2(UserStateUpdated(getSessionsFor(conn, userStateV2.id)))
+        changelog.add(UserStateUpdated(getSessionsFor(conn, userStateV2.id)))
     }
 
     fun getSessionsFor(conn: Connection, userStateId: String) =

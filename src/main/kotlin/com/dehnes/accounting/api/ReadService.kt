@@ -6,7 +6,6 @@ import com.dehnes.accounting.api.dtos.ReadRequestType.*
 import com.dehnes.accounting.api.dtos.ReadResponse
 import com.dehnes.accounting.api.dtos.UserStateV2
 import com.dehnes.accounting.database.AccountsRepository
-import com.dehnes.accounting.database.ChangeLogEventType
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.services.bank.BankAccountService
@@ -50,15 +49,15 @@ class ReadService(
 
     fun addSubscription(sub: WebSocketServer.Subscription) {
         listeners[sub.subscriptionId] = sub
-        onChangelogEvent(null, sub.subscriptionId)
+        onChangelogEvent(sub.subscriptionId)
     }
 
     fun removeSubscription(subId: String) {
         listeners.remove(subId)
     }
 
-    fun onChangelogEvent(changeLogEventType: ChangeLogEventType?, subId: String? = null) {
-        threadLocalChangeLog.get()?.add(ChangeEvent(changeLogEventType, null, subId))
+    fun onChangelogEvent(subId: String? = null) {
+        threadLocalChangeLog.get()?.add(ChangeEvent(null, subId))
     }
 
     fun onChangelogEvent(changeEvent: ChangeEvent) {
@@ -78,9 +77,7 @@ class ReadService(
                     listeners.values
                         .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
                         .filter {
-                            (changeEvent.changeLogEventType == null
-                                    || changeEvent.changeLogEventType in it.readRequest.type.listensOn)
-                                    || (changeEvent.changeLogEventTypeV2 == null
+                            (changeEvent.changeLogEventTypeV2 == null
                                     || (changeEvent.changeLogEventTypeV2::class in it.readRequest.type.listensOnV2
                                     && changeEvent.changeLogEventTypeV2.triggerNotify(it.readRequest, it.sessionId)))
                         }
@@ -191,7 +188,6 @@ class ReadService(
 }
 
 data class ChangeEvent(
-    val changeLogEventType: ChangeLogEventType?,
     val changeLogEventTypeV2: ChangeLogEventTypeV2?,
     val subId: String?,
 )

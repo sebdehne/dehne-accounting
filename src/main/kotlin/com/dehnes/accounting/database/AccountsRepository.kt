@@ -70,7 +70,7 @@ class AccountsRepository(
             throw e
         }
 
-        changelog.addV2(AccountsChanged)
+        changelog.add(AccountsChanged)
     }
 
     fun updateAccount(conn: Connection, accountDto: AccountDto) {
@@ -85,7 +85,7 @@ class AccountsRepository(
             preparedStatement.executeUpdate()
         }
 
-        changelog.addV2(AccountsChanged)
+        changelog.add(AccountsChanged)
     }
 
 }

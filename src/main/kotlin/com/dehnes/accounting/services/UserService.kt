@@ -23,7 +23,7 @@ class UserService(
                 true,
                 false
             )
-            conn.prepareStatement("INSERT INTO user (id, name, description, user_email, active, is_admin) VALUES (?,?,?,?,?,?,)").use { preparedStatement ->
+            conn.prepareStatement("INSERT INTO user (id, name, description, user_email, active, is_admin) VALUES (?,?,?,?,?,?)").use { preparedStatement ->
                 preparedStatement.setString(1, user.id)
                 preparedStatement.setString(2, user.name)
                 preparedStatement.setString(3, user.description)

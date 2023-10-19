@@ -4,7 +4,6 @@ import com.dehnes.accounting.api.ChangeEvent
 import com.dehnes.accounting.api.ChangeLogEventTypeV2
 import com.dehnes.accounting.api.ReadService
 import com.dehnes.accounting.configuration
-import java.sql.Connection
 
 class Changelog(
     private val requireReadService: Boolean = true
@@ -20,48 +19,7 @@ class Changelog(
         return readService
     }
 
-    fun add(connection: Connection, userId: String, type: ChangeLogEventType, value: Any) {
-        readService()?.onChangelogEvent(type)
+    fun add(type: ChangeLogEventTypeV2) {
+        readService()?.onChangelogEvent(ChangeEvent(type, null))
     }
-    fun addV2(type: ChangeLogEventTypeV2) {
-        readService()?.onChangelogEvent(ChangeEvent(null, type, null))
-    }
-
 }
-
-enum class ChangeLogEventType {
-    bankAdded,
-    bankUpdated,
-    bankRemoved,
-
-    userAdded,
-    userUpdated,
-
-    legderAdded,
-    legderUpdated,
-    legderRemoved,
-
-    bankAccountAdded,
-    bankAccountUpdated,
-    bankAccountRemoved,
-
-    userLedgerAccessChanged,
-
-    categoryAdded,
-    categoryUpdated,
-    categoryRemoved,
-
-    matcherAdded,
-    matcherUpdated,
-    matcherRemoved,
-
-    bankTransactionRemoveLast,
-    bankTransactionAdded,
-
-    bookingAdded,
-    bookingRemoved,
-    bookingChanged,
-
-    userStateUpdated
-}
-

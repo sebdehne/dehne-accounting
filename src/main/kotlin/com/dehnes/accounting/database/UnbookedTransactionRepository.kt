@@ -18,7 +18,7 @@ class UnbookedTransactionRepository(
             preparedStatement.setString(1, accountId)
             preparedStatement.executeUpdate()
         }
-        changelog.addV2(UnbookedTransactionsChanged)
+        changelog.add(UnbookedTransactionsChanged)
     }
 
     fun insert(conn: Connection, unbookedTransaction: UnbookedTransaction): Long {

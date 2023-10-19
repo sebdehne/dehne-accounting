@@ -146,8 +146,8 @@ class UnbookedBankTransactionMatcherService(
                 unbookedTransaction.id,
             )
 
-            changelog.addV2(UnbookedTransactionsChanged)
-            changelog.addV2(BookingsChanged)
+            changelog.add(UnbookedTransactionsChanged)
+            changelog.add(BookingsChanged)
         }
     }
 
@@ -165,7 +165,7 @@ class UnbookedBankTransactionMatcherService(
                 realmId
             )
 
-            changelog.addV2(UnbookedTransactionMatchersChanged)
+            changelog.add(UnbookedTransactionMatchersChanged)
         }
     }
 
@@ -192,7 +192,7 @@ class UnbookedBankTransactionMatcherService(
             }
 
 
-            changelog.addV2(UnbookedTransactionMatchersChanged)
+            changelog.add(UnbookedTransactionMatchersChanged)
         }
     }
 

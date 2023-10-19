@@ -2,7 +2,6 @@ package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.api.*
 import com.dehnes.accounting.database.*
-import com.dehnes.accounting.database.ChangeLogEventType.*
 import com.dehnes.accounting.services.MatchedUnbookedBankTransactionMatcher
 import com.dehnes.accounting.services.OverviewRapportAccount
 import com.dehnes.accounting.services.UnbookedBankTransactionMatcherService
@@ -26,18 +25,17 @@ data class Notify(
 )
 
 enum class ReadRequestType(
-    val listensOn: List<ChangeLogEventType>,
     val listensOnV2: List<KClass<out ChangeLogEventTypeV2>> = emptyList(),
 ) {
-    getAllRealms(emptyList(), listOf(RealmChanged::class)),
-    getUserState(emptyList(), listOf(UserStateUpdated::class)),
-    getOverviewRapport(emptyList(), listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
-    getBanksAndAccountsOverview(emptyList(), listOf(AccountsChanged::class, BookingsChanged::class, UnbookedTransactionsChanged::class)),
-    getBankAccountTransactions(emptyList(), listOf(BookingsChanged::class, UnbookedTransactionsChanged::class)),
-    getAllAccounts(emptyList(), listOf(AccountsChanged::class)),
-    getUnbookedBankTransactionMatchers(emptyList(), listOf(UnbookedTransactionMatchersChanged::class)),
-    getUnbookedBankTransaction(emptyList(), listOf(UnbookedTransactionsChanged::class)),
-    getTotalUnbookedTransactions(emptyList(), listOf(UnbookedTransactionsChanged::class)),
+    getAllRealms(listOf(RealmChanged::class)),
+    getUserState(listOf(UserStateUpdated::class)),
+    getOverviewRapport(listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
+    getBanksAndAccountsOverview(listOf(AccountsChanged::class, BookingsChanged::class, UnbookedTransactionsChanged::class)),
+    getBankAccountTransactions(listOf(BookingsChanged::class, UnbookedTransactionsChanged::class)),
+    getAllAccounts(listOf(AccountsChanged::class)),
+    getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class)),
+    getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class)),
+    getTotalUnbookedTransactions(listOf(UnbookedTransactionsChanged::class)),
     ;
 
 }
