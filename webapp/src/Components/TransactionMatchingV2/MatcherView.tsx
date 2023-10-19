@@ -51,9 +51,9 @@ export const MatcherView = ({matcher, buttons, initialCollapsed = false}: Matche
             <BorderedSection title={"Action: " + type}>
                 <div className="MatcherViewAccount">
                     <div className="MatcherViewAccountType">
-                        {type == "Transfer" && "To: "}
-                        {type == "Payment" && "Pay to: "}
-                        {type == "Income" && "From: "}
+                        {type === "Transfer" && "To: "}
+                        {type === "Payment" && "Pay to: "}
+                        {type === "Income" && "From: "}
                     </div>
                     <div className="MatcherViewAccountAccountName">
                         {account.name}

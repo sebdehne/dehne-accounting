@@ -19,6 +19,15 @@ class UnbookedBankTransactionMatcherService(
     private val bookingRepository: BookingRepository,
 ) {
 
+    fun getTotalUnbookedTransactions(
+        userId: String,
+        realmId: String,
+    ) = dataSource.readTx { conn ->
+        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
+
+        unbookedTransactionRepository.getCount(conn, realmId, null)
+    }
+
     fun executeMatcher(
         userId: String,
         realmId: String,

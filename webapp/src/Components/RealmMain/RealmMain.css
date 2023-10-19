@@ -14,3 +14,12 @@
     justify-content: space-between;
     align-items: center;
 }
+
+.TotalUnbookedTransactions {
+    font-size: smaller;
+    color: yellow;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+

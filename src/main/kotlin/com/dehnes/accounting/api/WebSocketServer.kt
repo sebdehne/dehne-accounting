@@ -2,7 +2,6 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.RequestType.*
-import com.dehnes.accounting.services.TransactionMatchingService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.services.*
@@ -27,13 +26,9 @@ class WebSocketServer : Endpoint() {
     private val objectMapper = configuration.getBean<ObjectMapper>()
     private val userService = configuration.getBean<UserService>()
     private val readService = configuration.getBean<ReadService>()
-    private val bankService = configuration.getBean<BankService>()
     private val bankAccountService = configuration.getBean<BankAccountService>()
-    private val categoryWriteService = configuration.getBean<CategoryWriteService>()
     private val userStateService = configuration.getBean<UserStateService>()
-    private val transactionMatchingService = configuration.getBean<TransactionMatchingService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
-    private val bookingWriteService = configuration.getBean<BookingWriteService>()
     private val unbookedBankTransactionMatcherService = configuration.getBean<UnbookedBankTransactionMatcherService>()
     private val logger = KotlinLogging.logger { }
     private val subscriptions = mutableMapOf<String, Subscription>()
@@ -118,18 +113,17 @@ class WebSocketServer : Endpoint() {
             }
 
             deleteAllUnbookedTransactions -> readService.doWithNotifies {
-                bankAccountService.deleteAllUnbookedTransactions(user.id, userStateV2.selectedRealm!!, rpcRequest.accountId!!)
+                bankAccountService.deleteAllUnbookedTransactions(
+                    user.id,
+                    userStateV2.selectedRealm!!,
+                    rpcRequest.accountId!!
+                )
                 RpcResponse()
             }
 
             setUserStateV2 -> readService.doWithNotifies {
                 check(rpcRequest.userStateV2!!.id == userStateV2.id)
                 userStateService.setUserStateV2(user.id, rpcRequest.userStateV2)
-                RpcResponse()
-            }
-
-            setUserState -> readService.doWithNotifies {
-                userStateService.setUserState(user.id, rpcRequest.userState!!)
                 RpcResponse()
             }
 
@@ -150,77 +144,6 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(importBankTransactionsResult = result, error = errorMsg)
             }
 
-            addOrReplaceMatcher -> readService.doWithNotifies {
-                val (_, errorMsg) = logAndGetError(logger) {
-                    transactionMatchingService.addOrReplaceMatcher(
-                        user.id,
-                        rpcRequest.addOrReplaceMatcherRequest!!
-                    )
-                }
-
-                RpcResponse(error = errorMsg)
-            }
-
-            deleteMatcher -> readService.doWithNotifies {
-                transactionMatchingService.deleteMatcher(
-                    userId = user.id,
-                    ledgerId = rpcRequest.ledgerId!!,
-                    matcherId = rpcRequest.deleteMatcherId!!
-                )
-                RpcResponse()
-            }
-
-            executeMatcher -> error("Removed V1")
-
-            removeBooking -> readService.doWithNotifies {
-                bookingWriteService.removeLast(
-                    user.id,
-                    rpcRequest.ledgerId!!,
-                    rpcRequest.bookingId!!
-                )
-
-                RpcResponse()
-            }
-
-            removeLastBankTransaction -> readService.doWithNotifies {
-                val (_, errorMsg) = logAndGetError(logger) {
-                    bankService.removeLastBankTransactions(
-                        user.id,
-                        rpcRequest.ledgerId!!,
-                        rpcRequest.accountId!!
-                    )
-                }
-                RpcResponse(error = errorMsg)
-            }
-
-            addOrReplaceCategory -> readService.doWithNotifies {
-                val (_, errorMsg) = logAndGetError(logger) {
-                    categoryWriteService.addOrReplaceCategory(user.id, rpcRequest.addOrReplaceCategory!!)
-                }
-                RpcResponse(error = errorMsg)
-            }
-
-            mergeCategories -> readService.doWithNotifies {
-                val (_, errorMsg) = logAndGetError(logger) {
-                    bookingWriteService.mergeCategories(
-                        user.id,
-                        rpcRequest.ledgerId!!,
-                        rpcRequest.mergeCategoriesRequest!!.sourceCategoryId,
-                        rpcRequest.mergeCategoriesRequest.destinationCategoryId,
-                    )
-                }
-                RpcResponse(error = errorMsg)
-            }
-
-            addOrReplaceBooking -> readService.doWithNotifies {
-                val (_, errorMsg) = logAndGetError(logger) {
-                    bookingWriteService.addOrReplaceBooking(
-                        user.id,
-                        rpcRequest.addOrReplaceBooking!!
-                    )
-                }
-                RpcResponse(error = errorMsg)
-            }
         }
 
         argSession.basicRemote.sendText(

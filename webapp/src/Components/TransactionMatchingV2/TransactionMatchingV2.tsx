@@ -39,14 +39,14 @@ export const TransactionMatchingV2 = () => {
             notify => setMatchers(
                 notify.readResponse.unbookedBankTransactionMatchers!
                     .sort((a, b) => {
-                        if (a.matches == b.matches) {
+                        if (a.matches === b.matches) {
                             return a.matcher.name.localeCompare(b.matcher.name)
                         }
                         return a.matches ? -1 : 1
                     })
             )
         )
-    }, [accountId, txId]);
+    }, [accountId, txId, unbookedTransactionId]);
 
     useEffect(() => {
         if (unbookedTransactionId && accountId) {
@@ -65,7 +65,7 @@ export const TransactionMatchingV2 = () => {
             );
             return () => WebsocketClient.unsubscribe(subId);
         }
-    }, []);
+    }, [accountId, unbookedTransactionId]);
 
     const navigate = useNavigate();
     const addUrl = unbookedTransactionId ? '/matcher/' + accountId + '/' + unbookedTransactionId : '/matcher'

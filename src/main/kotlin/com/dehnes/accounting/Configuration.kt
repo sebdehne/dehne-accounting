@@ -3,7 +3,6 @@ package com.dehnes.accounting
 import com.dehnes.accounting.api.ReadService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.database.*
-import com.dehnes.accounting.rapports.RapportService
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.services.bank.BankAccountService
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -38,16 +37,9 @@ class Configuration {
         SchemaHandler.initSchema(datasource)
 
         val changelog = Changelog()
-        val repository = Repository(changelog, objectMapper)
-        val categoryReadService = CategoryReadService(repository, datasource)
         val userService = UserService(datasource)
-        val bookingReadService = BookingReadService(repository, userService)
-        val bankService = BankService(bookingReadService, repository, datasource)
-        val rapportService = RapportService(repository, categoryReadService)
-        val transactionMatchingService = TransactionMatchingService(repository, datasource, bookingReadService)
         val userStateRepository = UserStateRepository(objectMapper, changelog)
         val userRepository = UserRepository(datasource, objectMapper)
-        val userStateService = UserStateService(datasource, repository, userStateRepository, userService)
         val accountsRepository = AccountsRepository(datasource, changelog)
         val realmRepository = RealmRepository(datasource, accountsRepository)
         val bookingRepository = BookingRepository(realmRepository)
@@ -55,7 +47,6 @@ class Configuration {
         val bankRepository = BankRepository(datasource)
         val bankAccountRepository = BankAccountRepository()
         val unbookedTransactionRepository = UnbookedTransactionRepository(changelog)
-
         val bankAccountService = BankAccountService(
             bookingRepository,
             bankRepository,
@@ -65,6 +56,8 @@ class Configuration {
             authorizationService,
             unbookedTransactionRepository
         )
+
+
         val bankTransactionImportService = BankTransactionImportService(
             datasource,
             authorizationService,
@@ -83,14 +76,8 @@ class Configuration {
             bookingRepository
         )
         val readService = ReadService(
-            bookingReadService,
-            bankService,
             executorService,
-            userService,
-            rapportService,
-            categoryReadService,
-            userStateService,
-            transactionMatchingService,
+            UserStateService(datasource, userStateRepository, userService),
             datasource,
             authorizationService,
             OverviewRapportService(datasource, bookingRepository, accountsRepository),
@@ -98,19 +85,14 @@ class Configuration {
             accountsRepository,
             unbookedBankTransactionMatcherService
         )
-        val bookingWriteService = BookingWriteService(repository, datasource, bookingReadService, categoryReadService)
 
 
-        beans[BankService::class] = bankService
         beans[ObjectMapper::class] = objectMapper
         beans[ReadService::class] = readService
         beans[UserService::class] = userService
         beans[BankTransactionImportService::class] = bankTransactionImportService
-        beans[TransactionMatchingService::class] = transactionMatchingService
-        beans[UserStateService::class] = userStateService
-        beans[BookingWriteService::class] = bookingWriteService
-        beans[CategoryWriteService::class] = CategoryWriteService(repository, datasource, bookingReadService)
         beans[BankAccountService::class] = bankAccountService
+        beans[UserStateService::class] = UserStateService(datasource, userStateRepository, userService)
         beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
     }
 

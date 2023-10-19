@@ -68,7 +68,7 @@ fun main() {
                                 existingCookie
                             )
 
-                            response!!.headers["Set-Cookie"] = listOf("dehne-accounting=$sessionId; Secure,HttpOnly")
+                            response!!.headers["Set-Cookie"] = listOf("dehne-accounting=$sessionId; Secure;HttpOnly;SameSite=Strict")
                             sec.userProperties!!["sessionId"] = sessionId
                         }
 

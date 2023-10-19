@@ -1,5 +1,3 @@
-- show total unmatched on home screen
-- show total unmatched on bank-accounts screen
 
 Bookings UI
 - list/search

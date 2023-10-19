@@ -3,6 +3,7 @@ package com.dehnes.accounting.database
 import com.dehnes.accounting.api.dtos.UserStateV2
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
+import com.dehnes.accounting.services.AccessLevel
 import com.dehnes.accounting.utils.toInt
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue

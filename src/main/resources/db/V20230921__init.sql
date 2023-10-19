@@ -81,6 +81,7 @@ create table bank_account
 create table unbooked_bank_transaction
 (
     account_id           text      not null,
+    realm_id             text      not null,
     id                   integer   not null,
     memo                 text,
     datetime             timestamp not null,
@@ -88,7 +89,8 @@ create table unbooked_bank_transaction
     other_account_number text,
 
     primary key (account_id, id),
-    foreign key (account_id) references account (id)
+    foreign key (account_id) references account (id),
+    foreign key (realm_id) references realm (id)
 );
 
 create table booking

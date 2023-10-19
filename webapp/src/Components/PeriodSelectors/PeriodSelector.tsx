@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {formatIso, formatMonth, formatYear, monthDelta, startOfCurrentMonth, yearDelta} from "../../utils/formatting";
 import IconButton from "@mui/material/IconButton";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
@@ -7,53 +7,8 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import './PeriodSelector.css'
 import moment from "moment";
-import {PeriodWindow, useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/userstate";
 
-
-export type PeriodSelectorProps = {
-    periodLocationInUserState: string[];
-}
-export const PeriodSelector = ({periodLocationInUserState}: PeriodSelectorProps) => {
-    const {userState, setUserState} = useGlobalState();
-
-    const period = useMemo(() => {
-        if (userState) {
-            let currentObj = userState as any;
-            periodLocationInUserState.forEach(loc => {
-                currentObj = currentObj[loc] as any
-            });
-            return currentObj as PeriodWindow;
-        }
-    }, [periodLocationInUserState, userState]);
-    const updatePeriod = useCallback((p: PeriodWindow) => {
-        setUserState(prevState => {
-            const clone = JSON.parse(JSON.stringify(prevState));
-            let currentObj = clone;
-            periodLocationInUserState.slice(0, -1).forEach(loc => {
-                currentObj = currentObj[loc] as any
-            })
-
-            let finalField = periodLocationInUserState[periodLocationInUserState.length - 1];
-            currentObj[finalField] = p
-            return {...clone};
-        })
-    }, [periodLocationInUserState, setUserState]);
-
-
-    return (
-        <>
-            {period?.type === "month" && <MonthPeriodSelector
-                period={[moment(period.startDateTime), moment(period.endDateTime)]}
-                setPeriod={p => updatePeriod({
-                    startDateTime: formatIso(p[0]),
-                    endDateTime: formatIso(p[1]),
-                    type: period.type
-                })}
-            />}
-        </>
-    );
-
-}
 
 type MonthPeriodSelectorProps = {
     period: moment.Moment[];
@@ -108,7 +63,7 @@ export const PeriodSelectorV2 = () => {
                 periodType: "month"
             }))
         }
-    }, [userStateV2]);
+    }, [setUserStateV2, userStateV2?.periodType, userStateV2?.rangeFilter]);
 
     return (
         <>

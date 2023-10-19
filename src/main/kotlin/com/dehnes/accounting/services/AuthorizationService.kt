@@ -1,6 +1,5 @@
 package com.dehnes.accounting.services
 
-import com.dehnes.accounting.database.AccessRequest
 import com.dehnes.accounting.database.Realm
 import com.dehnes.accounting.database.RealmRepository
 import com.dehnes.accounting.database.UserRepository
@@ -41,5 +40,28 @@ class AuthorizationService(
             }
             .filter { user.admin || it.second?.accessLevel?.hasAccess(accessRequest) == true }
             .map { it.first }
+    }
+}
+
+enum class AccessRequest {
+    read,
+    write,
+    owner,
+    admin
+}
+
+enum class AccessLevel {
+    admin,
+    legderOwner,
+    legderReadWrite,
+    legderRead,
+    none,
+    ;
+
+    fun hasAccess(req: AccessRequest) = when (req) {
+        AccessRequest.admin -> this == admin
+        AccessRequest.owner -> this in listOf(admin, legderOwner)
+        AccessRequest.write -> this in listOf(admin, legderOwner, legderReadWrite)
+        AccessRequest.read -> this in listOf(admin, legderOwner, legderReadWrite, legderRead)
     }
 }

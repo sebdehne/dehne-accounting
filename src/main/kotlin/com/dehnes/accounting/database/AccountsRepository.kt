@@ -16,9 +16,7 @@ class AccountsRepository(
     private val logger = KotlinLogging.logger {  }
 
     fun getAll(conn: Connection, realmId: String): List<AccountDto> = conn.prepareStatement(
-        """
-        SELECT * FROM account where realm_id = ?
-    """.trimIndent()
+        "SELECT * FROM account where realm_id = ?"
     ).use { preparedStatement ->
         preparedStatement.setString(1, realmId)
         preparedStatement.executeQuery().use { rs ->

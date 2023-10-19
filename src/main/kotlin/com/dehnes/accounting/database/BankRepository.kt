@@ -1,6 +1,7 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.database.Transactions.writeTx
+import com.dehnes.accounting.domain.InformationElement
 import java.sql.Connection
 import javax.sql.DataSource
 
@@ -44,3 +45,10 @@ class BankRepository(
     }
 
 }
+
+data class BankDto(
+    override val id: String,
+    override val name: String,
+    override val description: String?,
+    val transactionImportFunction: String?,
+) : InformationElement()

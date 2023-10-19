@@ -2,6 +2,7 @@ package com.dehnes.accounting.bank.importers
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
+import com.dehnes.accounting.services.AccessRequest
 import com.dehnes.accounting.services.AuthorizationService
 import com.dehnes.accounting.services.bank.BankAccountService
 import com.dehnes.accounting.services.bank.BankAccountTransaction
@@ -73,6 +74,7 @@ class BankTransactionImportService(
                 conn,
                 UnbookedTransaction(
                     accountId,
+                    realmId,
                     0,
                     record.description,
                     record.datetime,

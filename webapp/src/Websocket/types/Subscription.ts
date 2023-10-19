@@ -1,17 +1,5 @@
-import {LedgerView} from "./ledgers";
-import {UserView} from "./user";
-import {BankAccountView, BankTransactionRequest, BankWithAccounts} from "./bankaccount";
-import {LedgerRapportNode, LedgerRapportRequest} from "./ledger_rapport";
-import {
-    BankAccountTransaction,
-    BankAccountTransactionView,
-    BankTransactionsRequest,
-    BankTransactionsResponse
-} from "./banktransactions";
-import {CategoryDto} from "./categories";
-import {UserState} from "../../utils/userstate";
-import {GetMatchersRequest, GetMatchersResponse} from "./transactionMatcher";
-import {BookingView, GetBookingsRequest} from "./bookings";
+import {BankWithAccounts} from "./bankaccount";
+import {BankAccountTransaction} from "./banktransactions";
 import {Realm} from "./realm";
 import {UserStateV2} from "./UserStateV2";
 import {OverviewRapportAccount} from "./OverviewRapportAccount";
@@ -21,7 +9,6 @@ import {
     UnbookedBankTransactionReference,
     UnbookedTransaction
 } from "./unbookedTransactions";
-
 
 export type Subscribe = {
     subscriptionId: string;
@@ -37,60 +24,32 @@ export type Notify = {
     readResponse: ReadResponse;
 }
 
-export type ReadRequestType = "userInfo"
-    | "getLedgers"
-    | "getBankAccounts"
-    | 'ledgerRapport'
-    | 'getBankTransactions'
-    | 'getBankTransaction'
-    | 'allCategories'
-    | 'userState'
-    | 'getMatchers'
-    | 'getBookings'
-    | 'getBooking'
+export type ReadRequestType = 'getAllRealms'
     | 'getUserState'
-    | 'getAllRealms'
     | 'getOverviewRapport'
     | 'getBanksAndAccountsOverview'
     | 'getBankAccountTransactions'
     | 'getAllAccounts'
     | 'getUnbookedBankTransactionMatchers'
     | 'getUnbookedBankTransaction'
+    | 'getTotalUnbookedTransactions'
     ;
 
 export type ReadRequest = {
     type: ReadRequestType;
-    ledgerId?: string;
     accountId?: string;
-    ledgerRapportRequest?: LedgerRapportRequest;
-    bankTransactionsRequest?: BankTransactionsRequest;
-    bankTransactionRequest?: BankTransactionRequest;
-    getMatchersRequest?: GetMatchersRequest;
-    getBookingsRequest?: GetBookingsRequest;
-    getBookingId?: number;
     unbookedBankTransactionReference?: UnbookedBankTransactionReference;
 }
 
 export type ReadResponse = {
     realms?: Realm[];
-    ledgers?: LedgerView[];
-    userView?: UserView;
-    bankAccounts?: BankAccountView[];
-    ledgerRapport?: LedgerRapportNode[];
-    bankTransactions?: BankTransactionsResponse;
-    bankTransaction?: BankAccountTransactionView;
-    categories?: CategoryDto[];
-    userState?: UserState;
     userStateV2?: UserStateV2;
-    getMatchersResponse?: GetMatchersResponse;
-    getBookingsResponse?: BookingView[];
-    getBookingResponse?: BookingView;
     overViewRapport?: OverviewRapportAccount[];
-
     banksAndAccountsOverview?: BankWithAccounts[];
     getBankAccountTransactions?: BankAccountTransaction[];
     allAccounts?: AccountDto[];
     unbookedBankTransactionMatchers?: MatchedUnbookedBankTransactionMatcher[];
     unbookedTransaction?: UnbookedTransaction;
+    totalUnbookedTransactions?: number;
 }
 

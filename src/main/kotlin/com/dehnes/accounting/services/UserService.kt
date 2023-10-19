@@ -1,7 +1,6 @@
 package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.Transactions.readTx
-import com.dehnes.accounting.database.UserDto
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.utils.toInt
 import java.sql.Connection
@@ -37,20 +36,6 @@ class UserService(
         }
     }
 
-    fun getUserById(connection: Connection, userId: String) =
-        connection.prepareStatement("SELECT * FROM user where id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, userId)
-            preparedStatement.executeQuery().use { rs ->
-                if (rs.next()) User(
-                    rs.getString("id"),
-                    rs.getString("name"),
-                    rs.getString("description"),
-                    rs.getString("user_email"),
-                    rs.getInt("active") > 0,
-                    rs.getInt("is_admin") > 0,
-                ) else null
-            }
-        }
 
     fun getUserByEmail(connection: Connection, userEmail: String) =
         connection.prepareStatement("SELECT * FROM user where user_email = ?").use { preparedStatement ->

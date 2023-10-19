@@ -37,13 +37,14 @@ export const BanksAndAccounts = () => {
                 onClick={() => navigate('/bankaccount/' + bAccount.account.id)}
             >
                 <div className="BankAccountLeft">
-                    <div className="BankAccountLeftFirst">{bank.name}</div>
-                    <div className="BankAccountLeftSecond">{bAccount.account.name}</div>
-                    <div className="BankAccountLeftThird">accountNumber: {bAccount.accountNumber}</div>
+                    <div className="BankAccountLeft01">{bAccount.account.name}</div>
+                    <div className="BankAccountLeft02">{bank.name} {bAccount.accountNumber && <span> / {bAccount.accountNumber}</span>}</div>
                 </div>
                 <div className="BankAccountRight">
-                    <div className="BankAccountRightFirst"><Amount amountInCents={bAccount.balance}/></div>
-                    <div className="BankAccountRightSecond">{formatLocalDate(moment(bAccount.lastKnownTransactionDate))}</div>
+                    {bAccount.totalUnbooked > 0 && <div className="BankAccountRight01">Unbooked: {bAccount.totalUnbooked}</div>}
+                    <div className="BankAccountRight02"><Amount amountInCents={bAccount.balance}/></div>
+                    <div className="BankAccountRight03">{formatLocalDate(moment(bAccount.lastKnownTransactionDate))}</div>
+
                 </div>
             </li>))}
         </ul>

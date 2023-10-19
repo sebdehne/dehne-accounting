@@ -9,15 +9,8 @@ import '@fontsource/roboto/700.css';
 import theme from "./theme";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
-import {BankTransactions} from "./Components/BankTransactions/BankTransactions";
-import {BankTransactionsImporter} from "./Components/BankTransactions/BankTransactionsImporter";
-import {BookTransaction} from "./Components/TransactionMatching/BookTransaction";
+import {BankTransactionsImporter} from "./Components/BankTransactionsV2/BankTransactionsImporter";
 import {GlobalStateProvider} from "./utils/userstate";
-import {AddOrEditMatcher} from "./Components/AddOrEditMatcher/AddOrEditMatcher";
-import {Bookings} from "./Components/Bookings/Bookings";
-import {Categories} from "./Components/Categories/Categories";
-import {AddOrEditCategory} from "./Components/Categories/AddOrEditCategory";
-import {AddOrEditBooking} from "./Components/Booking/AddOrEditBooking";
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterMoment} from '@mui/x-date-pickers/AdapterMoment'
 import 'moment/locale/nb';
@@ -53,26 +46,8 @@ root.render(
                                 <Route path="/matchers/:accountId/:txId" element={<TransactionMatchingV2/>}/>
                                 <Route path="/matcher/:matcherId" element={<AddOrEditMatcherV2/>}/> {/* Edit */}
                                 <Route path="/matcher" element={<AddOrEditMatcherV2/>}/> {/* Add new */}
-                                <Route path="/matcher/:accountId/:txId" element={<AddOrEditMatcherV2/>}/> {/* Add new based on unbooked TX */}
-
-
-
-                                <Route path="/categories" element={<Categories/>}/>
-                                <Route path="/category" element={<AddOrEditCategory/>}/>
-                                <Route path="/category/:editCategoryId" element={<AddOrEditCategory/>}/>
-
-                                <Route path="/bankaccount" element={<BankTransactions/>}/>
-                                <Route path="/bankaccount/import"
-                                       element={<BankTransactionsImporter/>}/>
-
-                                <Route path="/book/transaction" element={<BookTransaction/>}/>
-
-                                <Route path="/matcher" element={<AddOrEditMatcher/>}/>
-                                <Route path="/matcher/:matcherId" element={<AddOrEditMatcher/>}/>
-
-                                <Route path="/bookings" element={<Bookings/>}/>
-                                <Route path="/booking" element={<AddOrEditBooking/>}/>
-                                <Route path="/booking/:bookingId" element={<AddOrEditBooking/>}/>
+                                <Route path="/matcher/:accountId/:txId"
+                                       element={<AddOrEditMatcherV2/>}/> {/* Add new based on unbooked TX */}
                             </Routes>
                         </BrowserRouter>
                     </LocalizationProvider>

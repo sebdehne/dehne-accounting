@@ -2,55 +2,32 @@ package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.bank.importers.DuplicationHandler
 import com.dehnes.accounting.bank.importers.ImportResult
-import com.dehnes.accounting.database.BookingView
-import com.dehnes.accounting.database.CategoryDto
 import com.dehnes.accounting.database.UnbookedBankTransactionMatcher
-import com.dehnes.accounting.services.UnbookedBankTransactionMatcherService
 
 
 enum class RequestType {
     subscribe,
     unsubscribe,
 
-    removeLastBankTransaction,
-
-    addOrReplaceMatcher,
-    deleteMatcher,
-    executeMatcher,
-
-    addOrReplaceBooking,
-    removeBooking,
-
-    setUserState,
-
-    addOrReplaceCategory,
-    mergeCategories,
-
-    // V2
-    setUserStateV2,
     importBankTransactions,
+
+    setUserStateV2,
+
     deleteAllUnbookedTransactions,
     addOrReplaceUnbookedTransactionMatcher,
     removeUnbookedTransactionMatcher,
-    executeMatcherUnbookedTransactionMatcher,
 
+    executeMatcherUnbookedTransactionMatcher,
 }
 
 data class RpcRequest(
     val type: RequestType,
     val subscribe: Subscribe?,
     val unsubscribe: Unsubscribe?,
-    val ledgerId: String?,
     val accountId: String?,
     val importBankTransactionsRequest: ImportBankTransactionsRequest?,
-    val addOrReplaceMatcherRequest: TransactionMatcher?,
     val executeMatcherRequest: ExecuteMatcherRequest?,
-    val userState: UserState?,
     val deleteMatcherId: String?,
-    val bookingId: Long?,
-    val addOrReplaceCategory: CategoryDto?,
-    val mergeCategoriesRequest: MergeCategoriesRequest?,
-    val addOrReplaceBooking: BookingView?,
     val userStateV2: UserStateV2?,
     val unbookedBankTransactionMatcher: UnbookedBankTransactionMatcher?,
     val removeUnbookedTransactionMatcherId: String?,
@@ -61,7 +38,6 @@ data class RpcResponse(
     val subscriptionRemoved: Boolean? = null,
 
     val importBankTransactionsResult: ImportResult? = null,
-    val getMatchCandidatesResult: List<TransactionMatcher>? = null,
     val error: String? = null,
 )
 

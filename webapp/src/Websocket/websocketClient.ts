@@ -2,8 +2,6 @@ import {v4 as uuidv4} from 'uuid';
 import {RpcRequest, RpcResponse} from "./types/Rpc";
 import {Notify, ReadRequest} from "./types/Subscription";
 import {WebsocketMessage} from "./types/WebsocketMessage";
-import {UserView} from "./types/user";
-import {useEffect, useState} from "react";
 
 export enum ConnectionStatus {
     connected = "connected",
@@ -188,24 +186,6 @@ const WebsocketService = {
         };
     }
 };
-
-export const useUser = () => {
-    const [user, setUser] = useState<UserView>();
-
-    useEffect(() => {
-
-        const subId = WebsocketService.subscribe(
-            {type: "userInfo"},
-            n => setUser(n.readResponse.userView)
-        );
-
-        return () => WebsocketService.unsubscribe(subId);
-    }, []);
-
-    return {
-        user,
-    }
-}
 
 export default WebsocketService;
 

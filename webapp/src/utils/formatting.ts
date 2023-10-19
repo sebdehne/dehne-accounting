@@ -1,6 +1,4 @@
 import moment from "moment";
-import {CategoryDto} from "../Websocket/types/categories";
-
 
 export function formatLocalDate(m: moment.Moment) {
     return m.format('YYYY-MM-DD');
@@ -45,16 +43,6 @@ export const arrayBufferToBase64 = (buffer: ArrayBuffer ) => {
     return btoa( binary );
 };
 
-export const categoryParentsPath = (categories: CategoryDto[], parentCategoryId: string |undefined, endDelimiter: boolean = true): string => {
-    const parts: string[] = [];
-    /* eslint-disable no-loop-func */
-    let current = categories.find(c => c.id === parentCategoryId);
-    while(current) {
-        parts.unshift(current.name);
-        current = categories.find(c => c.id === current?.parentCategoryId);
-    }
-    return parts.length > 0 ? (parts.join(":") + (endDelimiter ? " > " : "")) : "";
-}
 
 export const amountInCentsToString = (amountInCentsToString: number, locale: string = "nb-NO") => {
     const formated = new Intl.NumberFormat(locale, {

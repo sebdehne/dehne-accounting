@@ -121,6 +121,8 @@ export const AddOrEditMatcherV2 = () => {
         setAccountActionPayable,
         setAccountActionReceivable,
         setUnbookedTransaction,
+        initialized,
+        matcherId,
     ]);
 
     const type: ActionType = useMemo(() => {
@@ -175,7 +177,18 @@ export const AddOrEditMatcherV2 = () => {
             }).then(() => navigate(-1))
         }
 
-    }, [matcherId, name, userStateV2?.selectedRealm, actionAccountId, actionMemo, type, accountActionPayable, accountActionReceivable, filter]);
+    }, [
+        matcherId,
+        name,
+        userStateV2?.selectedRealm,
+        actionAccountId,
+        actionMemo,
+        type,
+        accountActionPayable,
+        accountActionReceivable,
+        filter,
+        navigate
+    ]);
 
 
     return (<Container maxWidth="xs">

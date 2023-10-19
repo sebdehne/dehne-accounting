@@ -1,15 +1,14 @@
 import {Button, Container} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {Realm} from "../../Websocket/types/realm";
-import WebsocketClient, {useUser} from "../../Websocket/websocketClient";
+import WebsocketClient from "../../Websocket/websocketClient";
 import {useGlobalState} from "../../utils/userstate";
 import {useNavigate} from "react-router-dom";
 
 
 export const ChooseRealm = () => {
     const [realms, setRealms] = useState<Realm[]>();
-    const {user} = useUser();
-    const {userStateV2, setUserStateV2} = useGlobalState();
+    const {setUserStateV2} = useGlobalState();
 
     const navigate = useNavigate()
 
@@ -29,8 +28,6 @@ export const ChooseRealm = () => {
     }
 
     return (<Container maxWidth="xs" className="App">
-        {user && <h4>Welcome {user.name}</h4>}
-
         <div
             style={{
                 display: "flex",

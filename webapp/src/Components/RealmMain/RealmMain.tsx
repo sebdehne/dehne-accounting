@@ -13,6 +13,7 @@ import {toColor} from "../../utils/formatting";
 export const RealmMain = () => {
     const {userStateV2, setUserStateV2, realm} = useGlobalState();
     const [overviewRapport, setOverviewRapport] = useState<OverviewRapportAccount[]>();
+    const [totalUnbookedTransactions, setTotalUnbookedTransactions] = useState(0);
 
     const navigate = useNavigate();
 
@@ -36,7 +37,12 @@ export const RealmMain = () => {
         )
         return () => WebsocketClient.unsubscribe(sub);
     }, [setOverviewRapport]);
-
+    useEffect(() => {
+        WebsocketClient.subscribe(
+            {type: "getTotalUnbookedTransactions"},
+            notify => setTotalUnbookedTransactions(notify.readResponse.totalUnbookedTransactions!)
+        )
+    }, [setTotalUnbookedTransactions]);
 
     return (
         <Container maxWidth="xs" className="App">
@@ -44,6 +50,8 @@ export const RealmMain = () => {
                 title={"Realm: " + realm?.name ?? ""}
                 clickable={onHeaderClick}
             />
+
+            {totalUnbookedTransactions > 0 && <div className="TotalUnbookedTransactions">({totalUnbookedTransactions} unbooked transactions)</div>}
 
             <PeriodSelectorV2/>
             {overviewRapport && <OverviewRapportViewer overviewRapport={overviewRapport}/>}

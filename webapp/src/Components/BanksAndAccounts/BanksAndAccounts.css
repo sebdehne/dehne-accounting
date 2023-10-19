@@ -26,21 +26,22 @@
     align-items: end;
 }
 
-.BankAccountLeftFirst {
-    font-size: smaller;
-}
-.BankAccountLeftSecond {
+.BankAccountLeft01 {
     font-size: x-large;
     font-weight: bold;
 }
-.BankAccountLeftThird {
+.BankAccountLeft02 {
     font-size: smaller;
 }
 
-.BankAccountRightFirst {
+.BankAccountRight01 {
+    font-size: smaller;
+    color: yellow;
+}
+.BankAccountRight02 {
     font-size: x-large;
     font-weight: bold;
 }
-.BankAccountRightSecond {
+.BankAccountRight03 {
     font-size: smaller;
 }

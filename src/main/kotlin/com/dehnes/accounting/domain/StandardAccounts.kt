@@ -1,7 +1,6 @@
 package com.dehnes.accounting.domain
 
 import com.dehnes.accounting.database.AccountDto
-import com.dehnes.accounting.utils.KMyMoneyImporter
 import java.util.UUID
 
 enum class StandardAccount(

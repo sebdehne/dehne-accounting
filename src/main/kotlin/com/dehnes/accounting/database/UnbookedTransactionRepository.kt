@@ -13,9 +13,7 @@ class UnbookedTransactionRepository(
 
     fun deleteAll(conn: Connection, accountId: String) {
         conn.prepareStatement(
-            """
-            delete from unbooked_bank_transaction where account_id = ?
-        """.trimIndent()
+            "delete from unbooked_bank_transaction where account_id = ?"
         ).use { preparedStatement ->
             preparedStatement.setString(1, accountId)
             preparedStatement.executeUpdate()
@@ -38,11 +36,12 @@ class UnbookedTransactionRepository(
 
         conn.prepareStatement(
             """
-            INSERT INTO unbooked_bank_transaction (account_id, id, memo, datetime, amount_in_cents, other_account_number) VALUES (?,?,?,?,?,?)
+            INSERT INTO unbooked_bank_transaction (account_id, realm_id, id, memo, datetime, amount_in_cents, other_account_number) VALUES (?,?,?,?,?,?,?)
         """.trimIndent()
         ).use { preparedStatement ->
             val params = mutableListOf<Any>()
             params.add(unbookedTransaction.accountId)
+            params.add(unbookedTransaction.realmId)
             params.add(newId)
             params.add(unbookedTransaction.memo ?: NullString)
             params.add(unbookedTransaction.datetime)
@@ -101,23 +100,45 @@ class UnbookedTransactionRepository(
         }
     }
 
+    fun getCount(
+        conn: Connection,
+        realmId: String,
+        accountId: String?,
+    ): Long = conn.prepareStatement(
+        """
+        SELECT 
+            count(*) 
+        from 
+            unbooked_bank_transaction 
+        where realm_id = ? ${if (accountId != null) " AND account_id = ?" else ""} 
+    """.trimIndent()
+    ).use { preparedStatement ->
+        preparedStatement.setString(1, realmId)
+        if (accountId != null)
+            preparedStatement.setString(2, accountId)
+
+        preparedStatement.executeQuery().use { rs ->
+            check(rs.next())
+            rs.getLong(1)
+        }
+    }
+
     fun getUnbookedTransactions(
         conn: Connection,
         realmId: String,
         accountId: String,
         dateRangeFilter: DateRangeFilter
     ): List<UnbookedTransaction> =
-        conn.prepareStatement("""
+        conn.prepareStatement(
+            """
             SELECT * 
             FROM 
-                unbooked_bank_transaction ut,
-                 account a
-            WHERE 
-                a.id = ut.account_id 
-                AND a.realm_id = ? 
+                unbooked_bank_transaction
+            WHERE realm_id = ? 
                 AND account_id = ? 
                 AND datetime >= ? AND datetime < ?
-        """.trimIndent())
+        """.trimIndent()
+        )
             .use { preparedStatement ->
                 preparedStatement.setString(1, realmId)
                 preparedStatement.setString(2, accountId)
@@ -129,6 +150,7 @@ class UnbookedTransactionRepository(
                         l.add(
                             UnbookedTransaction(
                                 rs.getString("account_id"),
+                                rs.getString("realm_id"),
                                 rs.getLong("id"),
                                 rs.getString("memo"),
                                 rs.getTimestamp("datetime").toInstant(),
@@ -147,17 +169,16 @@ class UnbookedTransactionRepository(
         accountId: String,
         unbookedTransactionId: Long,
     ) =
-        conn.prepareStatement("""
+        conn.prepareStatement(
+            """
             SELECT * 
             FROM 
-                unbooked_bank_transaction ut, 
-                account a 
-            WHERE 
-                a.id = ut.account_id 
-                AND a.realm_id = ?
-                AND ut.account_id = ? 
-                AND ut.id = ? 
-        """.trimIndent())
+                unbooked_bank_transaction ut
+            WHERE realm_id = ?
+                AND account_id = ? 
+                AND id = ? 
+        """.trimIndent()
+        )
             .use { preparedStatement ->
                 preparedStatement.setString(1, realmId)
                 preparedStatement.setString(2, accountId)
@@ -166,6 +187,7 @@ class UnbookedTransactionRepository(
                     check(rs.next())
                     UnbookedTransaction(
                         rs.getString("account_id"),
+                        rs.getString("realm_id"),
                         rs.getLong("id"),
                         rs.getString("memo"),
                         rs.getTimestamp("datetime").toInstant(),
@@ -176,20 +198,68 @@ class UnbookedTransactionRepository(
             }
 
     fun delete(conn: Connection, accountId: String, id: Long) {
-        conn.prepareStatement("DELETE FROM unbooked_bank_transaction WHERE account_id = ? AND id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, accountId)
-            preparedStatement.setLong(2, id)
-            preparedStatement.executeUpdate()
-        }
+        conn.prepareStatement("DELETE FROM unbooked_bank_transaction WHERE account_id = ? AND id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, accountId)
+                preparedStatement.setLong(2, id)
+                preparedStatement.executeUpdate()
+            }
     }
 
 }
 
 data class UnbookedTransaction(
     val accountId: String,
+    val realmId: String,
     val id: Long,
     val memo: String?,
     val datetime: Instant,
     val amountInCents: Long,
     val otherAccountNumber: String?,
 )
+
+interface QueryFilter {
+    fun whereAndParams(): Pair<String, List<Any>>
+}
+
+interface BookingsFilter : QueryFilter
+interface BankAccountTransactionsFilter : QueryFilter
+
+class DateRangeFilter(
+    val from: Instant = Instant.MIN,
+    val toExclusive: Instant = Instant.MAX,
+) : BookingsFilter {
+    override fun whereAndParams(): Pair<String, List<Any>> {
+        return "b.datetime >= ? AND b.datetime < ?" to listOf(
+            from,
+            toExclusive
+        )
+    }
+}
+
+class AccountIdFilter(
+    private val accountId: String,
+    private val realmId: String,
+) : BookingsFilter {
+    override fun whereAndParams(): Pair<String, List<Any>> =
+        "b.id in (SELECT distinct booking_id from booking_entry WHERE realm_id = ? AND account_id = ?)" to listOf(realmId, accountId)
+}
+
+class SingleBookingFilter(
+    private val bookingId: Long,
+) : BookingsFilter {
+    override fun whereAndParams(): Pair<String, List<Any>> =
+        "b.id = ?" to listOf(bookingId)
+}
+
+class BankTxDateRangeFilter(
+    private val from: Instant = Instant.MIN,
+    private val toExclusive: Instant = Instant.MAX,
+) : BankAccountTransactionsFilter {
+    override fun whereAndParams(): Pair<String, List<Any>> {
+        return "datetime >= ? AND datetime < ?" to listOf(
+            from,
+            toExclusive
+        )
+    }
+}

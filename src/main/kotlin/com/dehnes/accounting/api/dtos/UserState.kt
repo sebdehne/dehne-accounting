@@ -2,6 +2,7 @@ package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.database.DateRangeFilter
 
+
 data class UserState(
     val frontendState: Map<String, Any>,
 )

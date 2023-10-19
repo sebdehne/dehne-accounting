@@ -5,7 +5,6 @@ import com.dehnes.accounting.datasourceSetup
 import com.dehnes.accounting.dbFile
 import com.dehnes.accounting.objectMapper
 import com.dehnes.accounting.utils.DateTimeUtils.zoneId
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -43,7 +42,7 @@ class OverviewRapportServiceTest {
         val m = UnbookedBankTransactionMatcher(
             UUID.randomUUID().toString(),
             "realmId",
-            null,
+            "name",
             AndFilters(listOf(
                 ContainsFilter("contains")
             )) ,

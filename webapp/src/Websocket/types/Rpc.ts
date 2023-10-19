@@ -1,23 +1,11 @@
 import {Subscribe, Unsubscribe} from "./Subscription";
-import {ExecuteMatcherRequest, TransactionMatcher} from "./transactionMatcher";
-import {UserState} from "../../utils/userstate";
-import {CategoryDto, MergeCategoriesRequest} from "./categories";
-import {BookingView} from "./bookings";
+import {ExecuteMatcherRequest} from "./transactionMatcher";
 import {UserStateV2} from "./UserStateV2";
-import {UnbookedBankTransactionMatcher, UnbookedBankTransactionReference} from "./unbookedTransactions";
+import {UnbookedBankTransactionMatcher} from "./unbookedTransactions";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
     | 'importBankTransactions'
-    | 'addOrReplaceMatcher'
-    | 'deleteMatcher'
-    | 'executeMatcher'
-    | 'setUserState'
-    | 'addOrReplaceBooking'
-    | 'removeBooking'
-    | 'removeLastBankTransaction'
-    | 'addOrReplaceCategory'
-    | 'mergeCategories'
     | 'setUserStateV2'
     | 'deleteAllUnbookedTransactions'
     | 'addOrReplaceUnbookedTransactionMatcher'
@@ -30,18 +18,10 @@ export type RpcRequest = {
     subscribe?: Subscribe;
     unsubscribe?: Unsubscribe;
 
-    ledgerId?: string;
-    bankAccountId?: string;
     accountId?: string;
     importBankTransactionsRequest?: ImportBankTransactionsRequest;
-    addOrReplaceMatcherRequest?: TransactionMatcher;
     executeMatcherRequest?: ExecuteMatcherRequest;
-    userState?: UserState;
     deleteMatcherId?: string;
-    bookingId?: number;
-    addOrReplaceCategory?: CategoryDto;
-    mergeCategoriesRequest?: MergeCategoriesRequest;
-    addOrReplaceBooking?: BookingView;
     userStateV2?: UserStateV2;
     unbookedBankTransactionMatcher?: UnbookedBankTransactionMatcher;
     removeUnbookedTransactionMatcherId?: string;
@@ -52,7 +32,6 @@ export type RpcResponse = {
     subscriptionRemoved?: boolean;
 
     importBankTransactionsResult?: ImportBankTransactionsResult;
-    getMatchCandidatesResult?: TransactionMatcher[];
     error?: string;
 }
 
