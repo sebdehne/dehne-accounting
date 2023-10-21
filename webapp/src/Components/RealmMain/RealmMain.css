@@ -48,13 +48,6 @@
     align-items: flex-end;
 }
 
-.LabeledNumberRow {
-    display: flex;
-    flex-direction: row;
-    margin-bottom: 20px;
-    justify-content: space-between;
-    align-items: center;
-}
 
 .TotalUnbookedTransactions {
     font-size: smaller;

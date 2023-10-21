@@ -7,11 +7,12 @@ import "./Header.css"
 
 type HeaderProps = {
     title: string;
+    subTitle?: string;
     clickable?: () => void;
     extraMenuOptions?: [string, () => void][];
 }
 
-const Header = ({title, clickable, extraMenuOptions}: HeaderProps) => {
+const Header = ({title, subTitle, clickable, extraMenuOptions}: HeaderProps) => {
     const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
     const navigate = useNavigate();
 
@@ -36,19 +37,21 @@ const Header = ({title, clickable, extraMenuOptions}: HeaderProps) => {
                     size={"small"}
                     color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>Back</Button>
             </div>
+            <div className="HeaderConnectionStatus">
+                {status === ConnectionStatus.connectedAndWorking &&
+                    <CircularProgress color="primary"/>
+                }
+                {displayStatus && <span>Server connection: {displayStatus}</span>}
+            </div>
             <div className="HeaderButtonsRight">
                 <BasicMenu extraMenuOptions={extraMenuOptions ?? []}/>
             </div>
         </div>
-        <div className="HeaderConnectionStatus">
-            {status === ConnectionStatus.connectedAndWorking &&
-                <CircularProgress color="primary"/>
-            }
-            {displayStatus && <span>Server connection: {displayStatus}</span>}
-        </div>
+
 
         {clickable && <h2 className="HeaderAsLink" onClick={clickable}>{title}</h2>}
         {!clickable && <h2 className="HeaderNoLink">{title}</h2>}
+        {subTitle && <h4 className="SubHeader">{subTitle}</h4>}
 
     </div>
 };
@@ -103,7 +106,6 @@ const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
                 }}
             >
                 <MenuItem onClick={() => onNavigate('/')}>Home</MenuItem>
-                <MenuItem onClick={() => onNavigate('/bookings')}>Bookings</MenuItem>
                 <MenuItem onClick={() => onNavigate('/bankaccounts')}>Bank accounts</MenuItem>
                 {extraMenuOptions.length > 0 && <MenuList>
                     <Divider/>

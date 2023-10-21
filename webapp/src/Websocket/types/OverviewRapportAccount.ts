@@ -8,6 +8,7 @@ export type OverviewRapportAccount = {
     closeBalance: number;
     children: OverviewRapportAccount[];
     records: OverviewRapportEntry[];
+    deepEntrySize: number;
 }
 
 export type OverviewRapportEntry = {

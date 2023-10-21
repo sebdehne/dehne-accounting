@@ -10,6 +10,7 @@ import "./RealmMain.css"
 import {Amount} from "../Amount";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import {ArrowDropDownIcon} from "@mui/x-date-pickers";
+import IconButton from "@mui/material/IconButton";
 
 export const RealmMain = () => {
     const {userStateV2, setUserStateV2, realm} = useGlobalState();
@@ -73,7 +74,6 @@ const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) =>
             {overviewRapport.map((a, index) => (<OverviewRapportViewerAccount
                 key={a.name}
                 account={a}
-                showOpen={a.name !== "Expense" && a.name !== "Income"}
                 level={0}
                 isLast={index === overviewRapport.length - 1}
             />))}
@@ -84,37 +84,36 @@ const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) =>
 
 type OverviewRapportViewerAccountProps = {
     account: OverviewRapportAccount;
-    showOpen: boolean;
     level: number;
     isLast: boolean;
 }
-const OverviewRapportViewerAccount = ({account, showOpen, level, isLast}: OverviewRapportViewerAccountProps) => {
+const OverviewRapportViewerAccount = ({account, level, isLast}: OverviewRapportViewerAccountProps) => {
     const {localState, setLocalState, accounts} = useGlobalState();
+    const navigate = useNavigate();
 
-    const overviewRapportAccounts = account.children.filter(a => a.thisPeriod > 0);
+    const overviewRapportAccounts = account.children.filter(a => a.deepEntrySize > 0);
     return (<li className="OverviewRapportViewerAccount" style={{marginLeft: (level * 5) + 'px'}}>
 
         <div
             className="OverviewRapportViewerAccountSummary"
-            onClick={() => setLocalState(prev => ({
-                ...prev,
-                accountTree: prev.accountTree.toggle(account.accountId)
-            }))}
         >
             <div className="OverviewRapportViewerAccountSummaryLevel">{!isLast && <MiddleLine/>}{isLast &&
                 <LastLine/>}</div>
             <div className="OverviewRapportViewerAccountSummaryMain">
                 <div className="OverviewRapportViewerAccountSummaryLeft">
                     {overviewRapportAccounts.length > 0 &&
-                        <div>
+                        <IconButton size={"small"} onClick={() => setLocalState(prev => ({
+                            ...prev,
+                            accountTree: prev.accountTree.toggle(account.accountId)
+                        }))}>
                             {localState.accountTree.isExpanded(account.accountId) &&
                                 <ArrowDropDownIcon fontSize={"small"}/>}
                             {!localState.accountTree.isExpanded(account.accountId) &&
                                 <ArrowRightIcon fontSize={"small"}/>}
-                        </div>
+                        </IconButton>
                     }
-                    {overviewRapportAccounts.length === 0 && <div style={{margin: '8px'}}></div>}
-                    <div>
+                    {overviewRapportAccounts.length === 0 && <div style={{margin: '12px'}}></div>}
+                    <div onClick={() => navigate('/bookings/' + account.accountId)}>
                         {accounts.getById(account.accountId).name}
                     </div>
                 </div>
@@ -133,7 +132,6 @@ const OverviewRapportViewerAccount = ({account, showOpen, level, isLast}: Overvi
                 .map((c, index) => (<OverviewRapportViewerAccount
                     key={c.name}
                     account={c}
-                    showOpen={showOpen}
                     level={level + 1}
                     isLast={index === overviewRapportAccounts.length - 1}
                 />))}
@@ -168,31 +166,5 @@ const LastLine = () => {
             strokeWidth: 2
         }}/>
     </svg>);
-}
-
-type LabeledNumberRowProps = {
-    label: string;
-    first: React.ReactNode;
-    second: React.ReactNode;
-    onClick: () => void;
-}
-const LabeledNumberRow = ({
-                              label,
-                              first,
-                              second,
-                              onClick
-                          }: LabeledNumberRowProps) => {
-
-    return (<div className="LabeledNumberRow" onClick={onClick}>
-        <div style={{width: '140px'}}>
-            {label}
-        </div>
-        <div style={{width: '120px', textAlign: "end"}}>
-            {first}
-        </div>
-        <div style={{width: '120px', textAlign: "end"}}>
-            {second}
-        </div>
-    </div>)
 }
 

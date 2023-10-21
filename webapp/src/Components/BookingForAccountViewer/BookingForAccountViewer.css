@@ -1,0 +1,37 @@
+
+.Bookings {
+    list-style-type: none;
+    padding: 0;
+}
+
+.BookingEntry {
+    display: flex;
+    flex-direction: column;
+    background-color: #252525;
+    border-radius: 15px;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+
+.BookingEntrySummary  {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.OtherEntries {
+    border-top: #a4a4a4 1px solid;
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 10px;
+    padding-top: 10px;
+    color: #a4a4a4;
+}
+
+.OtherEntry {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}

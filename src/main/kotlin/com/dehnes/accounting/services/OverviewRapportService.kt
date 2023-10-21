@@ -23,31 +23,23 @@ class OverviewRapportService(
                 conn,
                 realmId,
                 Int.MAX_VALUE,
-                listOf(
-                    DateRangeFilter(
-                        Instant.MIN,
-                        rangeFilter.from
-                    )
-                )
+                listOf(DateRangeFilter(toExclusive = rangeFilter.from))
             )
             val thisPeriodBookings = bookingRepository.getBookings(
                 conn,
                 realmId,
                 Int.MAX_VALUE,
-                listOf(
-                    rangeFilter
-                )
+                listOf(rangeFilter)
             )
 
             fun getForAccount(a: AccountDto): OverviewRapportAccount {
                 val children = allAccounts
                     .filter { it.parentAccountId == a.id }
                     .map { getForAccount(it) }
-                    .filter { it.hasValue() }
 
-                val openingBalance = openingBalanceBookings.flatMap { booking ->
-                    booking.entries.filter { it.accountId == a.id }
-                }.sumOf { it.amountInCents } + children.sumOf { it.openBalance }
+                val openingBalance = openingBalanceBookings
+                    .flatMap { it.entries.filter { it.accountId == a.id } }
+                    .sumOf { it.amountInCents } + children.sumOf { it.openBalance }
 
                 val entries = thisPeriodBookings.flatMap { booking ->
                     booking.entries.filter { it.accountId == a.id }.map { entry ->
@@ -60,7 +52,7 @@ class OverviewRapportService(
                             entry.amountInCents
                         )
                     }
-                }
+                } // where is account-payable in the rapport???
 
                 val thisPeriod = entries.sumOf { it.amountInCents } + children.sumOf { it.thisPeriod }
 
@@ -71,19 +63,15 @@ class OverviewRapportService(
                     thisPeriod,
                     openingBalance + thisPeriod,
                     children,
-                    entries
+                    entries,
+                    children.sumOf { it.deepEntrySize } + entries.size
                 )
             }
 
-
             StandardAccount.entries
                 .filter { it.parent == null }
-                .map { root ->
-                    allAccounts.first { it.name == root.name && it.parentAccountId == null }
-                }
+                .map { root -> allAccounts.first { it.id == root.toAccountId(realmId) } }
                 .map { getForAccount(it) }
-                .filter { it.hasValue() }
-
         }
 
 }
@@ -97,9 +85,8 @@ data class OverviewRapportAccount(
     val closeBalance: Long,
     val children: List<OverviewRapportAccount>,
     val records: List<OverviewRapportEntry>,
-) {
-    fun hasValue() = thisPeriod != 0L || openBalance != 0L
-}
+    val deepEntrySize: Int,
+)
 
 data class OverviewRapportEntry(
     val bookingId: Long,

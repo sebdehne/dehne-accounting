@@ -6,6 +6,13 @@
 
 .HeaderNoLink {
     text-align: center;
+    margin: 0;
+}
+
+.SubHeader {
+    margin: 0;
+    text-align: center;
+    color: #a4a4a4;
 }
 
 .Header {

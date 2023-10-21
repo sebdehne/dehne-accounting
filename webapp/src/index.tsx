@@ -21,7 +21,7 @@ import {BankTransactionsV2} from "./Components/BankTransactionsV2/BankTransactio
 import {DialogsProvider} from "./utils/dialogs";
 import {TransactionMatchingV2} from "./Components/TransactionMatchingV2/TransactionMatchingV2";
 import {AddOrEditMatcherV2} from "./Components/TransactionMatchingV2/AddOrEditMatcherV2";
-import {BookingsViewer} from "./Components/BookingsViewer/BookingsViewer";
+import {BookingForAccountViewer} from "./Components/BookingForAccountViewer/BookingForAccountViewer";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -49,7 +49,7 @@ root.render(
                                 <Route path="/matcher" element={<AddOrEditMatcherV2/>}/> {/* Add new */}
                                 <Route path="/matcher/:accountId/:txId"
                                        element={<AddOrEditMatcherV2/>}/> {/* Add new based on unbooked TX */}
-                                <Route path="/bookings/:accountId" element={<BookingsViewer/>}/> {/* Add new */}
+                                <Route path="/bookings/:accountId" element={<BookingForAccountViewer/>}/> {/* Add new */}
                             </Routes>
                         </BrowserRouter>
                     </LocalizationProvider>

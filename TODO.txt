@@ -1,5 +1,3 @@
-Home screen -> click on any account -> new screen: see bookings for this account
-
 Single booking viewer/creator/editor (and delete button)
 
 Accounts

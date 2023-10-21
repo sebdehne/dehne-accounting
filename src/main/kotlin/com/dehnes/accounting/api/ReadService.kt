@@ -187,7 +187,7 @@ class ReadService(
             getUserState -> ReadResponse(userStateV2 = userStateV2)
 
             getOverviewRapport -> {
-                ReadResponse(
+                val readResponse = ReadResponse(
                     overViewRapport = if (userStateV2?.rangeFilter != null && userStateV2.selectedRealm != null) {
                         overviewRapportService.createRapport(
                             userStateV2.selectedRealm,
@@ -195,6 +195,7 @@ class ReadService(
                         )
                     } else emptyList()
                 )
+                readResponse
             }
 
 
