@@ -1,6 +1,7 @@
 
 
 export type OverviewRapportAccount = {
+    accountId: string;
     name: string;
     openBalance: number;
     thisPeriod: number;

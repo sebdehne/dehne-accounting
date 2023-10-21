@@ -4,7 +4,7 @@ export function formatLocalDate(m: moment.Moment) {
     return m.format('YYYY-MM-DD');
 }
 
-export function formatLocatDayMonth(m: moment.Moment) {
+export function formatLocalDayMonth(m: moment.Moment) {
     return m.format('DD. MMM');
 }
 

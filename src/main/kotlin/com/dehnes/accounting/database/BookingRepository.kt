@@ -62,19 +62,19 @@ class BookingRepository(
         connection: Connection,
         realmId: String,
         limit: Int,
-        vararg filters: BookingsFilter?,
+        filters: List<BookingsFilter>,
     ): List<Booking> {
         check(limit >= 0)
 
         val params = mutableListOf<Any>()
         params.add(realmId)
 
-        val filterData = filters.filterNotNull().map { it.whereAndParams() }
+        val filterData = filters.map { it.whereAndParams() }
         val wheres = filterData.map { it.first }.joinToString(" AND ") { "($it)" }
         filterData.map { it.second }.forEach { params.addAll(it) }
 
         val finalQuery = """
-            SELECT 
+            SELECT
                 b.id, 
                 b.description, 
                 b.datetime, 
@@ -82,13 +82,13 @@ class BookingRepository(
                 be.description beDescription, 
                 be.account_id, 
                 be.amount_in_cents 
-            FROM 
+            FROM
                 booking b
-            LEFT JOIN 
+            LEFT JOIN
                 booking_entry be on b.id = be.booking_id AND b.realm_id = be.realm_id
             WHERE
                 b.realm_id = ? ${if (wheres.isNotBlank()) "AND $wheres" else ""}
-            ORDER BY b.datetime, b.id , beId
+            ORDER BY b.datetime DESC, b.id DESC, beId DESC
             LIMIT $limit
         """.trimIndent()
 

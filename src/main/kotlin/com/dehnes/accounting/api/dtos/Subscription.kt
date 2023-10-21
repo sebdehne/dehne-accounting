@@ -2,11 +2,7 @@ package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.api.*
 import com.dehnes.accounting.database.*
-import com.dehnes.accounting.services.MatchedUnbookedBankTransactionMatcher
-import com.dehnes.accounting.services.OverviewRapportAccount
-import com.dehnes.accounting.services.UnbookedBankTransactionMatcherService
-import com.dehnes.accounting.services.bank.BankAccountTransaction
-import com.dehnes.accounting.services.bank.BankWithAccounts
+import com.dehnes.accounting.services.*
 import kotlin.reflect.KClass
 
 
@@ -30,12 +26,19 @@ enum class ReadRequestType(
     getAllRealms(listOf(RealmChanged::class)),
     getUserState(listOf(UserStateUpdated::class)),
     getOverviewRapport(listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
-    getBanksAndAccountsOverview(listOf(AccountsChanged::class, BookingsChanged::class, UnbookedTransactionsChanged::class)),
+    getBanksAndAccountsOverview(
+        listOf(
+            AccountsChanged::class,
+            BookingsChanged::class,
+            UnbookedTransactionsChanged::class
+        )
+    ),
     getBankAccountTransactions(listOf(BookingsChanged::class, UnbookedTransactionsChanged::class)),
     getAllAccounts(listOf(AccountsChanged::class)),
     getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class)),
     getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class)),
     getTotalUnbookedTransactions(listOf(UnbookedTransactionsChanged::class)),
+    getBookings(listOf(BookingsChanged::class, UserStateUpdated::class)),
     ;
 
 }
@@ -59,4 +62,5 @@ data class ReadResponse(
     val unbookedBankTransactionMatchers: List<MatchedUnbookedBankTransactionMatcher>? = null,
     val unbookedTransaction: UnbookedTransaction? = null,
     val totalUnbookedTransactions: Long? = null,
+    val bookings: List<Booking>? = null,
 )

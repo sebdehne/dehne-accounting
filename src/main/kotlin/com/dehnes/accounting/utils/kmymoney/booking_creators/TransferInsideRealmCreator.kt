@@ -27,9 +27,11 @@ object TransferInsideRealmCreator : BookingCreator {
             connection,
             realmId,
             Int.MAX_VALUE,
-            DateRangeFilter(
-                datetime,
-                datetime.plusDays(1)
+            listOf(
+                DateRangeFilter(
+                    datetime,
+                    datetime.plusDays(1)
+                )
             )
         )
         val alreadyBooked = bookings.filter { b ->

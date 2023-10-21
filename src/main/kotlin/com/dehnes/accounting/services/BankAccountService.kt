@@ -1,11 +1,9 @@
-package com.dehnes.accounting.services.bank
+package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
-import com.dehnes.accounting.services.AccessRequest
-import com.dehnes.accounting.services.AuthorizationService
 import java.sql.Connection
 import java.time.Instant
 import javax.sql.DataSource
@@ -115,8 +113,10 @@ class BankAccountService(
             conn,
             realmId,
             Int.MAX_VALUE,
-            dateRangeFilter,
-            AccountIdFilter(accountId, realmId)
+            listOf(
+                dateRangeFilter,
+                AccountIdFilter(accountId, realmId)
+            )
         ).map {
             val mainEntry = it.entries.single { it.accountId == accountId }
             val otherEntry = it.entries.single { it.accountId != accountId }

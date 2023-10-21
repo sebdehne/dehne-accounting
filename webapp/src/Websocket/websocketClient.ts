@@ -1,7 +1,8 @@
 import {v4 as uuidv4} from 'uuid';
 import {RpcRequest, RpcResponse} from "./types/Rpc";
-import {Notify, ReadRequest} from "./types/Subscription";
+import {Notify, ReadRequest, ReadResponse} from "./types/Subscription";
 import {WebsocketMessage} from "./types/WebsocketMessage";
+import {sha256} from 'js-sha256';
 
 export enum ConnectionStatus {
     connected = "connected",
@@ -16,6 +17,8 @@ const ConnectionStatusSubscriptionsById: { [K: string]: (s: ConnectionStatus) =>
 let ws: WebSocket | undefined = undefined;
 let connectionStatus: ConnectionStatus = ConnectionStatus.closed;
 
+const readCache: { [key: string]: ReadResponse } = {};
+
 function subscribe(
     readRequest: ReadRequest,
     onNotify: (notify: Notify) => void) {
@@ -28,6 +31,15 @@ function subscribe(
         type: "subscribe",
         subscribe: {subscriptionId, readRequest}
     });
+
+    // proved cached data initially
+    const cacheKey = sha256(JSON.stringify(readRequest));
+    const cachedReadResponse = readCache[cacheKey];
+    if (cachedReadResponse) {
+        setTimeout(() => {
+            onNotify({subscriptionId, readResponse: cachedReadResponse})
+        }, 0);
+    }
 
     return subscriptionId;
 }
@@ -134,6 +146,10 @@ function reconnect() {
             const subId = notify.subscriptionId;
             let subscription = SubscriptionsById[subId];
             if (subscription) {
+
+                const cacheKey = sha256(JSON.stringify(subscription.readRequest));
+                readCache[cacheKey] = notify.readResponse;
+
                 subscription.onNotify(notify);
                 if (!subscription.initialNotifyReceived) {
                     subscription.initialNotifyReceived = true;

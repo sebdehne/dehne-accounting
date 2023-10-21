@@ -5,7 +5,7 @@ import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.services.*
-import com.dehnes.accounting.services.bank.BankAccountService
+import com.dehnes.accounting.services.BankAccountService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.websocket.CloseReason
@@ -72,8 +72,6 @@ class WebSocketServer : Endpoint() {
                     subscriptions[subscriptionId] = sub
                     readService.addSubscription(sub)
                 }
-
-                logger.info { "$instanceId Added subscription id=$subscriptionId" }
 
                 RpcResponse(subscriptionCreated = true)
             }

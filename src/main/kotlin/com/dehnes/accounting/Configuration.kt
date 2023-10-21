@@ -4,7 +4,7 @@ import com.dehnes.accounting.api.ReadService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.services.*
-import com.dehnes.accounting.services.bank.BankAccountService
+import com.dehnes.accounting.services.BankAccountService
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -83,7 +83,8 @@ class Configuration {
             OverviewRapportService(datasource, bookingRepository, accountsRepository),
             bankAccountService,
             accountsRepository,
-            unbookedBankTransactionMatcherService
+            unbookedBankTransactionMatcherService,
+            BookingService(datasource, bookingRepository, authorizationService)
         )
 
 

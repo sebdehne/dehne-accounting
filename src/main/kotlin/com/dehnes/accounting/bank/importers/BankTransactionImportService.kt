@@ -4,8 +4,8 @@ import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.services.AccessRequest
 import com.dehnes.accounting.services.AuthorizationService
-import com.dehnes.accounting.services.bank.BankAccountService
-import com.dehnes.accounting.services.bank.BankAccountTransaction
+import com.dehnes.accounting.services.BankAccountService
+import com.dehnes.accounting.services.BankAccountTransaction
 import com.dehnes.accounting.utils.DateTimeUtils.plusDays
 import java.io.InputStream
 import javax.sql.DataSource

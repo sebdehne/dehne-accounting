@@ -23,16 +23,20 @@ class OverviewRapportService(
                 conn,
                 realmId,
                 Int.MAX_VALUE,
-                DateRangeFilter(
-                    Instant.MIN,
-                    rangeFilter.from
+                listOf(
+                    DateRangeFilter(
+                        Instant.MIN,
+                        rangeFilter.from
+                    )
                 )
             )
             val thisPeriodBookings = bookingRepository.getBookings(
                 conn,
                 realmId,
                 Int.MAX_VALUE,
-                rangeFilter
+                listOf(
+                    rangeFilter
+                )
             )
 
             fun getForAccount(a: AccountDto): OverviewRapportAccount {
@@ -61,6 +65,7 @@ class OverviewRapportService(
                 val thisPeriod = entries.sumOf { it.amountInCents } + children.sumOf { it.thisPeriod }
 
                 return OverviewRapportAccount(
+                    a.id,
                     a.name,
                     openingBalance,
                     thisPeriod,
@@ -85,6 +90,7 @@ class OverviewRapportService(
 
 
 data class OverviewRapportAccount(
+    val accountId: String,
     val name: String,
     val openBalance: Long,
     val thisPeriod: Long,

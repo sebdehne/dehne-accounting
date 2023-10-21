@@ -2,9 +2,50 @@
 .OverviewRapportViewerAccounts {
     list-style-type: none;
     padding: 0;
+    margin: 0;
 }
 
 .OverviewRapportViewerAccount {
+    display: flex;
+    flex-direction: column;
+}
+
+.OverviewRapportViewerAccountSummary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+
+.OverviewRapportViewerAccountSummaryLevel {
+    font-size: 0;
+}
+
+.OverviewRapportViewerAccountSummaryMain {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #252525;
+    border-radius: 15px;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+    width: 100%;
+
+}
+
+
+.OverviewRapportViewerAccountSummaryLeft {
+    font-size: larger;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.OverviewRapportViewerAccountSummaryRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
 .LabeledNumberRow {

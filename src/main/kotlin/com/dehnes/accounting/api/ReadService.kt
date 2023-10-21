@@ -5,10 +5,10 @@ import com.dehnes.accounting.api.dtos.ReadRequest
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
 import com.dehnes.accounting.api.dtos.ReadResponse
 import com.dehnes.accounting.api.dtos.UserStateV2
+import com.dehnes.accounting.database.AccountIdFilter
 import com.dehnes.accounting.database.AccountsRepository
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
-import com.dehnes.accounting.services.bank.BankAccountService
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
 import java.sql.Connection
@@ -26,6 +26,7 @@ class ReadService(
     private val bankAccountService: BankAccountService,
     private val accountsRepository: AccountsRepository,
     private val unbookedBankTransactionMatcherService: UnbookedBankTransactionMatcherService,
+    private val bookingService: BookingService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -48,11 +49,13 @@ class ReadService(
     }
 
     fun addSubscription(sub: WebSocketServer.Subscription) {
+        logger.info { "Added subscription id=${sub.subscriptionId}" }
         listeners[sub.subscriptionId] = sub
         onChangelogEvent(sub.subscriptionId)
     }
 
     fun removeSubscription(subId: String) {
+        logger.info { "Removed subscription id=${subId}" }
         listeners.remove(subId)
     }
 
@@ -118,6 +121,17 @@ class ReadService(
         userStateV2: UserStateV2?,
     ): ReadResponse =
         when (readRequest.type) {
+
+            getBookings -> ReadResponse(
+                bookings = bookingService.getBookings(
+                    userId = userId,
+                    realmId = userStateV2!!.selectedRealm!!,
+                    bookingsFilters = listOf(
+                        userStateV2.rangeFilter!!,
+                        AccountIdFilter(readRequest.accountId!!, userStateV2.selectedRealm!!)
+                    )
+                )
+            )
 
             getTotalUnbookedTransactions -> ReadResponse(
                 totalUnbookedTransactions = unbookedBankTransactionMatcherService.getTotalUnbookedTransactions(

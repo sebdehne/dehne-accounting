@@ -1,15 +1,11 @@
+Home screen -> click on any account -> new screen: see bookings for this account
 
-Bookings UI
-- list/search
-- new bookings
-- remove bookings
+Single booking viewer/creator/editor (and delete button)
 
 Accounts
-- list/search
-- add new
-- edit
-- remove
-- merge
+- show tree & filter/search
+- add new / edit account
+- merge (= remove)
 
 - matcher action: procent split?
 

@@ -5,7 +5,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {BankAccountTransaction} from "../../Websocket/types/banktransactions";
 import {useGlobalState} from "../../utils/userstate";
 import WebsocketClient from "../../Websocket/websocketClient";
-import {amountInCentsToString, formatLocatDayMonth} from "../../utils/formatting";
+import {amountInCentsToString, formatLocalDayMonth} from "../../utils/formatting";
 import moment from "moment";
 import "./BankTransactionsV2.css"
 import CheckIcon from "@mui/icons-material/Check";
@@ -114,7 +114,7 @@ export const TransactionView = ({
                 <div>{amountInCentsToString(amountInCents)}</div>
             </div>
             <div className="TransactionDown">
-                <div>{formatLocatDayMonth(datetime)}</div>
+                <div>{formatLocalDayMonth(datetime)}</div>
                 {balance && <div>{amountInCentsToString(balance)}</div>}
             </div>
         </div>

@@ -3,12 +3,15 @@ import WebsocketClient from "../Websocket/websocketClient";
 import {UserStateV2} from "../Websocket/types/UserStateV2";
 import {Realm} from "../Websocket/types/realm";
 import {Accounts} from "./accounts";
+import {AccountTree, LocalState} from "../Websocket/types/localstate";
 
 type ContextType = {
     userStateV2: UserStateV2 | undefined;
     setUserStateV2: (fn: (prev: UserStateV2) => UserStateV2) => Promise<void>;
     realm: Realm | undefined;
     accounts: Accounts;
+    localState: LocalState;
+    setLocalState: (fn: (prev: LocalState) => LocalState) => void;
 }
 
 const GlobalStateProviderContext = React.createContext({} as ContextType);
@@ -20,6 +23,7 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
     const [userStateV2, setUserStateV2] = useState<UserStateV2 | undefined>();
     const [realm, setRealm] = useState<Realm>();
     const [accounts, setAccounts] = useState<Accounts>(new Accounts([]));
+    const [localState, setLocalState] = useState<LocalState>({accountTree: new AccountTree()})
 
     useEffect(() => {
         if (userStateV2?.selectedRealm) {
@@ -73,7 +77,9 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
             setUserStateV2: updateStateV2,
             userStateV2,
             realm,
-            accounts
+            accounts,
+            localState,
+            setLocalState
         }}>
             {children}
         </GlobalStateProviderContext.Provider>
@@ -88,17 +94,6 @@ export const useGlobalState = () => {
     return context;
 };
 
-
-export type BookingsState = {
-    currentPeriod: PeriodWindow;
-}
-export type LegderMainState = {
-    currentPeriod: PeriodWindow;
-}
-
-export type BankTransactionsState = {
-    currentPeriod: PeriodWindow;
-}
 
 
 export type PeriodWindowType = 'month' | 'betweenDates'

@@ -12,7 +12,7 @@ class SimpleRapportService(
 
     fun createUnauthorizedRapport(realmId: String, filter: DateRangeFilter): List<AccountWithBookings> {
         return dataSource.readTx { conn ->
-            val allBookings = bookingRepository.getBookings(conn, realmId, Int.MAX_VALUE, filter)
+            val allBookings = bookingRepository.getBookings(conn, realmId, Int.MAX_VALUE, listOf(filter))
             val allAccounts = accountsRepository.getAll(conn, realmId)
 
             fun get(a: AccountDto): AccountWithBookings {

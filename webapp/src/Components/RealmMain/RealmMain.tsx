@@ -8,7 +8,8 @@ import {OverviewRapportAccount} from "../../Websocket/types/OverviewRapportAccou
 import WebsocketClient from "../../Websocket/websocketClient";
 import "./RealmMain.css"
 import {Amount} from "../Amount";
-import {toColor} from "../../utils/formatting";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import {ArrowDropDownIcon} from "@mui/x-date-pickers";
 
 export const RealmMain = () => {
     const {userStateV2, setUserStateV2, realm} = useGlobalState();
@@ -47,11 +48,12 @@ export const RealmMain = () => {
     return (
         <Container maxWidth="xs" className="App">
             <Header
-                title={"Realm: " + realm?.name ?? ""}
+                title={realm?.name ?? ""}
                 clickable={onHeaderClick}
             />
 
-            {totalUnbookedTransactions > 0 && <div className="TotalUnbookedTransactions">({totalUnbookedTransactions} unbooked transactions)</div>}
+            {totalUnbookedTransactions > 0 &&
+                <div className="TotalUnbookedTransactions">({totalUnbookedTransactions} unbooked transactions)</div>}
 
             <PeriodSelectorV2/>
             {overviewRapport && <OverviewRapportViewer overviewRapport={overviewRapport}/>}
@@ -66,22 +68,14 @@ type OverviewRapportViewerProps = {
 }
 const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) => {
 
-    return (<div style={{paddingTop: '50px'}}>
-
-        <LabeledNumberRow
-            label={""}
-            first={<div style={{fontWeight: 'bold'}}>Open balance</div>}
-            second={<div style={{fontWeight: 'bold'}}>This period</div>}
-            onClick={() => {
-            }}
-        />
-
+    return (<div>
         <ul className="OverviewRapportViewerAccounts">
-            {overviewRapport.map(a => (<OverviewRapportViewerAccount
+            {overviewRapport.map((a, index) => (<OverviewRapportViewerAccount
                 key={a.name}
                 account={a}
                 showOpen={a.name !== "Expense" && a.name !== "Income"}
                 level={0}
+                isLast={index === overviewRapport.length - 1}
             />))}
         </ul>
     </div>)
@@ -92,32 +86,89 @@ type OverviewRapportViewerAccountProps = {
     account: OverviewRapportAccount;
     showOpen: boolean;
     level: number;
+    isLast: boolean;
 }
-const OverviewRapportViewerAccount = ({account, showOpen, level}: OverviewRapportViewerAccountProps) => {
-    const [expanded, setExpanded] = useState(false);
+const OverviewRapportViewerAccount = ({account, showOpen, level, isLast}: OverviewRapportViewerAccountProps) => {
+    const {localState, setLocalState, accounts} = useGlobalState();
 
-    return (<li className="OverviewRapportViewerAccount"
-                style={(expanded && account.children.length > 0) ? {backgroundColor: toColor(2960941 + (level * 50))} : {}}>
-        <LabeledNumberRow
-            label={account.name}
-            first={showOpen && <Amount amountInCents={account.openBalance}/>}
-            second={<Amount amountInCents={account.thisPeriod}/>}
-            onClick={() => setExpanded(!expanded)}
-        />
+    const overviewRapportAccounts = account.children.filter(a => a.thisPeriod > 0);
+    return (<li className="OverviewRapportViewerAccount" style={{marginLeft: (level * 5) + 'px'}}>
 
-        {expanded && <ul className="OverviewRapportViewerAccounts">
-            {account.children
-                .filter(c => showOpen || c.thisPeriod > 0)
-                .map(c => (<OverviewRapportViewerAccount
+        <div
+            className="OverviewRapportViewerAccountSummary"
+            onClick={() => setLocalState(prev => ({
+                ...prev,
+                accountTree: prev.accountTree.toggle(account.accountId)
+            }))}
+        >
+            <div className="OverviewRapportViewerAccountSummaryLevel">{!isLast && <MiddleLine/>}{isLast &&
+                <LastLine/>}</div>
+            <div className="OverviewRapportViewerAccountSummaryMain">
+                <div className="OverviewRapportViewerAccountSummaryLeft">
+                    {overviewRapportAccounts.length > 0 &&
+                        <div>
+                            {localState.accountTree.isExpanded(account.accountId) &&
+                                <ArrowDropDownIcon fontSize={"small"}/>}
+                            {!localState.accountTree.isExpanded(account.accountId) &&
+                                <ArrowRightIcon fontSize={"small"}/>}
+                        </div>
+                    }
+                    {overviewRapportAccounts.length === 0 && <div style={{margin: '8px'}}></div>}
+                    <div>
+                        {accounts.getById(account.accountId).name}
+                    </div>
+                </div>
+                <div className="OverviewRapportViewerAccountSummaryRight">
+                    <div style={{fontSize: "small", color: "#a8a8a8"}}><Amount
+                        amountInCents={account.openBalance}/></div>
+                    <div style={{fontSize: "larger"}}><Amount amountInCents={account.thisPeriod}/></div>
+                    <div style={{fontSize: "small", color: "#a8a8a8"}}><Amount
+                        amountInCents={account.closeBalance}/></div>
+                </div>
+            </div>
+        </div>
+
+        {localState.accountTree.isExpanded(account.accountId) && <ul className="OverviewRapportViewerAccounts">
+            {overviewRapportAccounts
+                .map((c, index) => (<OverviewRapportViewerAccount
                     key={c.name}
                     account={c}
                     showOpen={showOpen}
                     level={level + 1}
+                    isLast={index === overviewRapportAccounts.length - 1}
                 />))}
         </ul>}
     </li>)
 }
 
+const lineHeight = 110;
+const lineWidth = 14;
+const lineColor = "#252525"
+
+const MiddleLine = () => {
+    return (<svg height={lineHeight} width={lineWidth}>
+        <line x1={0} y1="0" x2={0} y2={lineHeight} style={{
+            stroke: lineColor,
+            strokeWidth: 2
+        }}/>
+        <line x1={0} y1={lineHeight / 2} x2={lineWidth} y2={lineHeight / 2} style={{
+            stroke: lineColor,
+            strokeWidth: 2
+        }}/>
+    </svg>);
+}
+const LastLine = () => {
+    return (<svg height={lineHeight} width={lineWidth}>
+        <line x1={0} y1={0} x2={0} y2={lineHeight / 2} style={{
+            stroke: lineColor,
+            strokeWidth: 2
+        }}/>
+        <line x1={0} y1={lineHeight / 2} x2={lineWidth} y2={lineHeight / 2} style={{
+            stroke: lineColor,
+            strokeWidth: 2
+        }}/>
+    </svg>);
+}
 
 type LabeledNumberRowProps = {
     label: string;
