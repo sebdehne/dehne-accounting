@@ -36,6 +36,13 @@ export class AccountExpanded {
         this.parentPath = parentPath;
     }
 
+    compare(other: AccountExpanded) {
+        const aString = this.parentPath.map(a => a.name).join() + this.account.name
+        const bString = other.parentPath.map(a => a.name).join() + other.account.name
+
+        return aString.localeCompare(bString)
+    }
+
     startsWith(path: string[]): boolean {
         let matches = true;
         path.forEach((p, index) => {

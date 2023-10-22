@@ -40,31 +40,31 @@ export const AccountSearchBox = ({
     if (currentValue === dummyItem) return null;
 
     const options = accounts.accountsExpanded
-        .filter(a => includeStartsWithPath?.length === 0 || includeStartsWithPath.some(path => a.startsWith(path)));
+        .filter(a => includeStartsWithPath?.length === 0 || includeStartsWithPath.some(path => a.startsWith(path)))
+        .sort((a, b) => a.compare(b))
+    ;
 
-    return (<div>
-        <FormControl sx={{m: 0, width: '100%'}}>
-            <Autocomplete
-                isOptionEqualToValue={(left, right) => left.account.id === right.account.id}
-                disableClearable={false}
-                onChange={(_, value) => onSelectedAccountId(
-                    value ? value.account.id : undefined
-                )}
-                options={options}
-                value={currentValue}
-                getOptionLabel={(option) => accounts.generateParentsString((option as AccountExpanded).account.id) + ' -> ' + (option as AccountExpanded).account.name}
-                renderInput={(params) => (
-                    <TextField
-                        {...params}
-                        label={title}
-                        InputProps={{
-                            ...params.InputProps,
-                            type: 'search',
-                        }}
-                    />
-                )}
-            /></FormControl>
-    </div>);
+    return (<FormControl sx={{m: 0, width: '100%'}}>
+        <Autocomplete
+            isOptionEqualToValue={(left, right) => left.account.id === right.account.id}
+            disableClearable={false}
+            onChange={(_, value) => onSelectedAccountId(
+                value ? value.account.id : undefined
+            )}
+            options={options}
+            value={currentValue}
+            getOptionLabel={(option) => accounts.generateParentsString((option as AccountExpanded).account.id) + ' -> ' + (option as AccountExpanded).account.name}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={title}
+                    InputProps={{
+                        ...params.InputProps,
+                        type: 'search',
+                    }}
+                />
+            )}
+        /></FormControl>);
 
 }
 
@@ -76,13 +76,11 @@ const dummyItem = new AccountExpanded(
     [],
 )
 
-
 export type AccountDtoTree = {
     account: AccountDto;
     children: AccountDtoTree[];
     parentPath: AccountDto[];
 }
-
 
 export type SearchableAccount = {
     account: AccountDtoTree;

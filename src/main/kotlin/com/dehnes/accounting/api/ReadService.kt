@@ -198,6 +198,14 @@ class ReadService(
                 readResponse
             }
 
+            getBooking -> ReadResponse(
+                booking = bookingService.getBooking(
+                    userId = userId,
+                    realmId = userStateV2!!.selectedRealm!!,
+                    bookingId = readRequest.getBookingId!!
+                )
+            )
+
 
         }
 }

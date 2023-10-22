@@ -1,7 +1,7 @@
 import {BankWithAccounts} from "./bankaccount";
 import {BankAccountTransaction} from "./banktransactions";
 import {Realm} from "./realm";
-import {DateRangeFilter, UserStateV2} from "./UserStateV2";
+import {UserStateV2} from "./UserStateV2";
 import {OverviewRapportAccount} from "./OverviewRapportAccount";
 import {AccountDto} from "./accounts";
 import {
@@ -35,11 +35,13 @@ export type ReadRequestType = 'getAllRealms'
     | 'getUnbookedBankTransaction'
     | 'getTotalUnbookedTransactions'
     | 'getBookings'
+    | 'getBooking'
     ;
 
 export type ReadRequest = {
     type: ReadRequestType;
     accountId?: string;
+    getBookingId?: number;
     unbookedBankTransactionReference?: UnbookedBankTransactionReference;
 }
 
@@ -54,5 +56,6 @@ export type ReadResponse = {
     unbookedTransaction?: UnbookedTransaction;
     totalUnbookedTransactions?: number;
     bookings?: Booking[];
+    booking?: Booking;
 }
 

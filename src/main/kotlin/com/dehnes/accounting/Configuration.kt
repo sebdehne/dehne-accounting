@@ -42,7 +42,7 @@ class Configuration {
         val userRepository = UserRepository(datasource, objectMapper)
         val accountsRepository = AccountsRepository(datasource, changelog)
         val realmRepository = RealmRepository(datasource, accountsRepository)
-        val bookingRepository = BookingRepository(realmRepository)
+        val bookingRepository = BookingRepository(realmRepository, changelog)
         val authorizationService = AuthorizationService(userRepository, realmRepository)
         val bankRepository = BankRepository(datasource)
         val bankAccountRepository = BankAccountRepository()
@@ -75,6 +75,7 @@ class Configuration {
             changelog,
             bookingRepository
         )
+        val bookingService = BookingService(datasource, bookingRepository, authorizationService)
         val readService = ReadService(
             executorService,
             UserStateService(datasource, userStateRepository, userService),
@@ -84,7 +85,7 @@ class Configuration {
             bankAccountService,
             accountsRepository,
             unbookedBankTransactionMatcherService,
-            BookingService(datasource, bookingRepository, authorizationService)
+            bookingService
         )
 
 
@@ -95,6 +96,7 @@ class Configuration {
         beans[BankAccountService::class] = bankAccountService
         beans[UserStateService::class] = UserStateService(datasource, userStateRepository, userService)
         beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
+        beans[BookingService::class] = bookingService
     }
 
     inline fun <reified T> getBeanNull(): T? {

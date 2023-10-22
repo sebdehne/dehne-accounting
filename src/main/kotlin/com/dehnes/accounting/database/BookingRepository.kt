@@ -1,12 +1,14 @@
 package com.dehnes.accounting.database
 
+import com.dehnes.accounting.api.BookingsChanged
 import com.dehnes.accounting.utils.SqlUtils
 import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
 
 class BookingRepository(
-    private val realmRepository: RealmRepository
+    private val realmRepository: RealmRepository,
+    private val changelog: Changelog,
 ) {
 
     fun getSum(conn: Connection, accountId: String, realmId: String, dateRangeFilter: DateRangeFilter): Long {
@@ -140,6 +142,7 @@ class BookingRepository(
         addBooking: AddBooking,
     ) {
         check(addBooking.entries.sumOf { it.amountInCents } == 0L) { "Booking entries do not sum to zero" }
+        check(addBooking.entries.isNotEmpty())
 
         val nextBookingId = realmRepository.getNextBookingId(connection, addBooking.realmId)
 
@@ -150,22 +153,24 @@ class BookingRepository(
         ).use { preparedStatement ->
             preparedStatement.setString(1, addBooking.realmId)
             preparedStatement.setLong(2, nextBookingId)
-            preparedStatement.setString(3, addBooking.description)
+            preparedStatement.setString(3, addBooking.description?.ifBlank { null })
             preparedStatement.setTimestamp(4, Timestamp.from(addBooking.datetime))
             preparedStatement.executeUpdate()
         }
 
         addBooking.entries.forEachIndexed { index, bookingEntry ->
             insertEntry(
-                connection,
-                addBooking.realmId,
-                nextBookingId,
-                index,
-                bookingEntry.description,
-                bookingEntry.accountId,
-                bookingEntry.amountInCents
+                connection = connection,
+                realmId = addBooking.realmId,
+                bookingId = nextBookingId,
+                id = index,
+                description = bookingEntry.description,
+                accountId = bookingEntry.accountId,
+                amountInCents = bookingEntry.amountInCents
             )
         }
+
+        changelog.add(BookingsChanged)
     }
 
     private fun insertEntry(
@@ -192,13 +197,66 @@ class BookingRepository(
             preparedStatement.setString(1, realmId)
             preparedStatement.setLong(2, bookingId)
             preparedStatement.setInt(3, id)
-            preparedStatement.setString(4, description)
+            preparedStatement.setString(4, description?.ifBlank { null })
             preparedStatement.setString(5, accountId)
             preparedStatement.setLong(6, amountInCents)
             preparedStatement.executeUpdate()
         }
     }
 
+    fun editBooking(
+        connection: Connection,
+        realmId: String,
+        booking: Booking
+    ) {
+        check(realmId == booking.realmId)
+        check(booking.entries.isNotEmpty())
+        check(booking.entries.sumOf { it.amountInCents } == 0L) { "Booking entries do not sum to zero" }
+
+        connection.prepareStatement("DELETE FROM booking_entry where booking_id = ? and realm_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setLong(1, booking.id)
+                preparedStatement.setString(2, realmId)
+                preparedStatement.executeUpdate()
+            }
+
+        booking.entries.forEachIndexed { index, bookingEntry ->
+            insertEntry(
+                connection,
+                realmId,
+                booking.id,
+                index,
+                bookingEntry.description,
+                bookingEntry.accountId,
+                bookingEntry.amountInCents,
+            )
+        }
+
+        connection.prepareStatement("UPDATE booking set datetime = ?, description = ? WHERE id = ? and realm_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setTimestamp(1, Timestamp.from(booking.datetime))
+                preparedStatement.setString(2, booking.description?.ifBlank { null })
+                preparedStatement.setLong(3, booking.id)
+                preparedStatement.setString(4, realmId)
+                check(preparedStatement.executeUpdate() == 1)
+            }
+
+        changelog.add(BookingsChanged)
+    }
+
+    fun deleteBooking(conn: Connection, realmId: String, bookingId: Long) {
+        conn.prepareStatement("DELETE FROM booking_entry where booking_id = ? and realm_id = ?").use { preparedStatement ->
+            preparedStatement.setLong(1, bookingId)
+            preparedStatement.setString(2, realmId)
+            preparedStatement.executeUpdate()
+        }
+        conn.prepareStatement("DELETE FROM booking where id = ? AND realm_id = ?").use { preparedStatement ->
+            preparedStatement.setLong(1, bookingId)
+            preparedStatement.setString(2, realmId)
+            preparedStatement.executeUpdate()
+        }
+        changelog.add(BookingsChanged)
+    }
 }
 
 

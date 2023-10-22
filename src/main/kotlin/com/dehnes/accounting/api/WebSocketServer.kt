@@ -28,6 +28,7 @@ class WebSocketServer : Endpoint() {
     private val readService = configuration.getBean<ReadService>()
     private val bankAccountService = configuration.getBean<BankAccountService>()
     private val userStateService = configuration.getBean<UserStateService>()
+    private val bookingService = configuration.getBean<BookingService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
     private val unbookedBankTransactionMatcherService = configuration.getBean<UnbookedBankTransactionMatcherService>()
     private val logger = KotlinLogging.logger { }
@@ -81,6 +82,24 @@ class WebSocketServer : Endpoint() {
                 subscriptions.remove(subscriptionId)?.close()
                 logger.info { "$instanceId Removed subscription id=$subscriptionId" }
                 RpcResponse(subscriptionRemoved = true)
+            }
+
+            createOrUpdateBooking -> readService.doWithNotifies {
+                bookingService.createOrUpdateBooking(
+                    user.id,
+                    userStateV2.selectedRealm!!,
+                    rpcRequest.createOrUpdateBooking!!
+                )
+                RpcResponse()
+            }
+
+            deleteBooking -> readService.doWithNotifies {
+                bookingService.deleteBooking(
+                    user.id,
+                    userStateV2.selectedRealm!!,
+                    rpcRequest.deleteBookingId!!
+                )
+                RpcResponse()
             }
 
             executeMatcherUnbookedTransactionMatcher -> readService.doWithNotifies {

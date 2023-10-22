@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from "react";
 import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
-import {Button, CircularProgress, Divider, Menu, MenuItem, MenuList} from "@mui/material";
+import {Button, CircularProgress, Divider, ListItemIcon, ListItemText, Menu, MenuItem, MenuList} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import "./Header.css"
+import AddIcon from "@mui/icons-material/Add";
 
 type HeaderProps = {
-    title: string;
+    title?: string;
     subTitle?: string;
     clickable?: () => void;
     extraMenuOptions?: [string, () => void][];
@@ -49,8 +50,8 @@ const Header = ({title, subTitle, clickable, extraMenuOptions}: HeaderProps) => 
         </div>
 
 
-        {clickable && <h2 className="HeaderAsLink" onClick={clickable}>{title}</h2>}
-        {!clickable && <h2 className="HeaderNoLink">{title}</h2>}
+        {title && clickable && <h2 className="HeaderAsLink" onClick={clickable}>{title}</h2>}
+        {title && !clickable && <h2 className="HeaderNoLink">{title}</h2>}
         {subTitle && <h4 className="SubHeader">{subTitle}</h4>}
 
     </div>
@@ -107,12 +108,20 @@ const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
             >
                 <MenuItem onClick={() => onNavigate('/')}>Home</MenuItem>
                 <MenuItem onClick={() => onNavigate('/bankaccounts')}>Bank accounts</MenuItem>
+
                 {extraMenuOptions.length > 0 && <MenuList>
                     <Divider/>
                     {extraMenuOptions.map(([name, onClick]) => (
                         <MenuItem key={name} onClick={() => onExtraClicked(onClick)}>{name}</MenuItem>
                     ))}
                 </MenuList>}
+                <Divider />
+                <MenuItem onClick={() => navigate('/booking')}>
+                    <ListItemIcon>
+                        <AddIcon/>
+                    </ListItemIcon>
+                    <ListItemText>Add booking</ListItemText>
+                </MenuItem>
             </Menu>
         </div>
     );

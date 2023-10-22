@@ -1,5 +1,3 @@
-Single booking viewer/creator/editor (and delete button)
-
 Accounts
 - show tree & filter/search
 - add new / edit account

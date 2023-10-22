@@ -10,7 +10,6 @@ import {formatLocalDayMonth} from "../../utils/formatting";
 import moment from "moment";
 import {Amount} from "../Amount";
 import {useNavigate, useParams} from "react-router-dom";
-import {AccountDto} from "../../Websocket/types/accounts";
 
 export const BookingForAccountViewer = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -62,7 +61,10 @@ const BookingViewer = ({booking, entry}: BookingViewerProps) => {
     return (<li className="BookingEntry">
         <div className="BookingEntrySummary">
             <div style={{display: "flex", flexDirection: "row"}}>
-                <div style={{marginRight: '10px'}}>{formatLocalDayMonth(moment(booking.datetime))}</div>
+                <div
+                    onClick={() => navigate('/booking/' + booking.id)}
+                    style={{marginRight: '10px'}}
+                >{formatLocalDayMonth(moment(booking.datetime))}</div>
                 <div>{booking.description ?? entry.description}</div>
             </div>
             <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={entry.amountInCents}/></div>

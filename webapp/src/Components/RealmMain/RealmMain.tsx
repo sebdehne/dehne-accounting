@@ -141,7 +141,7 @@ const OverviewRapportViewerAccount = ({account, level, isLast}: OverviewRapportV
 
 const lineHeight = 110;
 const lineWidth = 14;
-const lineColor = "#252525"
+const lineColor = "#696969"
 
 const MiddleLine = () => {
     return (<svg height={lineHeight} width={lineWidth}>

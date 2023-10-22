@@ -2,6 +2,7 @@ import {Subscribe, Unsubscribe} from "./Subscription";
 import {ExecuteMatcherRequest} from "./transactionMatcher";
 import {UserStateV2} from "./UserStateV2";
 import {UnbookedBankTransactionMatcher} from "./unbookedTransactions";
+import {Booking} from "./bookings";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
@@ -11,6 +12,8 @@ export type RequestType = "subscribe"
     | 'addOrReplaceUnbookedTransactionMatcher'
     | 'removeUnbookedTransactionMatcher'
     | 'executeMatcherUnbookedTransactionMatcher'
+    | 'createOrUpdateBooking'
+    | 'deleteBooking'
     ;
 
 export type RpcRequest = {
@@ -25,6 +28,8 @@ export type RpcRequest = {
     userStateV2?: UserStateV2;
     unbookedBankTransactionMatcher?: UnbookedBankTransactionMatcher;
     removeUnbookedTransactionMatcherId?: string;
+    deleteBookingId?: number;
+    createOrUpdateBooking?: Booking;
 }
 
 export type RpcResponse = {

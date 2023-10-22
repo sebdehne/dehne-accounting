@@ -22,6 +22,7 @@ import {DialogsProvider} from "./utils/dialogs";
 import {TransactionMatchingV2} from "./Components/TransactionMatchingV2/TransactionMatchingV2";
 import {AddOrEditMatcherV2} from "./Components/TransactionMatchingV2/AddOrEditMatcherV2";
 import {BookingForAccountViewer} from "./Components/BookingForAccountViewer/BookingForAccountViewer";
+import {BookingViewerEditor} from "./Components/BookingViewerEditor/BookingViewerEditor";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -45,11 +46,13 @@ root.render(
                                 <Route path="/bankaccount/:accountId/import" element={<BankTransactionsImporter/>}/>
                                 <Route path="/matchers" element={<TransactionMatchingV2/>}/>
                                 <Route path="/matchers/:accountId/:txId" element={<TransactionMatchingV2/>}/>
-                                <Route path="/matcher/:matcherId" element={<AddOrEditMatcherV2/>}/> {/* Edit */}
-                                <Route path="/matcher" element={<AddOrEditMatcherV2/>}/> {/* Add new */}
+                                <Route path="/matcher/:matcherId" element={<AddOrEditMatcherV2/>}/>
+                                <Route path="/matcher" element={<AddOrEditMatcherV2/>}/>
                                 <Route path="/matcher/:accountId/:txId"
-                                       element={<AddOrEditMatcherV2/>}/> {/* Add new based on unbooked TX */}
-                                <Route path="/bookings/:accountId" element={<BookingForAccountViewer/>}/> {/* Add new */}
+                                       element={<AddOrEditMatcherV2/>}/>
+                                <Route path="/bookings/:accountId" element={<BookingForAccountViewer/>}/>
+                                <Route path="/booking/:bookingId" element={<BookingViewerEditor/>}/>
+                                <Route path="/booking" element={<BookingViewerEditor/>}/>
                             </Routes>
                         </BrowserRouter>
                     </LocalizationProvider>

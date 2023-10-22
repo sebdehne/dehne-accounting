@@ -1,5 +1,5 @@
 import {FormControl, TextField} from "@mui/material";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {SxProps} from "@mui/system";
 import {Theme} from "@mui/material/styles";
 
@@ -10,14 +10,20 @@ export type AmountTextFieldProps = {
     setValue: (newValue: number) => void;
     sx?: SxProps<Theme>;
     label?: string
+    fullWidth?: boolean;
 }
 export const AmountTextField = ({
                                     initialValue,
                                     setValue,
                                     sx,
-                                    label = "Amount"
+                                    label = "Amount",
+                                    fullWidth = true
                                 }: AmountTextFieldProps) => {
     const [text, setText] = useState((initialValue / 100).toString());
+
+    useEffect(() => {
+        setText((initialValue / 100).toString())
+    }, [initialValue]);
 
     const onUpdate = (s: string | undefined) => {
         let inputString = s ?? '';
@@ -35,7 +41,7 @@ export const AmountTextField = ({
 
     const isValid = isValidAmount(text);
 
-    return (<FormControl sx={sx} fullWidth={true}>
+    return (<FormControl sx={sx} fullWidth={fullWidth}>
         <TextField
             label={label}
             error={!isValid}
