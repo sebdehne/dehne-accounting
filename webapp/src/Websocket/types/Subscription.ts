@@ -3,7 +3,7 @@ import {BankAccountTransaction} from "./banktransactions";
 import {Realm} from "./realm";
 import {UserStateV2} from "./UserStateV2";
 import {OverviewRapportAccount} from "./OverviewRapportAccount";
-import {AccountDto} from "./accounts";
+import {AccountDto, Party} from "./accounts";
 import {
     MatchedUnbookedBankTransactionMatcher,
     UnbookedBankTransactionReference,
@@ -36,6 +36,7 @@ export type ReadRequestType = 'getAllRealms'
     | 'getTotalUnbookedTransactions'
     | 'getBookings'
     | 'getBooking'
+    | 'getAllParties'
     ;
 
 export type ReadRequest = {
@@ -57,5 +58,6 @@ export type ReadResponse = {
     totalUnbookedTransactions?: number;
     bookings?: Booking[];
     booking?: Booking;
+    parties?: Party[];
 }
 

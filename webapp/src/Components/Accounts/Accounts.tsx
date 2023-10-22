@@ -91,7 +91,11 @@ const AccountViewer = ({account, level, filter, selectedAccountId, setSelectedAc
             {children.length === 0 && <div style={{margin: '10px'}}></div>}
 
             <div
-                onClick={() => setSelectedAccountId(prevState => prevState === account.account.id ? '' : account.account.id)}>
+                onClick={() => {
+                    if (!account.account.builtIn) {
+                        setSelectedAccountId(prevState => prevState === account.account.id ? '' : account.account.id);
+                    }
+                }}>
                 {account.account.name}
             </div>
 

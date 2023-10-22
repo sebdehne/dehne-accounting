@@ -3,6 +3,7 @@ package com.dehnes.accounting.database
 import com.dehnes.accounting.api.AccountsChanged
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
+import com.dehnes.accounting.domain.StandardAccount
 import mu.KotlinLogging
 import java.lang.Exception
 import java.sql.Connection
@@ -22,14 +23,16 @@ class AccountsRepository(
         preparedStatement.executeQuery().use { rs ->
             val l = mutableListOf<AccountDto>()
             while (rs.next()) {
+                val accountId = rs.getString("id")
                 l.add(
                     AccountDto(
-                        rs.getString("id"),
+                        accountId,
                         rs.getString("name"),
                         rs.getString("description"),
                         realmId,
                         rs.getString("parent_account_id"),
                         rs.getString("party_id"),
+                        StandardAccount.entries.any { it.toAccountId(realmId) == accountId }
                     )
                 )
             }
@@ -44,9 +47,8 @@ class AccountsRepository(
     }
 
     fun insert(conn: Connection, accountDto: AccountDto) {
-        try {
-            conn.prepareStatement(
-                """
+        conn.prepareStatement(
+            """
                 INSERT INTO account (
                     realm_id,
                     id,
@@ -56,18 +58,15 @@ class AccountsRepository(
                     party_id
                 ) VALUES (?,?,?,?,?,?)
             """.trimIndent()
-            ).use { preparedStatement ->
-                preparedStatement.setString(1, accountDto.realmId)
-                preparedStatement.setString(2, accountDto.id)
-                preparedStatement.setString(3, accountDto.name)
-                preparedStatement.setString(4, accountDto.description)
-                preparedStatement.setString(5, accountDto.parentAccountId)
-                preparedStatement.setString(6, accountDto.partyId)
-                preparedStatement.executeUpdate()
-                logger.info { "Inserted account $accountDto" }
-            }
-        } catch (e: Exception) {
-            throw e
+        ).use { preparedStatement ->
+            preparedStatement.setString(1, accountDto.realmId)
+            preparedStatement.setString(2, accountDto.id)
+            preparedStatement.setString(3, accountDto.name)
+            preparedStatement.setString(4, accountDto.description)
+            preparedStatement.setString(5, accountDto.parentAccountId)
+            preparedStatement.setString(6, accountDto.partyId)
+            preparedStatement.executeUpdate()
+            logger.info { "Inserted account $accountDto" }
         }
 
         changelog.add(AccountsChanged)
@@ -105,5 +104,6 @@ data class AccountDto(
     val realmId: String,
     val parentAccountId: String?,
     val partyId: String?,
+    val builtIn: Boolean,
 ) : InformationElement()
 

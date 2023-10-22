@@ -4,6 +4,7 @@ import {InformationElement} from "./InformationElement";
 export interface AccountDto extends InformationElement {
     parentAccountId?: string;
     partyId?: string;
+    builtIn: boolean;
 }
 
 export const isAccountPayable = (path: AccountDto[]): boolean => matchedPath(path, ['Liability', 'AccountPayable'])
@@ -15,7 +16,7 @@ export const isBankAccountAsset = (path: AccountDto[]): boolean => matchedPath(p
 export const isBankAccountLiability = (path: AccountDto[]): boolean => matchedPath(path, ['Liability', 'BankAccountLiability'])
 
 const matchedPath = (path: AccountDto[], expected: StandardAccount[]): boolean => {
-    const pathNames  = path.map(a => a.name);
+    const pathNames = path.map(a => a.name);
     let matches = true;
     expected.forEach((p, index) => matches = matches && pathNames[index] === p)
     return matches;
@@ -33,3 +34,8 @@ export type StandardAccount = 'Asset'
     | 'BankAccountAsset'
     | 'BankAccountLiability'
     ;
+
+
+export type Party = InformationElement & {
+    realmId: string;
+}

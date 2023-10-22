@@ -1,10 +1,7 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.api.*
-import com.dehnes.accounting.database.AccountDto
-import com.dehnes.accounting.database.Booking
-import com.dehnes.accounting.database.Realm
-import com.dehnes.accounting.database.UnbookedTransaction
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.services.*
 import kotlin.reflect.KClass
 

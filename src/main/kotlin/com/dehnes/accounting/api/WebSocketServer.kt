@@ -85,6 +85,15 @@ class WebSocketServer : Endpoint() {
                 RpcResponse(subscriptionRemoved = true)
             }
 
+            createOrUpdateAccount -> {
+                accountService.createOrUpdateAccount(
+                    user.id,
+                    userStateV2.selectedRealm!!,
+                    rpcRequest.createOrUpdateAccount!!
+                )
+                RpcResponse()
+            }
+
             mergeAccount -> readService.doWithNotifies {
                 val (_, errorMsg) = logAndGetError(logger) {
                     accountService.merge(

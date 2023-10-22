@@ -72,9 +72,10 @@ const dummyItem = new AccountExpanded(
     {
         id: 'dummy',
         name: 'dummy',
+        builtIn: true,
     },
     [],
-    []
+    [],
 )
 
 export type AccountDtoTree = {

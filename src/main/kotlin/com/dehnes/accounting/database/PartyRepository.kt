@@ -33,20 +33,15 @@ class PartyRepository(
     }
 
     fun insert(connection: Connection, party: Party) {
-        try {
-            connection.prepareStatement("""
+        connection.prepareStatement("""
             insert into party (realm_id, id, name, description) VALUES (?,?,?,?)
         """.trimIndent()).use { preparedStatement ->
-                preparedStatement.setString(1, party.realmId)
-                preparedStatement.setString(2, party.id)
-                preparedStatement.setString(3, party.name)
-                preparedStatement.setString(4, party.description)
-                preparedStatement.executeUpdate()
-                logger.info { "Imported part=$party" }
-            }
-
-        } catch (e: Exception) {
-            throw e
+            preparedStatement.setString(1, party.realmId)
+            preparedStatement.setString(2, party.id)
+            preparedStatement.setString(3, party.name)
+            preparedStatement.setString(4, party.description)
+            preparedStatement.executeUpdate()
+            logger.info { "Imported part=$party" }
         }
     }
 

@@ -1,6 +1,9 @@
-- Account: add new / edit account
+- sync party with account and drop editing party
+- account: add new / edit account
 
 - matcher action: percent split?
+
+- re-fresh all subscriptions after realm change
 
 Bank accounts:
 - add/edit

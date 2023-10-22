@@ -121,13 +121,13 @@ const MergeAccountDialogC = ({close, props}: MergeAccountDialogCProps) => {
             <DialogTitle>Merge {accounts.generateParentsString(props.sourceAccountId)} - {sourceAccount.account.name}?</DialogTitle>
 
             <DialogContent>
-                <div>Select target account to which all bookings should be moved to:</div>
+                <div style={{marginBottom: "20px"}}>Select target account to which all bookings should be moved to:</div>
                 <AccountSearchBox
                     onSelectedAccountId={accountId => setTargetAccountId(accountId)}
                     value={targetAccountId}
                     title={"Target account"}
                 />
-                <div>If the account has no children, then it is automatically removed after the merge.</div>
+                <div style={{marginTop: "20px"}}>If the account has no children, then it is automatically removed after the merge.</div>
             </DialogContent>
 
             <DialogActions>

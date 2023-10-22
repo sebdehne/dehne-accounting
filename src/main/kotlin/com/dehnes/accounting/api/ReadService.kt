@@ -27,6 +27,7 @@ class ReadService(
     private val accountsRepository: AccountsRepository,
     private val unbookedBankTransactionMatcherService: UnbookedBankTransactionMatcherService,
     private val bookingService: BookingService,
+    private val accountService: AccountService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -236,6 +237,10 @@ object AccountsChanged : ChangeLogEventTypeV2() {
 }
 
 object BookingsChanged : ChangeLogEventTypeV2() {
+    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
+}
+
+object PartiesChanged : ChangeLogEventTypeV2() {
     override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
 }
 

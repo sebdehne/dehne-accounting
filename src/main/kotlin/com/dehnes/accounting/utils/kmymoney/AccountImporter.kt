@@ -74,6 +74,7 @@ class AccountImporter(
                                 realmId,
                                 path.lastOrNull()?.id,
                                 null,
+                                false,
                             )
                         )
                         accountsRepository.insert(connection, path.last())
@@ -113,7 +114,8 @@ class AccountImporter(
                 null,
                 realmId,
                 StandardAccount.AccountPayable.toAccountId(realmId),
-                party.id
+                party.id,
+                false,
             )
 
             accountsRepository.insert(connection, accountDto)
@@ -147,7 +149,8 @@ class AccountImporter(
                 null,
                 realmId,
                 StandardAccount.AccountReceivable.toAccountId(realmId),
-                party.id
+                party.id,
+                false,
             )
 
             accountsRepository.insert(connection, accountDto)

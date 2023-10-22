@@ -35,13 +35,15 @@ class RealmRepository(
 
             StandardAccount.entries.forEach { sa ->
                 accountsRepository.insert(
-                    conn, AccountDto(
+                    conn,
+                    AccountDto(
                         sa.toAccountId(realm.id),
                         sa.name,
                         null,
                         realm.id,
                         sa.parent?.toAccountId(realm.id),
                         null,
+                        false,
                     )
                 )
             }

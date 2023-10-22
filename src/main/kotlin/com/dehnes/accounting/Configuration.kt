@@ -4,7 +4,6 @@ import com.dehnes.accounting.api.ReadService
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.services.*
-import com.dehnes.accounting.services.BankAccountService
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -76,6 +75,13 @@ class Configuration {
             bookingRepository
         )
         val bookingService = BookingService(datasource, bookingRepository, authorizationService)
+        val accountService = AccountService(
+            datasource,
+            authorizationService,
+            accountsRepository,
+            bookingRepository,
+        )
+
         val readService = ReadService(
             executorService,
             UserStateService(datasource, userStateRepository, userService),
@@ -85,7 +91,8 @@ class Configuration {
             bankAccountService,
             accountsRepository,
             unbookedBankTransactionMatcherService,
-            bookingService
+            bookingService,
+            accountService
         )
 
 
@@ -97,7 +104,7 @@ class Configuration {
         beans[UserStateService::class] = UserStateService(datasource, userStateRepository, userService)
         beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
         beans[BookingService::class] = bookingService
-        beans[AccountService::class] = AccountService(datasource, authorizationService, accountsRepository, bookingRepository)
+        beans[AccountService::class] = accountService
     }
 
     inline fun <reified T> getBeanNull(): T? {

@@ -2,6 +2,7 @@ package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.bank.importers.DuplicationHandler
 import com.dehnes.accounting.bank.importers.ImportResult
+import com.dehnes.accounting.database.AccountDto
 import com.dehnes.accounting.database.Booking
 import com.dehnes.accounting.database.UnbookedBankTransactionMatcher
 
@@ -24,6 +25,7 @@ enum class RequestType {
     deleteBooking,
 
     mergeAccount,
+    createOrUpdateAccount,
 }
 
 data class RpcRequest(
@@ -40,6 +42,7 @@ data class RpcRequest(
     val removeUnbookedTransactionMatcherId: String?,
     val deleteBookingId: Long?,
     val createOrUpdateBooking: Booking?,
+    val createOrUpdateAccount: AccountDto?,
 )
 
 data class RpcResponse(
