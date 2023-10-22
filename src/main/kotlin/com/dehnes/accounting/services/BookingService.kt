@@ -37,45 +37,44 @@ class BookingService(
         ).single()
     }
 
-    fun createOrUpdateBooking(userId: String, realmId: String, booking: Booking) {
-        dataSource.writeTx { conn ->
-            authorizationService.assertAuthorization(
+    fun createOrUpdateBooking(userId: String, realmId: String, booking: Booking) = dataSource.writeTx { conn ->
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.write
+        )
+
+        val existingBooking = bookingRepository.getBookings(
+            conn,
+            realmId,
+            Int.MAX_VALUE,
+            listOf(SingleBookingFilter(booking.id))
+        ).singleOrNull()
+
+        if (existingBooking == null) {
+            bookingRepository.insert(
                 conn,
-                userId,
-                realmId,
-                AccessRequest.write
+                AddBooking(
+                    realmId = realmId,
+                    description = booking.description,
+                    datetime = booking.datetime,
+                    entries = booking.entries.map {
+                        AddBookingEntry(
+                            description = it.description,
+                            accountId = it.accountId,
+                            amountInCents = it.amountInCents
+                        )
+                    }
+                )
             )
-
-            val existingBooking = bookingRepository.getBookings(
+        } else {
+            bookingRepository.editBooking(
                 conn,
                 realmId,
-                Int.MAX_VALUE,
-                listOf(SingleBookingFilter(booking.id))
-            ).singleOrNull()
-
-            if (existingBooking == null) {
-                bookingRepository.insert(
-                    conn,
-                    AddBooking(
-                        realmId = realmId,
-                        description = booking.description,
-                        datetime = booking.datetime,
-                        entries = booking.entries.map {
-                            AddBookingEntry(
-                                description = it.description,
-                                accountId = it.accountId,
-                                amountInCents = it.amountInCents
-                            )
-                        }
-                    )
-                )
-            } else {
-                bookingRepository.editBooking(
-                    conn,
-                    realmId,
-                    booking
-                )
-            }
+                booking
+            )
+            booking.id
         }
     }
 

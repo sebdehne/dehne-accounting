@@ -23,6 +23,8 @@ import {TransactionMatchingV2} from "./Components/TransactionMatchingV2/Transact
 import {AddOrEditMatcherV2} from "./Components/TransactionMatchingV2/AddOrEditMatcherV2";
 import {BookingForAccountViewer} from "./Components/BookingForAccountViewer/BookingForAccountViewer";
 import {BookingViewerEditor} from "./Components/BookingViewerEditor/BookingViewerEditor";
+import {Accounts} from "./Components/Accounts/Accounts";
+import {Account} from "./Components/Accounts/Account";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -39,20 +41,26 @@ root.render(
                         <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
                             <Routes>
                                 <Route path="/" element={<RealmMain/>}/>
+
                                 <Route path="/realm" element={<ChooseRealm/>}/>
 
                                 <Route path="/bankaccounts" element={<BanksAndAccounts/>}/>
                                 <Route path="/bankaccount/:accountId" element={<BankTransactionsV2/>}/>
                                 <Route path="/bankaccount/:accountId/import" element={<BankTransactionsImporter/>}/>
+
                                 <Route path="/matchers" element={<TransactionMatchingV2/>}/>
                                 <Route path="/matchers/:accountId/:txId" element={<TransactionMatchingV2/>}/>
                                 <Route path="/matcher/:matcherId" element={<AddOrEditMatcherV2/>}/>
                                 <Route path="/matcher" element={<AddOrEditMatcherV2/>}/>
-                                <Route path="/matcher/:accountId/:txId"
-                                       element={<AddOrEditMatcherV2/>}/>
+                                <Route path="/matcher/:accountId/:txId" element={<AddOrEditMatcherV2/>}/>
+
                                 <Route path="/bookings/:accountId" element={<BookingForAccountViewer/>}/>
                                 <Route path="/booking/:bookingId" element={<BookingViewerEditor/>}/>
                                 <Route path="/booking" element={<BookingViewerEditor/>}/>
+
+                                <Route path="/accounts" element={<Accounts/>}/>
+                                <Route path="/account" element={<Account/>}/>
+                                <Route path="/account/:accountId" element={<Account/>}/>
                             </Routes>
                         </BrowserRouter>
                     </LocalizationProvider>

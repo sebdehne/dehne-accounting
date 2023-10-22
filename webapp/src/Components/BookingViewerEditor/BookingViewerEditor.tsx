@@ -64,7 +64,6 @@ export const BookingViewerEditor = () => {
     }, [bookingId, setBooking]);
 
 
-
     const removeEntry = useCallback((index: number) => () => {
         setBooking(prevState => ({
             ...prevState,
@@ -104,9 +103,14 @@ export const BookingViewerEditor = () => {
             WebsocketClient.rpc({
                 type: "createOrUpdateBooking",
                 createOrUpdateBooking: booking
-            }).then(() => setEditMode(false));
+            }).then(response => {
+                if (!bookingId) {
+                    navigate('/booking/' + response.editedBookingId, {replace: true})
+                }
+                setEditMode(false);
+            });
         }
-    }, [booking, isValid, editMode]);
+    }, [booking, isValid, editMode, bookingId, navigate]);
 
     return (<Container maxWidth="xs" className="App">
         <Header/>
@@ -115,7 +119,7 @@ export const BookingViewerEditor = () => {
             {editMode && <IconButton disabled={!isValid} onClick={save}><SaveIcon/></IconButton>}
             {!editMode && <IconButton onClick={() => setEditMode(true)}><EditIcon/></IconButton>}
             {bookingId && !editMode && <IconButton onClick={deleteBooking}><DeleteIcon/></IconButton>}
-            {editMode && <IconButton onClick={() => {
+            {bookingId && editMode && <IconButton onClick={() => {
                 if (originalBooking) {
                     setBooking(clone(originalBooking));
                 }
@@ -157,10 +161,10 @@ export const BookingViewerEditor = () => {
 
         <div>
             <h4>Entries:</h4>
-            <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+            {editMode && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <Button onClick={addEntry}><AddIcon/> Add</Button>
                 {sum !== 0 && <div style={{color: "yellow"}}><Amount amountInCents={sum}/></div>}
-            </div>
+            </div>}
             {!editMode && <ul className="BookingEntries">
                 {booking.entries.map((e, index) => (
                     <EntryViewer
@@ -191,7 +195,7 @@ type EntryViewerProps = {
 const EntryViewer = ({entry}: EntryViewerProps) => {
     const {accounts} = useGlobalState();
 
-    if (!   accounts.hasData()) return null;
+    if (!accounts.hasData()) return null;
 
     return (<li className="BookingEntry">
         <div>{accounts.generateParentsString(entry.accountId)} - {accounts.getById(entry.accountId).name}</div>

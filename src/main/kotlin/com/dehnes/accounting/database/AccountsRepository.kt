@@ -88,6 +88,14 @@ class AccountsRepository(
         changelog.add(AccountsChanged)
     }
 
+    fun remove(conn: Connection, accountId: String) {
+        conn.prepareStatement("delete from account where id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, accountId)
+            preparedStatement.executeUpdate()
+        }
+        changelog.add(AccountsChanged)
+    }
+
 }
 
 data class AccountDto(

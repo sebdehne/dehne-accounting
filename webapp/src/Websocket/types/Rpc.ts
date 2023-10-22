@@ -14,6 +14,7 @@ export type RequestType = "subscribe"
     | 'executeMatcherUnbookedTransactionMatcher'
     | 'createOrUpdateBooking'
     | 'deleteBooking'
+    | 'mergeAccount'
     ;
 
 export type RpcRequest = {
@@ -22,6 +23,7 @@ export type RpcRequest = {
     unsubscribe?: Unsubscribe;
 
     accountId?: string;
+    mergeTargetAccountId?: string;
     importBankTransactionsRequest?: ImportBankTransactionsRequest;
     executeMatcherRequest?: ExecuteMatcherRequest;
     deleteMatcherId?: string;
@@ -37,6 +39,7 @@ export type RpcResponse = {
     subscriptionRemoved?: boolean;
 
     importBankTransactionsResult?: ImportBankTransactionsResult;
+    editedBookingId?: number;
     error?: string;
 }
 

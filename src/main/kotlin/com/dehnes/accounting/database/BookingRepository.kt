@@ -1,5 +1,6 @@
 package com.dehnes.accounting.database
 
+import com.dehnes.accounting.api.AccountsChanged
 import com.dehnes.accounting.api.BookingsChanged
 import com.dehnes.accounting.utils.SqlUtils
 import java.sql.Connection
@@ -140,7 +141,7 @@ class BookingRepository(
     fun insert(
         connection: Connection,
         addBooking: AddBooking,
-    ) {
+    ): Long {
         check(addBooking.entries.sumOf { it.amountInCents } == 0L) { "Booking entries do not sum to zero" }
         check(addBooking.entries.isNotEmpty())
 
@@ -171,6 +172,8 @@ class BookingRepository(
         }
 
         changelog.add(BookingsChanged)
+
+        return nextBookingId
     }
 
     private fun insertEntry(
@@ -255,6 +258,17 @@ class BookingRepository(
             preparedStatement.setString(2, realmId)
             preparedStatement.executeUpdate()
         }
+        changelog.add(BookingsChanged)
+    }
+
+    fun mergeAccount(conn: Connection, realmId: String, sourceAccountId: String, targetAccountId: String) {
+        conn.prepareStatement("UPDATE booking_entry SET account_id = ? where realm_id = ? and account_id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, targetAccountId)
+            preparedStatement.setString(2, realmId)
+            preparedStatement.setString(3, sourceAccountId)
+            preparedStatement.executeUpdate()
+        }
+
         changelog.add(BookingsChanged)
     }
 }

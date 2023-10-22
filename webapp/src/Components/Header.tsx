@@ -108,6 +108,7 @@ const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
             >
                 <MenuItem onClick={() => onNavigate('/')}>Home</MenuItem>
                 <MenuItem onClick={() => onNavigate('/bankaccounts')}>Bank accounts</MenuItem>
+                <MenuItem onClick={() => onNavigate('/accounts')}>Accounts</MenuItem>
 
                 {extraMenuOptions.length > 0 && <MenuList>
                     <Divider/>

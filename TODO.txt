@@ -1,9 +1,6 @@
-Accounts
-- show tree & filter/search
-- add new / edit account
-- merge (= remove)
+- Account: add new / edit account
 
-- matcher action: procent split?
+- matcher action: percent split?
 
 Bank accounts:
 - add/edit
@@ -18,6 +15,8 @@ User-profile:
 - change locate
 
 ==== lower priority ==== :
+- open close bank accounts
+- close periods - and prevent editing
 - bulk edit - how?
 - show general errors in client
 

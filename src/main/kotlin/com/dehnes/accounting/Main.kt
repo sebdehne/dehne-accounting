@@ -36,7 +36,7 @@ fun main() {
     handler.addServlet(ServletHolder(StaticFilesServlet()), "/*")
 
     JakartaWebSocketServletContainerInitializer.configure(handler) { _, container ->
-        container.defaultMaxSessionIdleTimeout = Duration.ofMinutes(10).toMillis()
+        container.defaultMaxSessionIdleTimeout = Duration.ofMinutes(60).toMillis()
         container.addEndpoint(
             ServerEndpointConfig.Builder
                 .create(WebSocketServer::class.java, "/api")

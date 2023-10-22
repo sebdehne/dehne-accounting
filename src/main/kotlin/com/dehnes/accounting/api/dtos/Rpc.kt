@@ -22,6 +22,8 @@ enum class RequestType {
 
     createOrUpdateBooking,
     deleteBooking,
+
+    mergeAccount,
 }
 
 data class RpcRequest(
@@ -29,6 +31,7 @@ data class RpcRequest(
     val subscribe: Subscribe?,
     val unsubscribe: Unsubscribe?,
     val accountId: String?,
+    val mergeTargetAccountId: String?,
     val importBankTransactionsRequest: ImportBankTransactionsRequest?,
     val executeMatcherRequest: ExecuteMatcherRequest?,
     val deleteMatcherId: String?,
@@ -44,6 +47,7 @@ data class RpcResponse(
     val subscriptionRemoved: Boolean? = null,
 
     val importBankTransactionsResult: ImportResult? = null,
+    val editedBookingId: Long? = null,
     val error: String? = null,
 )
 

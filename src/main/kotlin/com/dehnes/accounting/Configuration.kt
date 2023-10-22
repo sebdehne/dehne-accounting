@@ -97,6 +97,7 @@ class Configuration {
         beans[UserStateService::class] = UserStateService(datasource, userStateRepository, userService)
         beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
         beans[BookingService::class] = bookingService
+        beans[AccountService::class] = AccountService(datasource, authorizationService, accountsRepository, bookingRepository)
     }
 
     inline fun <reified T> getBeanNull(): T? {

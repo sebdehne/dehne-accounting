@@ -126,7 +126,7 @@ export const AddOrEditMatcherV2 = () => {
     ]);
 
     const type: ActionType = useMemo(() => {
-        const selectedAccount = accounts.accountsExpanded.find(a => a.account.id === actionAccountId);
+        const selectedAccount = actionAccountId ? accounts.getByIdExpanded(actionAccountId) : undefined;
 
         if (selectedAccount) {
             if (isAccountPayable(selectedAccount.parentPath)) return 'payable';
@@ -426,7 +426,7 @@ const FilterEditor = ({filter, setFilter, titlePostfix = ""}: FilterEditorProps)
                 id="demo-simple-select"
                 value={filter["@c"]}
                 label="Filter type"
-                onChange={(event, child) => changeType(event.target.value as FilterType)}
+                onChange={(event) => changeType(event.target.value as FilterType)}
             >
                 <MenuItem value={".ContainsFilter"}>ContainsFilter</MenuItem>
                 <MenuItem value={".StartsWith"}>StartsWith</MenuItem>

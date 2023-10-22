@@ -1,0 +1,12 @@
+
+.AccountsList {
+    list-style-type: none;
+    padding-left: 10px;
+}
+
+.AccountSummary {
+    font-size: larger;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}

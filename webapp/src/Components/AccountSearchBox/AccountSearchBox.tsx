@@ -25,10 +25,10 @@ export const AccountSearchBox = ({
     const {accounts} = useGlobalState();
 
     const currentValue = useMemo(() => {
-        let result = accounts.accountsExpanded.find(a => a.account.id === value);
+        let result = value ? accounts.getByIdExpanded(value) : undefined;
         if (!result) {
-            if (accounts.accountsExpanded.length > 0) {
-                result = accounts.accountsExpanded[0];
+            if (accounts.hasData()) {
+                result = accounts.flat[0];
             } else {
                 result = dummyItem;
             }
@@ -39,7 +39,7 @@ export const AccountSearchBox = ({
 
     if (currentValue === dummyItem) return null;
 
-    const options = accounts.accountsExpanded
+    const options = accounts.flat
         .filter(a => includeStartsWithPath?.length === 0 || includeStartsWithPath.some(path => a.startsWith(path)))
         .sort((a, b) => a.compare(b))
     ;
@@ -74,6 +74,7 @@ const dummyItem = new AccountExpanded(
         name: 'dummy',
     },
     [],
+    []
 )
 
 export type AccountDtoTree = {

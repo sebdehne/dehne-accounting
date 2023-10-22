@@ -3,11 +3,16 @@ import {AccountDto} from "../Websocket/types/accounts";
 
 export class Accounts {
     public accounts: AccountDto[];
-    public accountsExpanded: AccountExpanded[];
+    public tree: AccountExpanded[];
+    public flat: AccountExpanded[];
+    public byId: { [key: string]: AccountExpanded };
 
     constructor(accounts: AccountDto[]) {
         this.accounts = accounts;
-        this.accountsExpanded = accounts.map(a => buildAccountExpanded(accounts, a));
+        const [tree, flat] = buildAccountExpanded(accounts);
+        this.tree = tree;
+        this.flat = flat;
+        this.byId = Object.fromEntries(this.flat.map(a => ([a.account.id, a])));
     }
 
     hasData(): boolean {
@@ -15,12 +20,14 @@ export class Accounts {
     }
 
     getById(id: string): AccountDto {
-        return this.accounts.find(a => a.id === id)!
+        return this.byId[id].account;
+    }
+    getByIdExpanded(id: string): AccountExpanded {
+        return this.byId[id];
     }
 
     generateParentsString(id: string, separator: string = ':'): string {
-        return this.accountsExpanded
-            .find(a => a.account.id === id)!
+        return this.byId[id]
             .parentPath
             .map(a => a.name)
             .join(separator)
@@ -30,10 +37,12 @@ export class Accounts {
 export class AccountExpanded {
     public account: AccountDto;
     public parentPath: AccountDto[];
+    public children: AccountExpanded[];
 
-    constructor(account: AccountDto, parentPath: AccountDto[]) {
+    constructor(account: AccountDto, parentPath: AccountDto[], children: AccountExpanded[]) {
         this.account = account;
         this.parentPath = parentPath;
+        this.children = children;
     }
 
     compare(other: AccountExpanded) {
@@ -41,6 +50,20 @@ export class AccountExpanded {
         const bString = other.parentPath.map(a => a.name).join() + other.account.name
 
         return aString.localeCompare(bString)
+    }
+
+    filteredChildren(filter: string): AccountExpanded[] | undefined {
+        if (filter) {
+            const filteredChildren = this.children.filter(c => c.filteredChildren(filter) !== undefined)
+
+            if (filteredChildren.length > 0 || this.account.name.toLowerCase().includes(filter.toLowerCase())) {
+                return filteredChildren;
+            } else {
+                return undefined;
+            }
+        } else {
+            return this.children;
+        }
     }
 
     startsWith(path: string[]): boolean {
@@ -52,7 +75,7 @@ export class AccountExpanded {
     }
 }
 
-const buildAccountExpanded = (accounts: AccountDto[], account: AccountDto): AccountExpanded => {
+const buildAccountExpanded = (accounts: AccountDto[]): AccountExpanded[][] => {
 
     function findParents(account: AccountDto, path: AccountDto[]): AccountDto[] {
         if (!account.parentAccountId) return path;
@@ -60,8 +83,19 @@ const buildAccountExpanded = (accounts: AccountDto[], account: AccountDto): Acco
         return findParents(parent, [parent, ...path]);
     }
 
-    return new AccountExpanded(
-        account,
-        findParents(account, [])
-    );
+    const flatList: AccountExpanded[] = [];
+
+    function buildChild(account: AccountDto): AccountExpanded {
+        let accountExpanded = new AccountExpanded(
+            account,
+            findParents(account, []),
+            accounts.filter(a => a.parentAccountId === account.id).map(a => buildChild(a))
+        );
+        flatList.unshift(accountExpanded);
+        return accountExpanded
+    }
+
+    const roots = accounts.filter(a => !a.parentAccountId).map(a => buildChild(a));
+
+    return [roots, flatList];
 }
