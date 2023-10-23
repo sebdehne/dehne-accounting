@@ -68,7 +68,7 @@ type OverviewRapportViewerProps = {
     overviewRapport: OverviewRapportAccount[]
 }
 const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) => {
-    const [onlyIfThisPeriod, setOnlyIfThisPeriod] = useState(false);
+    const [onlyIfThisPeriod, setOnlyIfThisPeriod] = useState(true);
 
     return (<div>
         <div style={{display: "flex", flexDirection: "row", justifyContent: "flex-end"}}>
