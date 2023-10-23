@@ -1,3 +1,5 @@
+- do not double book transfers, which are imported on each account
+
 - matcher action: percent split?
 - re-fresh all subscriptions after realm change
 

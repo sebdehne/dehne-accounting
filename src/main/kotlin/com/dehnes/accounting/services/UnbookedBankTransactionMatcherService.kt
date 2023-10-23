@@ -88,7 +88,7 @@ class UnbookedBankTransactionMatcherService(
                                     entry.value
                                 )
                             )
-                            acc + entry.value
+                            acc - entry.value
                         }
                     splits.add(
                         AddBookingEntry(
