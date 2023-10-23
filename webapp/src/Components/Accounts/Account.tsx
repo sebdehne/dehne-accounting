@@ -24,7 +24,7 @@ export const Account = () => {
 
     useEffect(() => {
         if (accounts.hasData() && accountId) {
-            setAccount(accounts.getById(accountId))
+            setAccount(accounts.getById(accountId)!)
         }
     }, [accounts.hasData(), accountId]);
 

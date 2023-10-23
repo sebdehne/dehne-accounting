@@ -38,6 +38,7 @@ export const MatcherView = ({matcher, buttons, initialCollapsed = false}: Matche
         ? accounts.getById((matcher.action as AccountAction).mainAccountId!)
         : undefined;
 
+    if (!account) return null;
 
     return (<div className="MatcherView" onClick={() => setCollapsed(!collapsed)}>
         <div className="MatcherViewSummary">

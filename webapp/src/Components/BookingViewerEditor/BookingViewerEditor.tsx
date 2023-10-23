@@ -198,7 +198,7 @@ const EntryViewer = ({entry}: EntryViewerProps) => {
     if (!accounts.hasData()) return null;
 
     return (<li className="BookingEntry">
-        <div>{accounts.generateParentsString(entry.accountId)} - {accounts.getById(entry.accountId).name}</div>
+        <div>{accounts.generateParentsString(entry.accountId)} - {accounts.getById(entry.accountId)!.name}</div>
         <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
             <div>{entry.description ?? ''}</div>
             <Amount amountInCents={entry.amountInCents}/>

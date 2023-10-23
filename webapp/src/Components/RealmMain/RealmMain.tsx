@@ -92,6 +92,9 @@ const OverviewRapportViewerAccount = ({account, level, isLast}: OverviewRapportV
     const navigate = useNavigate();
 
     const overviewRapportAccounts = account.children.filter(a => a.deepEntrySize > 0);
+
+    if (!accounts.hasData()) return null;
+
     return (<li className="OverviewRapportViewerAccount" style={{marginLeft: (level * 5) + 'px'}}>
 
         <div
@@ -114,7 +117,7 @@ const OverviewRapportViewerAccount = ({account, level, isLast}: OverviewRapportV
                     }
                     {overviewRapportAccounts.length === 0 && <div style={{margin: '12px'}}></div>}
                     <div onClick={() => navigate('/bookings/' + account.accountId)}>
-                        {accounts.getById(account.accountId).name}
+                        {accounts.getById(account.accountId)!.name}
                     </div>
                 </div>
                 <div className="OverviewRapportViewerAccountSummaryRight">

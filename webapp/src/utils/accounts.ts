@@ -19,8 +19,8 @@ export class Accounts {
         return this.accounts.length > 0;
     }
 
-    getById(id: string): AccountDto {
-        return this.byId[id].account;
+    getById(id: string): AccountDto | undefined {
+        return this.byId[id]?.account;
     }
     getByIdExpanded(id: string): AccountExpanded {
         return this.byId[id];

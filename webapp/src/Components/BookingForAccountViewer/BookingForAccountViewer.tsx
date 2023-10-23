@@ -32,7 +32,8 @@ export const BookingForAccountViewer = () => {
         let sumNegative = 0;
 
         bookings.forEach(b => {
-            const e = b.entries.find(e => e.accountId === accountId)!;
+            const e = b.entries.find(e => e.accountId === accountId);
+            if (!e) return;
             if (e.amountInCents > 0) {
                 sumPositive += e.amountInCents;
             } else {
@@ -48,7 +49,7 @@ export const BookingForAccountViewer = () => {
 
     return (<Container maxWidth="xs" className="App">
         <Header
-            title={accountId ? accounts.getById(accountId).name : ''}
+            title={accountId ? accounts.getById(accountId)!.name : ''}
             subTitle={accountId ? accounts.generateParentsString(accountId) : ''}
         />
 
@@ -103,7 +104,7 @@ const BookingViewer = ({booking, entry}: BookingViewerProps) => {
         <ul className="OtherEntries">
             {otherEntries.map(e => (<li key={e.id} className="OtherEntry">
                 <div
-                    onClick={() => navigate('/bookings/' + e.accountId)}>{accounts.generateParentsString(e.accountId)} - {accounts.getById(e.accountId).name}</div>
+                    onClick={() => navigate('/bookings/' + e.accountId)}>{accounts.generateParentsString(e.accountId)} - {accounts.getById(e.accountId)!.name}</div>
                 {otherEntries.length > 1 && <Amount amountInCents={e.amountInCents}/>}
             </li>))}
         </ul>

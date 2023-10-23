@@ -315,6 +315,8 @@ const AccountActionEditor = ({accounts, value, setValue, title, type}: AccountAc
 
     const canAddSplit = !!addingSplitAccountId;
 
+    if (!accounts.hasData()) return null;
+
     return <BorderedSection title={title}>
         <AccountSearchBox
             onSelectedAccountId={a => setValue(prevState => ({
@@ -332,7 +334,7 @@ const AccountActionEditor = ({accounts, value, setValue, title, type}: AccountAc
         {Object.keys(value.additionalSplits).length > 0 && <ul className="ExtraSplits">
             {Object.entries(value.additionalSplits).map(([accountId, amount]) => (
                 <li key={accountId} className="ExtraSplit">
-                    <div>{accounts.getById(accountId).name}</div>
+                    <div>{accounts.getById(accountId)!.name}</div>
                     <div><Amount amountInCents={amount}/></div>
                     <Button onClick={() => removeSplit(accountId)}><DeleteIcon/></Button>
                 </li>))}
