@@ -1,4 +1,8 @@
+- do not auto-hide accounts in Home-screen, rather have a toggle-switch
+- clickable TX in BankAccount Transactions
+- when merging/deleting accounts -> remove matchers!
 - do not double book transfers, which are imported on each account
+- slow performance
 
 - matcher action: percent split?
 - re-fresh all subscriptions after realm change

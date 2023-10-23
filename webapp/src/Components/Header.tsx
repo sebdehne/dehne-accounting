@@ -28,7 +28,7 @@ const Header = ({title, subTitle, clickable, extraMenuOptions}: HeaderProps) => 
     let displayStatus: string | undefined = undefined;
 
     if (connectionStatusAndError.status === ConnectionStatus.closed || connectionStatusAndError.status === ConnectionStatus.connecting) {
-        displayStatus = "Server connection: " + connectionStatusAndError;
+        displayStatus = "Server connection: " + connectionStatusAndError.status;
     } else if (connectionStatusAndError.status === ConnectionStatus.connectedAndWorking) {
         displayStatus = "executing...";
     }
