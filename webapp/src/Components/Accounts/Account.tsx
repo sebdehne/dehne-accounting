@@ -1,7 +1,7 @@
 import {Button, Container, TextField} from "@mui/material";
 import Header from "../Header";
 import {useGlobalState} from "../../utils/userstate";
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import "./Account.css"
 import {useEffect, useState} from "react";
 import {AccountDto} from "../../Websocket/types/accounts";
@@ -11,13 +11,15 @@ import WebsocketClient from "../../Websocket/websocketClient";
 
 export const Account = () => {
     const {accountId} = useParams();
+    let [searchParams, setSearchParams] = useSearchParams();
     const {accounts} = useGlobalState();
     const [account, setAccount] = useState<AccountDto>({
         builtIn: false,
-        parentAccountId: '',
+        parentAccountId: searchParams.get('parentAccountId') ?? '',
         name: "",
         partyId: undefined,
         id: accountId ?? uuidv4(),
+        realmId: ""
     });
 
     useEffect(() => {
@@ -59,7 +61,7 @@ export const Account = () => {
                 if (accountId1) {
                     setAccount(prevState => ({
                         ...prevState,
-                        parentAccountId: accountId
+                        parentAccountId: accountId1
                     }));
                 }
             }}

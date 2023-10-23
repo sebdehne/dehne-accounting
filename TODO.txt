@@ -1,8 +1,4 @@
-- sync party with account and drop editing party
-- account: add new / edit account
-
 - matcher action: percent split?
-
 - re-fresh all subscriptions after realm change
 
 Bank accounts:
@@ -21,7 +17,6 @@ User-profile:
 - open close bank accounts
 - close periods - and prevent editing
 - bulk edit - how?
-- show general errors in client
 
 - easy installation
 - docker?

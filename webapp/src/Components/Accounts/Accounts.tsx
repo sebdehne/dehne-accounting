@@ -13,6 +13,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import MergeIcon from '@mui/icons-material/Merge';
 import {useDialogs} from "../../utils/dialogs";
 import WebsocketClient from "../../Websocket/websocketClient";
+import AddIcon from "@mui/icons-material/Add";
+import ListIcon from '@mui/icons-material/List';
 
 export const Accounts = () => {
     const {accounts} = useGlobalState();
@@ -91,17 +93,18 @@ const AccountViewer = ({account, level, filter, selectedAccountId, setSelectedAc
             {children.length === 0 && <div style={{margin: '10px'}}></div>}
 
             <div
-                onClick={() => {
-                    if (!account.account.builtIn) {
-                        setSelectedAccountId(prevState => prevState === account.account.id ? '' : account.account.id);
-                    }
-                }}>
+                onClick={() => setSelectedAccountId(prevState => prevState === account.account.id ? '' : account.account.id)}>
                 {account.account.name}
             </div>
 
             {selectedAccountId === account.account.id && <ButtonGroup>
-                <IconButton onClick={() => navigate('/account/' + account.account.id)}><EditIcon/></IconButton>
-                <IconButton onClick={merge}><MergeIcon/></IconButton>
+                <IconButton
+                    onClick={() => navigate('/account?parentAccountId=' + account.account.id)}><AddIcon/></IconButton>
+                {!account.account.builtIn &&
+                    <IconButton onClick={() => navigate('/account/' + account.account.id)}><EditIcon/></IconButton>}
+                {!account.account.builtIn && <IconButton onClick={merge}><MergeIcon/></IconButton>}
+                <IconButton
+                    onClick={() => navigate('/bookings/' + account.account.id)}><ListIcon/></IconButton>
             </ButtonGroup>}
         </div>
 

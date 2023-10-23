@@ -63,126 +63,123 @@ class WebSocketServer : Endpoint() {
         }
 
         val rpcRequest = websocketMessage.rpcRequest!!
-        val response: RpcResponse = when (rpcRequest.type) {
-            subscribe -> readService.doWithNotifies {
-                val subscribe = rpcRequest.subscribe!!
-                val subscriptionId = subscribe.subscriptionId
 
-                synchronized(subscriptions) {
-                    subscriptions[subscriptionId]?.close()
-                    val sub = Subscription(subscriptionId, argSession, user.id, subscribe.readRequest, sessionId)
-                    subscriptions[subscriptionId] = sub
-                    readService.addSubscription(sub)
+
+        val (response, error) = logAndGetError(logger) {
+            when (rpcRequest.type) {
+                subscribe -> readService.doWithNotifies {
+                    val subscribe = rpcRequest.subscribe!!
+                    val subscriptionId = subscribe.subscriptionId
+
+                    synchronized(subscriptions) {
+                        subscriptions[subscriptionId]?.close()
+                        val sub = Subscription(subscriptionId, argSession, user.id, subscribe.readRequest, sessionId)
+                        subscriptions[subscriptionId] = sub
+                        readService.addSubscription(sub)
+                    }
+
+                    RpcResponse(subscriptionCreated = true)
                 }
 
-                RpcResponse(subscriptionCreated = true)
-            }
+                unsubscribe -> {
+                    val subscriptionId = rpcRequest.unsubscribe!!.subscriptionId
+                    subscriptions.remove(subscriptionId)?.close()
+                    logger.info { "$instanceId Removed subscription id=$subscriptionId" }
+                    RpcResponse(subscriptionRemoved = true)
+                }
 
-            unsubscribe -> {
-                val subscriptionId = rpcRequest.unsubscribe!!.subscriptionId
-                subscriptions.remove(subscriptionId)?.close()
-                logger.info { "$instanceId Removed subscription id=$subscriptionId" }
-                RpcResponse(subscriptionRemoved = true)
-            }
+                createOrUpdateAccount -> readService.doWithNotifies {
+                    accountService.createOrUpdateAccount(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.createOrUpdateAccount!!
+                    )
+                    RpcResponse()
+                }
 
-            createOrUpdateAccount -> {
-                accountService.createOrUpdateAccount(
-                    user.id,
-                    userStateV2.selectedRealm!!,
-                    rpcRequest.createOrUpdateAccount!!
-                )
-                RpcResponse()
-            }
-
-            mergeAccount -> readService.doWithNotifies {
-                val (_, errorMsg) = logAndGetError(logger) {
+                mergeAccount -> readService.doWithNotifies {
                     accountService.merge(
                         user.id,
                         userStateV2.selectedRealm!!,
                         rpcRequest.accountId!!,
                         rpcRequest.mergeTargetAccountId!!
                     )
+                    RpcResponse()
                 }
-                RpcResponse(error = errorMsg)
-            }
 
-            createOrUpdateBooking -> readService.doWithNotifies {
-                val id = bookingService.createOrUpdateBooking(
-                    user.id,
-                    userStateV2.selectedRealm!!,
-                    rpcRequest.createOrUpdateBooking!!
-                )
-                RpcResponse(editedBookingId = id)
-            }
+                createOrUpdateBooking -> readService.doWithNotifies {
+                    val id = bookingService.createOrUpdateBooking(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.createOrUpdateBooking!!
+                    )
+                    RpcResponse(editedBookingId = id)
+                }
 
-            deleteBooking -> readService.doWithNotifies {
-                bookingService.deleteBooking(
-                    user.id,
-                    userStateV2.selectedRealm!!,
-                    rpcRequest.deleteBookingId!!
-                )
-                RpcResponse()
-            }
+                deleteBooking -> readService.doWithNotifies {
+                    bookingService.deleteBooking(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.deleteBookingId!!
+                    )
+                    RpcResponse()
+                }
 
-            executeMatcherUnbookedTransactionMatcher -> readService.doWithNotifies {
-                unbookedBankTransactionMatcherService.executeMatcher(
-                    user.id,
-                    userStateV2.selectedRealm!!,
-                    rpcRequest.executeMatcherRequest!!
-                )
-                RpcResponse()
-            }
+                executeMatcherUnbookedTransactionMatcher -> readService.doWithNotifies {
+                    unbookedBankTransactionMatcherService.executeMatcher(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.executeMatcherRequest!!
+                    )
+                    RpcResponse()
+                }
 
-            removeUnbookedTransactionMatcher -> readService.doWithNotifies {
-                unbookedBankTransactionMatcherService.removeMatcher(
-                    user.id,
-                    userStateV2.selectedRealm!!,
-                    rpcRequest.removeUnbookedTransactionMatcherId!!
-                )
-                RpcResponse()
-            }
+                removeUnbookedTransactionMatcher -> readService.doWithNotifies {
+                    unbookedBankTransactionMatcherService.removeMatcher(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.removeUnbookedTransactionMatcherId!!
+                    )
+                    RpcResponse()
+                }
 
-            addOrReplaceUnbookedTransactionMatcher -> readService.doWithNotifies {
-                unbookedBankTransactionMatcherService.addOrReplaceMatcher(
-                    user.id,
-                    userStateV2.selectedRealm!!,
-                    rpcRequest.unbookedBankTransactionMatcher!!
-                )
-                RpcResponse()
-            }
+                addOrReplaceUnbookedTransactionMatcher -> readService.doWithNotifies {
+                    unbookedBankTransactionMatcherService.addOrReplaceMatcher(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.unbookedBankTransactionMatcher!!
+                    )
+                    RpcResponse()
+                }
 
-            deleteAllUnbookedTransactions -> readService.doWithNotifies {
-                bankAccountService.deleteAllUnbookedTransactions(
-                    user.id,
-                    userStateV2.selectedRealm!!,
-                    rpcRequest.accountId!!
-                )
-                RpcResponse()
-            }
+                deleteAllUnbookedTransactions -> readService.doWithNotifies {
+                    bankAccountService.deleteAllUnbookedTransactions(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.accountId!!
+                    )
+                    RpcResponse()
+                }
 
-            setUserStateV2 -> readService.doWithNotifies {
-                check(rpcRequest.userStateV2!!.id == userStateV2.id)
-                userStateService.setUserStateV2(user.id, rpcRequest.userStateV2)
-                RpcResponse()
-            }
+                setUserStateV2 -> readService.doWithNotifies {
+                    check(rpcRequest.userStateV2!!.id == userStateV2.id)
+                    userStateService.setUserStateV2(user.id, rpcRequest.userStateV2)
+                    RpcResponse()
+                }
 
-            importBankTransactions -> readService.doWithNotifies {
-                val request = rpcRequest.importBankTransactionsRequest!!
+                importBankTransactions -> readService.doWithNotifies {
+                    val request = rpcRequest.importBankTransactionsRequest!!
 
-                val (result, errorMsg) = logAndGetError(logger) {
-                    bankTransactionImportService.doImport(
+                    RpcResponse(importBankTransactionsResult = bankTransactionImportService.doImport(
                         user.id,
                         userStateV2.selectedRealm!!,
                         request.accountId,
                         ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
                         request.filename,
                         request.duplicationHandlerType.duplicationHandler
-                    )
+                    ))
                 }
-
-                RpcResponse(importBankTransactionsResult = result, error = errorMsg)
             }
-
         }
 
         argSession.basicRemote.sendText(
@@ -191,7 +188,11 @@ class WebSocketServer : Endpoint() {
                     websocketMessage.id,
                     WebsocketMessageType.rpcResponse,
                     null,
-                    response,
+                    if (error != null) {
+                        RpcResponse(error = error)
+                    } else {
+                        response
+                    },
                     null
                 )
             )

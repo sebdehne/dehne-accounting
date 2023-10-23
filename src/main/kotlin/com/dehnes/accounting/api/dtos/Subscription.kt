@@ -1,7 +1,10 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.api.*
-import com.dehnes.accounting.database.*
+import com.dehnes.accounting.database.AccountDto
+import com.dehnes.accounting.database.Booking
+import com.dehnes.accounting.database.Realm
+import com.dehnes.accounting.database.UnbookedTransaction
 import com.dehnes.accounting.services.*
 import kotlin.reflect.KClass
 
@@ -30,10 +33,16 @@ enum class ReadRequestType(
         listOf(
             AccountsChanged::class,
             BookingsChanged::class,
-            UnbookedTransactionsChanged::class
+            UnbookedTransactionsChanged::class,
         )
     ),
-    getBankAccountTransactions(listOf(BookingsChanged::class, UnbookedTransactionsChanged::class)),
+    getBankAccountTransactions(
+        listOf(
+            BookingsChanged::class,
+            UnbookedTransactionsChanged::class,
+            UserStateUpdated::class,
+        )
+    ),
     getAllAccounts(listOf(AccountsChanged::class)),
     getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class)),
     getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class)),

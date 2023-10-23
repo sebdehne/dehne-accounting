@@ -32,7 +32,6 @@ enum class TransactionType(
 }
 
 class KMyMoneyImporter2(
-    private val partyRepository: PartyRepository,
     private val bankRepository: BankRepository,
     private val bankAccountRepository: BankAccountRepository,
     private val accountsRepository: AccountsRepository,
@@ -61,7 +60,6 @@ class KMyMoneyImporter2(
             accountIdMapping,
             realmId,
             accountsRepository,
-            partyRepository,
             kMyMoneyRoot.getAllPayees(),
             payeeNameToAccountsReceivableAccount,
             defaultPayeeName,

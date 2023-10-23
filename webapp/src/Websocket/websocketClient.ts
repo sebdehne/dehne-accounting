@@ -11,11 +11,20 @@ export enum ConnectionStatus {
     closed = "closed"
 }
 
+export type ConnectionStatusAndError = {
+    status: ConnectionStatus;
+    error?: string | undefined;
+}
+
+
 const OngoingRPCsById: { [K: string]: Rpc } = {}
 const SubscriptionsById: { [K: string]: Subscription } = {};
-const ConnectionStatusSubscriptionsById: { [K: string]: (s: ConnectionStatus) => void } = {};
+const ConnectionStatusSubscriptionsById: { [K: string]: (s: ConnectionStatusAndError) => void } = {};
 let ws: WebSocket | undefined = undefined;
-let connectionStatus: ConnectionStatus = ConnectionStatus.closed;
+let connectionStatusWithError: ConnectionStatusAndError = {
+    status: ConnectionStatus.closed
+};
+
 
 const readCache: { [key: string]: ReadResponse } = {};
 
@@ -62,9 +71,10 @@ function unsubscribe(subscriptionId: string) {
 
 function rpc(rpcRequest: RpcRequest): Promise<RpcResponse> {
     const msgId = uuidv4();
-    return new Promise<RpcResponse>((resolve) => {
+    return new Promise<RpcResponse>((resolve, reject) => {
         const rpc = new Rpc(
             resolve,
+            reject,
             {
                 id: msgId,
                 type: "rpcRequest",
@@ -79,9 +89,9 @@ function rpc(rpcRequest: RpcRequest): Promise<RpcResponse> {
 }
 
 function send(msg: WebsocketMessage) {
-    if (connectionStatus === ConnectionStatus.closed) {
+    if (connectionStatusWithError.status === ConnectionStatus.closed) {
         reconnect();
-    } else if (connectionStatus === ConnectionStatus.connected || connectionStatus === ConnectionStatus.connectedAndWorking) {
+    } else if (connectionStatusWithError.status === ConnectionStatus.connected || connectionStatusWithError.status === ConnectionStatus.connectedAndWorking) {
         try {
             ws?.send(JSON.stringify(msg));
         } catch (e) {
@@ -90,12 +100,25 @@ function send(msg: WebsocketMessage) {
     }
 }
 
+function setError(error: string | undefined) {
+    connectionStatusWithError = ({
+        ...connectionStatusWithError,
+        error
+    });
+    Object.values(ConnectionStatusSubscriptionsById).forEach((value) => {
+        value(connectionStatusWithError);
+    });
+}
+
 function setConnectionStatusChanged(newState: ConnectionStatus) {
-    const oldState = connectionStatus;
-    connectionStatus = newState;
-    if (oldState !== connectionStatus) {
+    const oldState = connectionStatusWithError.status;
+    connectionStatusWithError = ({
+        ...connectionStatusWithError,
+        status: newState,
+    });
+    if (oldState !== newState) {
         Object.values(ConnectionStatusSubscriptionsById).forEach((value) => {
-            value(newState);
+            value(connectionStatusWithError);
         });
     }
 }
@@ -139,7 +162,15 @@ function reconnect() {
             let ongoingRPC = OngoingRPCsById[json.id];
             if (ongoingRPC) {
                 delete OngoingRPCsById[json.id];
-                ongoingRPC.resolve(json.rpcResponse!!);
+
+                if (json.rpcResponse?.error) {
+                    setError(
+                        json.rpcResponse.error
+                    )
+                    //ongoingRPC.reject(json.rpcResponse.error)
+                } else {
+                    ongoingRPC.resolve(json.rpcResponse!!);
+                }
             }
         } else if (json.type === "notify") {
             let notify = json.notify!!;
@@ -193,15 +224,17 @@ const WebsocketService = {
     rpc,
     subscribe,
     unsubscribe,
-    monitorConnectionStatus: (fn: (connectionStatis: ConnectionStatus) => void): () => void => {
+    clearError: () => setError(undefined),
+    monitorConnectionStatus: (fn: (status: ConnectionStatusAndError) => void): () => void => {
         const id = uuidv4();
         ConnectionStatusSubscriptionsById[id] = fn;
-        fn(connectionStatus);
+        fn(connectionStatusWithError);
         return () => {
             delete ConnectionStatusSubscriptionsById[id];
         };
     }
 };
+
 
 export default WebsocketService;
 
@@ -213,9 +246,15 @@ export type Subscription = {
 
 class Rpc {
     public resolve: (rpcResponse: RpcResponse) => void;
+    public reject: (error: string) => void;
     public msg: WebsocketMessage;
 
-    public constructor(resolve: (rpcResponse: RpcResponse) => void, msg: WebsocketMessage) {
+    public constructor(
+        resolve: (rpcResponse: RpcResponse) => void,
+        reject: (error: string) => void,
+        msg: WebsocketMessage
+    ) {
+        this.reject = reject;
         this.resolve = resolve;
         this.msg = msg;
     }

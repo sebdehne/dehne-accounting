@@ -5,7 +5,6 @@ import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.domain.StandardAccount
 import mu.KotlinLogging
-import java.lang.Exception
 import java.sql.Connection
 import javax.sql.DataSource
 
@@ -31,7 +30,6 @@ class AccountsRepository(
                         rs.getString("description"),
                         realmId,
                         rs.getString("parent_account_id"),
-                        rs.getString("party_id"),
                         StandardAccount.entries.any { it.toAccountId(realmId) == accountId }
                     )
                 )
@@ -54,9 +52,8 @@ class AccountsRepository(
                     id,
                     name,
                     description,
-                    parent_account_id,
-                    party_id
-                ) VALUES (?,?,?,?,?,?)
+                    parent_account_id
+                ) VALUES (?,?,?,?,?)
             """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setString(1, accountDto.realmId)
@@ -64,7 +61,6 @@ class AccountsRepository(
             preparedStatement.setString(3, accountDto.name)
             preparedStatement.setString(4, accountDto.description)
             preparedStatement.setString(5, accountDto.parentAccountId)
-            preparedStatement.setString(6, accountDto.partyId)
             preparedStatement.executeUpdate()
             logger.info { "Inserted account $accountDto" }
         }
@@ -74,13 +70,12 @@ class AccountsRepository(
 
     fun updateAccount(conn: Connection, accountDto: AccountDto) {
         conn.prepareStatement("""
-            UPDATE account set parent_account_id = ?, name = ?, description = ?, party_id = ? WHERE id = ?
+            UPDATE account set parent_account_id = ?, name = ?, description = ? WHERE id = ?
         """.trimIndent()).use { preparedStatement ->
             preparedStatement.setString(1, accountDto.parentAccountId)
             preparedStatement.setString(2, accountDto.name)
             preparedStatement.setString(3, accountDto.description)
-            preparedStatement.setString(4, accountDto.partyId)
-            preparedStatement.setString(5, accountDto.id)
+            preparedStatement.setString(4, accountDto.id)
             preparedStatement.executeUpdate()
         }
 
@@ -103,7 +98,6 @@ data class AccountDto(
     override val description: String?,
     val realmId: String,
     val parentAccountId: String?,
-    val partyId: String?,
     val builtIn: Boolean,
 ) : InformationElement()
 

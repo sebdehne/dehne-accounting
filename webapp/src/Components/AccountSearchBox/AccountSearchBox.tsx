@@ -73,6 +73,7 @@ const dummyItem = new AccountExpanded(
         id: 'dummy',
         name: 'dummy',
         builtIn: true,
+        realmId: ""
     },
     [],
     [],

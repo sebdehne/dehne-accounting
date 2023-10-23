@@ -5,7 +5,7 @@ import WebsocketClient from "../../Websocket/websocketClient";
 import {BankAccountViewV2, BankWithAccounts} from "../../Websocket/types/bankaccount";
 import "./BanksAndAccounts.css"
 import {Amount} from "../Amount";
-import {formatLocalDate} from "../../utils/formatting";
+import {formatLocalDate, formatLocalDayMonthYear} from "../../utils/formatting";
 import moment from "moment";
 import {useNavigate} from "react-router-dom";
 
@@ -43,7 +43,7 @@ export const BanksAndAccounts = () => {
                 <div className="BankAccountRight">
                     {bAccount.totalUnbooked > 0 && <div className="BankAccountRight01">Unbooked: {bAccount.totalUnbooked}</div>}
                     <div className="BankAccountRight02"><Amount amountInCents={bAccount.balance}/></div>
-                    <div className="BankAccountRight03">{formatLocalDate(moment(bAccount.lastKnownTransactionDate))}</div>
+                    <div className="BankAccountRight03">{formatLocalDayMonthYear(moment(bAccount.lastKnownTransactionDate))}</div>
 
                 </div>
             </li>))}

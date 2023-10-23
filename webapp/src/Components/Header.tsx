@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
-import WebsocketService, {ConnectionStatus} from "../Websocket/websocketClient";
-import {Button, CircularProgress, Divider, ListItemIcon, ListItemText, Menu, MenuItem, MenuList} from "@mui/material";
+import WebsocketService from "../Websocket/websocketClient";
+import WebsocketClient, {ConnectionStatus, ConnectionStatusAndError} from "../Websocket/websocketClient";
+import {Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem, MenuList} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import "./Header.css"
@@ -14,17 +15,22 @@ type HeaderProps = {
 }
 
 const Header = ({title, subTitle, clickable, extraMenuOptions}: HeaderProps) => {
-    const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.connecting);
+    const [connectionStatusAndError, setConnectionStatusAndError] = useState<ConnectionStatusAndError>({
+        status: ConnectionStatus.connecting
+    });
     const navigate = useNavigate();
 
     useEffect(() =>
-        WebsocketService.monitorConnectionStatus((status: ConnectionStatus) => {
-            setStatus(status);
+        WebsocketService.monitorConnectionStatus((status: ConnectionStatusAndError) => {
+            setConnectionStatusAndError(status);
         }), []);
 
     let displayStatus: string | undefined = undefined;
-    if (status === ConnectionStatus.closed || status === ConnectionStatus.connecting) {
-        displayStatus = status;
+
+    if (connectionStatusAndError.status === ConnectionStatus.closed || connectionStatusAndError.status === ConnectionStatus.connecting) {
+        displayStatus = "Server connection: " + connectionStatusAndError;
+    } else if (connectionStatusAndError.status === ConnectionStatus.connectedAndWorking) {
+        displayStatus = "executing...";
     }
 
     const goBack = () => {
@@ -39,10 +45,12 @@ const Header = ({title, subTitle, clickable, extraMenuOptions}: HeaderProps) => 
                     color="primary" variant="contained" onClick={goBack}><ArrowBackIcon/>Back</Button>
             </div>
             <div className="HeaderConnectionStatus">
-                {status === ConnectionStatus.connectedAndWorking &&
-                    <CircularProgress color="primary"/>
-                }
-                {displayStatus && <span>Server connection: {displayStatus}</span>}
+                {connectionStatusAndError.error &&
+                    <span
+                        style={{color: "red", fontSize: "larger"}}
+                        onClick={() => WebsocketClient.clearError()}
+                    >{connectionStatusAndError.error}</span>}
+                {displayStatus && <span>{displayStatus}</span>}
             </div>
             <div className="HeaderButtonsRight">
                 <BasicMenu extraMenuOptions={extraMenuOptions ?? []}/>
@@ -116,7 +124,7 @@ const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
                         <MenuItem key={name} onClick={() => onExtraClicked(onClick)}>{name}</MenuItem>
                     ))}
                 </MenuList>}
-                <Divider />
+                <Divider/>
                 <MenuItem onClick={() => navigate('/booking')}>
                     <ListItemIcon>
                         <AddIcon/>

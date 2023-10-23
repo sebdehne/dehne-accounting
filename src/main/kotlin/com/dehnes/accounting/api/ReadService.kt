@@ -71,12 +71,12 @@ class ReadService(
     private fun sendOutNotifies(changeEvent: Collection<ChangeEvent>) {
         val compressed = changeEvent.toSet()
 
-        executorService.submit(wrap(logger) {
+        compressed.forEach { changeEvent ->
 
-            val cache = mutableMapOf<String, UserStateV2?>()
+            executorService.submit(wrap(logger) {
 
-            dataSource.readTx { conn ->
-                compressed.forEach { changeEvent ->
+
+                dataSource.readTx { conn ->
 
                     listeners.values
                         .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
@@ -87,9 +87,8 @@ class ReadService(
                         }
                         .forEach { sub ->
 
-                            val userState = cache.getOrPut(sub.userId) {
-                                userStateService.getUserStateV2(conn, sub.sessionId)
-                            }
+
+                            val userState = userStateService.getUserStateV2(conn, sub.sessionId)
 
                             try {
                                 sub.onEvent(
@@ -106,13 +105,18 @@ class ReadService(
                             } catch (e: Throwable) {
                                 logger.error(e) { "" }
                             }
+
                         }
 
+
+
+
                 }
-            }
 
 
-        })
+
+            })
+        }
     }
 
     fun handleRequest(
@@ -165,7 +169,10 @@ class ReadService(
             })
 
             getBanksAndAccountsOverview -> ReadResponse(
-                banksAndAccountsOverview = bankAccountService.getOverview(userId, userStateV2!!.selectedRealm!!)
+                banksAndAccountsOverview = bankAccountService.getOverview(
+                    userId,
+                    userStateV2!!.selectedRealm!!
+                )
             )
 
             getBankAccountTransactions -> ReadResponse(

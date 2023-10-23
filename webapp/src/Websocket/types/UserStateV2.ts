@@ -1,10 +1,10 @@
 
-export type periodType = 'month';
+export type PeriodType = 'month' | 'all';
 
 export type UserStateV2 = {
     selectedRealm?: string;
     rangeFilter?: DateRangeFilter;
-    periodType?: periodType;
+    periodType?: PeriodType;
 }
 
 export type DateRangeFilter = {

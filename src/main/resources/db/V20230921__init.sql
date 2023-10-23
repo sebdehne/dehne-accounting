@@ -56,11 +56,9 @@ create table account
     name              text not null,
     description       text,
     parent_account_id text,
-    party_id          text,
     primary key (id),
     foreign key (realm_id) references realm (id),
-    foreign key (parent_account_id) references account (id),
-    foreign key (party_id) references party (id)
+    foreign key (parent_account_id) references account (id)
 );
 create unique index account_idx1 on account (realm_id, name, parent_account_id);
 
@@ -148,12 +146,3 @@ create table user_state_session
 );
 
 
-create table party
-(
-    realm_id    text not null,
-    id          text not null,
-    name        text not null,
-    description text,
-    primary key (id),
-    foreign key (realm_id) references realm (id)
-)

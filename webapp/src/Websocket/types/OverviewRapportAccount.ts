@@ -7,15 +7,6 @@ export type OverviewRapportAccount = {
     thisPeriod: number;
     closeBalance: number;
     children: OverviewRapportAccount[];
-    records: OverviewRapportEntry[];
     deepEntrySize: number;
 }
 
-export type OverviewRapportEntry = {
-    bookingId: number;
-    bookingEntryId: number;
-    bookingDescription?: string;
-    bookingEntryDescription?: string;
-    datetime: string;
-    amountInCents: number;
-}

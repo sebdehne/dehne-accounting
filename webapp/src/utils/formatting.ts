@@ -8,6 +8,10 @@ export function formatLocalDayMonth(m: moment.Moment) {
     return m.format('DD. MMM');
 }
 
+export function formatLocalDayMonthYear(m: moment.Moment) {
+    return m.format('DD. MMM YYYY');
+}
+
 export function formatYearMonth(m: moment.Moment) {
     return m.format('MMMM, YYYY');
 }

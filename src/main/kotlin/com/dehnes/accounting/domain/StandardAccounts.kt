@@ -1,7 +1,7 @@
 package com.dehnes.accounting.domain
 
 import com.dehnes.accounting.database.AccountDto
-import java.util.UUID
+import java.util.*
 
 enum class StandardAccount(
     val parent: StandardAccount? = null
@@ -26,7 +26,6 @@ enum class StandardAccount(
         null,
         realmId,
         parent?.toAccountId(realmId),
-        null,
         true
     )
 

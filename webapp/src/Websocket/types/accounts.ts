@@ -5,6 +5,7 @@ export interface AccountDto extends InformationElement {
     parentAccountId?: string;
     partyId?: string;
     builtIn: boolean;
+    realmId: string;
 }
 
 export const isAccountPayable = (path: AccountDto[]): boolean => matchedPath(path, ['Liability', 'AccountPayable'])

@@ -2,8 +2,6 @@ package com.dehnes.accounting.utils.kmymoney
 
 import com.dehnes.accounting.database.AccountDto
 import com.dehnes.accounting.database.AccountsRepository
-import com.dehnes.accounting.database.Party
-import com.dehnes.accounting.database.PartyRepository
 import com.dehnes.accounting.domain.StandardAccount
 import com.dehnes.accounting.kmymoney.AccountIdMapping
 import com.dehnes.accounting.kmymoney.KMyMoneyUtils
@@ -15,7 +13,6 @@ class AccountImporter(
     private val accountIdMapping: AccountIdMapping,
     private val realmId: String,
     private val accountsRepository: AccountsRepository,
-    private val partyRepository: PartyRepository,
     private val allPayees: List<KMyMoneyUtils.Payee>,
     private val payeeNameToAccountsReceivableAccount: Map<String, String>,
     private val defaultPayeeName: String,
@@ -73,7 +70,6 @@ class AccountImporter(
                                 null,
                                 realmId,
                                 path.lastOrNull()?.id,
-                                null,
                                 false,
                             )
                         )
@@ -100,21 +96,13 @@ class AccountImporter(
         return accountsPayableAlreadyImported.getOrPut(payeeId) {
 
             val payee = allPayees.first { it.id == payeeId }
-            val party = partyRepository.get(connection, payee.id.deterministicId(realmId)) ?: run {
-                val party = Party(
-                    payee.id.deterministicId(realmId), payee.name, null, realmId
-                )
-                partyRepository.insert(connection, party)
-                party
-            }
 
             val accountDto = AccountDto(
-                party.id.deterministicId(realmId, "AccountPayable"),
-                party.name,
+                payee.id.deterministicId(realmId, "AccountPayable"),
+                payee.name,
                 null,
                 realmId,
                 StandardAccount.AccountPayable.toAccountId(realmId),
-                party.id,
                 false,
             )
 
@@ -135,21 +123,14 @@ class AccountImporter(
         return accountsReceivableAlreadyImported.getOrPut(payeeId) {
 
             val payee = allPayees.first { it.id == payeeId }
-            val party = partyRepository.get(connection, payee.id.deterministicId(realmId)) ?: run {
-                val party = Party(
-                    payee.id.deterministicId(realmId), payee.name, null, realmId
-                )
-                partyRepository.insert(connection, party)
-                party
-            }
+
 
             val accountDto = AccountDto(
-                party.id.deterministicId(realmId, "AccountReceivable"),
-                party.name,
+                payee.id.deterministicId(realmId, "AccountReceivable"),
+                payee.name,
                 null,
                 realmId,
                 StandardAccount.AccountReceivable.toAccountId(realmId),
-                party.id,
                 false,
             )
 

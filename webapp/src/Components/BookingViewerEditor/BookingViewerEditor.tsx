@@ -3,7 +3,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {useCallback, useEffect, useState} from "react";
 import {Booking, BookingEntry} from "../../Websocket/types/bookings";
 import moment from "moment";
-import {formatIso, formatLocalDayMonth} from "../../utils/formatting";
+import {formatIso, formatLocalDayMonthYear} from "../../utils/formatting";
 import WebsocketClient from "../../Websocket/websocketClient";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
@@ -154,7 +154,7 @@ export const BookingViewerEditor = () => {
             </FormControl>}
             {!editMode && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <div>Date:</div>
-                <div>{formatLocalDayMonth(moment(booking.datetime))}</div>
+                <div>{formatLocalDayMonthYear(moment(booking.datetime))}</div>
             </div>}
 
         </div>

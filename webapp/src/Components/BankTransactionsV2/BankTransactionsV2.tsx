@@ -5,7 +5,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {BankAccountTransaction} from "../../Websocket/types/banktransactions";
 import {useGlobalState} from "../../utils/userstate";
 import WebsocketClient from "../../Websocket/websocketClient";
-import {amountInCentsToString, formatLocalDayMonth} from "../../utils/formatting";
+import {amountInCentsToString} from "../../utils/formatting";
 import moment from "moment";
 import "./BankTransactionsV2.css"
 import CheckIcon from "@mui/icons-material/Check";
@@ -13,13 +13,13 @@ import IconButton from "@mui/material/IconButton";
 import InputIcon from "@mui/icons-material/Input";
 import {PeriodSelectorV2} from "../PeriodSelectors/PeriodSelector";
 import {useDialogs} from "../../utils/dialogs";
+import {DateViewer} from "../PeriodSelectors/DateViewer";
 
 export const BankTransactionsV2 = () => {
     const {accountId} = useParams();
     const [transactions, setTransactions] = useState<BankAccountTransaction[]>([]);
     const {accounts} = useGlobalState();
 
-    const account = accounts.getById(accountId!);
 
     useEffect(() => {
         if (accountId) {
@@ -47,6 +47,10 @@ export const BankTransactionsV2 = () => {
             header: "Delete all unbooked transactions?",
         })
     }
+
+    if (!accounts.hasData()) return null;
+
+    const account = accounts.getById(accountId!);
 
     return (<Container maxWidth="xs">
         <Header title={account?.name ?? 'Transactions for...'} extraMenuOptions={[
@@ -114,7 +118,7 @@ export const TransactionView = ({
                 <div>{amountInCentsToString(amountInCents)}</div>
             </div>
             <div className="TransactionDown">
-                <div>{formatLocalDayMonth(datetime)}</div>
+                <DateViewer date={datetime}/>
                 {balance && <div>{amountInCentsToString(balance)}</div>}
             </div>
         </div>
