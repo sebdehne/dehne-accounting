@@ -14,6 +14,7 @@ import InputIcon from "@mui/icons-material/Input";
 import {PeriodSelectorV2} from "../PeriodSelectors/PeriodSelector";
 import {useDialogs} from "../../utils/dialogs";
 import {DateViewer} from "../PeriodSelectors/DateViewer";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export const BankTransactionsV2 = () => {
     const {accountId} = useParams();
@@ -70,6 +71,7 @@ export const BankTransactionsV2 = () => {
                     memo={transaction.memo}
                     datetime={moment(transaction.datetime)}
                     unbookedId={transaction.unbookedReference?.unbookedId}
+                    bookingId={transaction.bookingReference?.bookingId}
                 />
             </li>))}
         </ul>
@@ -82,7 +84,8 @@ export type TransactionViewProps = {
     showRightAccountId?: string;
     otherAccountName?: string;
     balance?: number;
-    unbookedId?: number;
+    unbookedId: number | undefined;
+    bookingId: number | undefined;
     amountInCents: number;
     memo: string | undefined;
     datetime: moment.Moment;
@@ -92,11 +95,13 @@ export const TransactionView = ({
                                     otherAccountName,
                                     balance,
                                     unbookedId,
+                                    bookingId,
                                     amountInCents,
                                     memo,
                                     datetime
                                 }: TransactionViewProps) => {
     const navigate = useNavigate();
+    const {showConfirmationDialog} = useDialogs();
 
     const formatText = useCallback((text: string | undefined) => {
         if (text?.includes("T0000")) return ""
@@ -107,9 +112,28 @@ export const TransactionView = ({
         navigate('/matchers/' + showRightAccountId + '/' + txId);
     }
 
-    return (<div className="TransactionV2">
+    const deleteUnbookedTx = (txId: number) => {
+        if (showRightAccountId) {
+            showConfirmationDialog({
+                header: "Delete unbooked transaction?",
+                content: "Are you sure? This cannot be undone",
+                onConfirmed: () => {
+                    WebsocketClient.rpc({
+                        type: "deleteUnbookedTransaction",
+                        accountId: showRightAccountId,
+                        deleteUnbookedBankTransactionId: txId
+                    })
+                }
+            })
+        }
+    }
 
-        <div className="TransactionLeft">
+    return (<div className="TransactionV2">
+        <div className="TransactionLeft" onClick={() => {
+            if (bookingId !== unbookedId) {
+                navigate("/booking/" + bookingId);
+            }
+        }}>
             <div className="TransactionUp">
                 {otherAccountName &&
                     <div>{otherAccountName} {formatText(memo)}</div>}
@@ -123,12 +147,11 @@ export const TransactionView = ({
             </div>
         </div>
         {showRightAccountId && <div className="TransactionRight">
-            {!unbookedId && <div style={{color: "lightgreen"}}><CheckIcon/></div>}
-            {unbookedId && <div style={{width: '24px', height: '30px'}}>
-                <IconButton onClick={() => book(unbookedId)}>
-                    <InputIcon fontSize="inherit"/>
-                </IconButton>
-            </div>}
+            {!unbookedId &&
+                <div style={{color: "lightgreen", width: "40px", display: "flex", justifyContent: "flex-end"}}>
+                    <CheckIcon/></div>}
+            {unbookedId && <IconButton onClick={() => book(unbookedId)}><InputIcon/></IconButton>}
+            {unbookedId && <IconButton onClick={() => deleteUnbookedTx(unbookedId)}><DeleteIcon/></IconButton>}
         </div>}
 
 

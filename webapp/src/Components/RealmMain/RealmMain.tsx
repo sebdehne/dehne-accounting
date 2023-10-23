@@ -1,5 +1,5 @@
 import Header from "../Header";
-import {Container} from "@mui/material";
+import {Container, FormControlLabel, Switch} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {useGlobalState} from "../../utils/userstate";
 import {useNavigate} from "react-router-dom";
@@ -68,14 +68,20 @@ type OverviewRapportViewerProps = {
     overviewRapport: OverviewRapportAccount[]
 }
 const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) => {
+    const [onlyIfThisPeriod, setOnlyIfThisPeriod] = useState(false);
 
     return (<div>
+        <div style={{display: "flex", flexDirection: "row", justifyContent: "flex-end"}}>
+            <FormControlLabel control={<Switch value={onlyIfThisPeriod} onChange={(event, checked) => setOnlyIfThisPeriod(checked)} />} label="Hide empty" labelPlacement={"start"}/>
+        </div>
+
         <ul className="OverviewRapportViewerAccounts">
             {overviewRapport.map((a, index) => (<OverviewRapportViewerAccount
                 key={a.name}
                 account={a}
                 level={0}
                 isLast={index === overviewRapport.length - 1}
+                filter={a => onlyIfThisPeriod ? a.thisPeriod !== 0 : true}
             />))}
         </ul>
     </div>)
@@ -86,12 +92,13 @@ type OverviewRapportViewerAccountProps = {
     account: OverviewRapportAccount;
     level: number;
     isLast: boolean;
+    filter: (a: OverviewRapportAccount) => boolean;
 }
-const OverviewRapportViewerAccount = ({account, level, isLast}: OverviewRapportViewerAccountProps) => {
+const OverviewRapportViewerAccount = ({account, level, isLast, filter}: OverviewRapportViewerAccountProps) => {
     const {localState, setLocalState, accounts} = useGlobalState();
     const navigate = useNavigate();
 
-    const overviewRapportAccounts = account.children.filter(a => a.deepEntrySize > 0);
+    const overviewRapportAccounts = account.children.filter(filter);
 
     if (!accounts.hasData()) return null;
 
@@ -137,6 +144,7 @@ const OverviewRapportViewerAccount = ({account, level, isLast}: OverviewRapportV
                     account={c}
                     level={level + 1}
                     isLast={index === overviewRapportAccounts.length - 1}
+                    filter={filter}
                 />))}
         </ul>}
     </li>)

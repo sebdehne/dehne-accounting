@@ -57,10 +57,31 @@ class UnbookedBankTransactionMatcherRepository(
     }
 
     fun remove(conn: Connection, matcherId: String, realmId: String) {
-        conn.prepareStatement("DELETE FROM unbooked_bank_transaction_matcher where  id = ? AND realm_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, matcherId)
-            preparedStatement.setString(2, realmId)
-            preparedStatement.executeUpdate()
+        conn.prepareStatement("DELETE FROM unbooked_bank_transaction_matcher where  id = ? AND realm_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, matcherId)
+                preparedStatement.setString(2, realmId)
+                preparedStatement.executeUpdate()
+            }
+    }
+
+    fun removeForAccountId(conn: Connection, realmId: String, accountId: String) {
+        getAll(conn, realmId).filter {
+            if (it.actionAccountId == accountId) return@filter true
+
+            if (it.action is AccountAction) {
+                it.action.mainAccountId == accountId || it.action.additionalSplits.entries.any {
+                    it.key == accountId
+                }
+            } else {
+                false
+            }
+        }.forEach { m ->
+            remove(
+                conn,
+                m.id,
+                realmId
+            )
         }
     }
 }

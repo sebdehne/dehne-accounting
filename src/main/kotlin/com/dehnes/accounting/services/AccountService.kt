@@ -1,8 +1,6 @@
 package com.dehnes.accounting.services
 
-import com.dehnes.accounting.database.AccountDto
-import com.dehnes.accounting.database.AccountsRepository
-import com.dehnes.accounting.database.BookingRepository
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.StandardAccount
 import java.util.*
@@ -13,6 +11,7 @@ class AccountService(
     private val authorizationService: AuthorizationService,
     private val accountsRepository: AccountsRepository,
     private val bookingRepository: BookingRepository,
+    private val unbookedBankTransactionMatcherRepository: UnbookedBankTransactionMatcherRepository,
 ) {
 
     fun merge(
@@ -28,6 +27,12 @@ class AccountService(
                 userId,
                 realmId,
                 AccessRequest.owner
+            )
+
+            unbookedBankTransactionMatcherRepository.removeForAccountId(
+                conn,
+                realmId,
+                sourceAccountId,
             )
 
             bookingRepository.mergeAccount(

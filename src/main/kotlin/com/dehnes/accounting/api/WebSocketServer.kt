@@ -160,6 +160,15 @@ class WebSocketServer : Endpoint() {
                     )
                     RpcResponse()
                 }
+                deleteUnbookedTransaction -> readService.doWithNotifies {
+                    bankAccountService.deleteUnbookedTransaction(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.accountId!!,
+                        rpcRequest.deleteUnbookedBankTransactionId!!,
+                    )
+                    RpcResponse()
+                }
 
                 setUserStateV2 -> readService.doWithNotifies {
                     check(rpcRequest.userStateV2!!.id == userStateV2.id)

@@ -32,13 +32,13 @@ export const BookingForAccountViewer = () => {
         let sumNegative = 0;
 
         bookings.forEach(b => {
-            const e = b.entries.find(e => e.accountId === accountId);
-            if (!e) return;
-            if (e.amountInCents > 0) {
-                sumPositive += e.amountInCents;
-            } else {
-                sumNegative += e.amountInCents;
-            }
+            b.entries.filter(e => e.accountId === accountId).forEach(e => {
+                if (e.amountInCents > 0) {
+                    sumPositive += e.amountInCents;
+                } else {
+                    sumNegative += e.amountInCents;
+                }
+            });
         });
 
         return [sumPositive, sumNegative, sumPositive + sumNegative]
@@ -71,8 +71,11 @@ export const BookingForAccountViewer = () => {
         </div>
 
         {accountId && <ul className="Bookings">
-            {bookings.map(b => (
-                <BookingViewer key={b.id} booking={b} entry={b.entries.find(e => e.accountId === accountId)}/>))}
+            {bookings
+                .flatMap(b => b.entries.filter(e => e.accountId === accountId).map(e => [b, e]))
+                .map(([b, e]) => (
+                    <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry}/>
+                ))}
         </ul>}
 
     </Container>)
@@ -81,13 +84,11 @@ export const BookingForAccountViewer = () => {
 
 type BookingViewerProps = {
     booking: Booking;
-    entry?: BookingEntry
+    entry: BookingEntry
 }
 const BookingViewer = ({booking, entry}: BookingViewerProps) => {
     const {accounts} = useGlobalState();
     const navigate = useNavigate();
-
-    if (!entry) return null;
 
     let otherEntries = booking.entries.filter(e => e.id !== entry.id);
     return (<li className="BookingEntry">

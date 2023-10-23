@@ -10,6 +10,7 @@ export type RequestType = "subscribe"
     | 'importBankTransactions'
     | 'setUserStateV2'
     | 'deleteAllUnbookedTransactions'
+    | 'deleteUnbookedTransaction'
     | 'addOrReplaceUnbookedTransactionMatcher'
     | 'removeUnbookedTransactionMatcher'
     | 'executeMatcherUnbookedTransactionMatcher'
@@ -25,6 +26,7 @@ export type RpcRequest = {
     unsubscribe?: Unsubscribe;
 
     accountId?: string;
+    deleteUnbookedBankTransactionId?: number;
     mergeTargetAccountId?: string;
     importBankTransactionsRequest?: ImportBankTransactionsRequest;
     executeMatcherRequest?: ExecuteMatcherRequest;

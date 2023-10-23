@@ -182,6 +182,28 @@ class BankAccountService(
         }.reversed()
     }
 
+    fun deleteUnbookedTransaction(
+        userId: String,
+        realmId: String,
+        accountId: String,
+        deleteUnbookedBankTransactionId: Long
+    ) {
+        dataSource.writeTx { conn ->
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.write
+            )
+
+            unbookedTransactionRepository.delete(
+                conn,
+                accountId,
+                deleteUnbookedBankTransactionId
+            )
+        }
+    }
+
 
 }
 

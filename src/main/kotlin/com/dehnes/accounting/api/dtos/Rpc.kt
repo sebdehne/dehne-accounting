@@ -16,6 +16,7 @@ enum class RequestType {
     setUserStateV2,
 
     deleteAllUnbookedTransactions,
+    deleteUnbookedTransaction,
     addOrReplaceUnbookedTransactionMatcher,
     removeUnbookedTransactionMatcher,
 
@@ -33,6 +34,7 @@ data class RpcRequest(
     val subscribe: Subscribe?,
     val unsubscribe: Unsubscribe?,
     val accountId: String?,
+    val deleteUnbookedBankTransactionId: Long?,
     val mergeTargetAccountId: String?,
     val importBankTransactionsRequest: ImportBankTransactionsRequest?,
     val executeMatcherRequest: ExecuteMatcherRequest?,

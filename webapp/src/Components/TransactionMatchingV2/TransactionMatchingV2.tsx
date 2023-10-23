@@ -121,6 +121,7 @@ export const TransactionMatchingV2 = () => {
                 memo={unbookedTransaction.memo}
                 datetime={moment(unbookedTransaction.datetime)}
                 unbookedId={unbookedTransaction.id}
+                bookingId={undefined}
             />
         </>}
 

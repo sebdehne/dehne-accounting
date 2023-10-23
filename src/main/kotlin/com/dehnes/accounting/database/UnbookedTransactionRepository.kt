@@ -204,6 +204,8 @@ class UnbookedTransactionRepository(
                 preparedStatement.setLong(2, id)
                 preparedStatement.executeUpdate()
             }
+
+        changelog.add(UnbookedTransactionsChanged)
     }
 
 }
