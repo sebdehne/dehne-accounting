@@ -2,7 +2,6 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
 import java.sql.Connection
 import java.time.Instant
@@ -16,10 +15,11 @@ class BankAccountService(
     private val dataSource: DataSource,
     private val authorizationService: AuthorizationService,
     private val unbookedTransactionRepository: UnbookedTransactionRepository,
+    private val changelog: Changelog,
 ) {
 
     fun deleteAllUnbookedTransactions(userId: String, realmId: String, accountId: String) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 
             unbookedTransactionRepository.deleteAll(conn, accountId)
@@ -54,7 +54,6 @@ class BankAccountService(
                         )
 
                     val lastKnownBookingDate = bookingRepository.getLastKnownBookingDate(
-                        conn,
                         ba.accountId,
                         realmId
                     )
@@ -66,7 +65,6 @@ class BankAccountService(
                         ba.openDate,
                         ba.closeDate,
                         bookingRepository.getSum(
-                            conn,
                             ba.accountId,
                             realmId,
                             DateRangeFilter()
@@ -110,12 +108,14 @@ class BankAccountService(
     ): List<BankAccountTransaction> {
 
         val bookingRecords = bookingRepository.getBookings(
-            conn,
             realmId,
             Int.MAX_VALUE,
             listOf(
                 dateRangeFilter,
-                AccountIdFilter(accountId, realmId)
+                AccountIdFilter(
+                    accountId = accountId,
+                    realmId = realmId
+                )
             )
         ).map {
             val mainEntry = it.entries.single { it.accountId == accountId }
@@ -157,7 +157,6 @@ class BankAccountService(
         }
 
         var balance = bookingRepository.getSum(
-            conn,
             accountId,
             realmId,
             DateRangeFilter(toExclusive = dateRangeFilter.from)
@@ -188,7 +187,7 @@ class BankAccountService(
         accountId: String,
         deleteUnbookedBankTransactionId: Long
     ) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(
                 conn,
                 userId,

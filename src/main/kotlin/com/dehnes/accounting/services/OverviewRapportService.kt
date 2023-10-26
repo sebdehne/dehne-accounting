@@ -22,14 +22,12 @@ class OverviewRapportService(
             val allAccounts = accountsRepository.getAll(conn, realmId)
 
             val openingBalanceBookings = bookingRepository.getBookings(
-                conn,
                 realmId,
                 Int.MAX_VALUE,
                 listOf(DateRangeFilter(toExclusive = rangeFilter.from))
             )
 
             val thisPeriodBookings = bookingRepository.getBookings(
-                conn,
                 realmId,
                 Int.MAX_VALUE,
                 listOf(rangeFilter)
@@ -55,7 +53,7 @@ class OverviewRapportService(
                             entry.amountInCents
                         )
                     }
-                } // where is account-payable in the rapport???
+                }
 
                 val thisPeriod = entries.sumOf { it.amountInCents } + children.sumOf { it.thisPeriod }
 

@@ -35,15 +35,15 @@ class Configuration {
         val datasource = datasourceSetup(dbFile())
         SchemaHandler.initSchema(datasource)
 
-        val changelog = Changelog()
+        val changelog = Changelog(datasource)
         val userService = UserService(datasource)
         val userStateRepository = UserStateRepository(objectMapper, changelog)
-        val userRepository = UserRepository(datasource, objectMapper)
-        val accountsRepository = AccountsRepository(datasource, changelog)
-        val realmRepository = RealmRepository(datasource, accountsRepository)
-        val bookingRepository = BookingRepository(realmRepository, changelog)
+        val userRepository = UserRepository(objectMapper, changelog)
+        val accountsRepository = AccountsRepository(changelog)
+        val realmRepository = RealmRepository(accountsRepository, changelog)
+        val bookingRepository = BookingRepository(realmRepository, changelog, datasource)
         val authorizationService = AuthorizationService(userRepository, realmRepository)
-        val bankRepository = BankRepository(datasource)
+        val bankRepository = BankRepository(datasource, changelog)
         val bankAccountRepository = BankAccountRepository()
         val unbookedTransactionRepository = UnbookedTransactionRepository(changelog)
         val bankAccountService = BankAccountService(
@@ -53,17 +53,18 @@ class Configuration {
             accountsRepository,
             datasource,
             authorizationService,
-            unbookedTransactionRepository
+            unbookedTransactionRepository,
+            changelog
         )
 
 
         val bankTransactionImportService = BankTransactionImportService(
-            datasource,
             authorizationService,
             bankAccountRepository,
             bankAccountService,
             unbookedTransactionRepository,
-            bankRepository
+            bankRepository,
+            changelog
         )
         val unbookedBankTransactionMatcherRepository = UnbookedBankTransactionMatcherRepository(objectMapper, changelog)
         val unbookedBankTransactionMatcherService = UnbookedBankTransactionMatcherService(
@@ -74,18 +75,18 @@ class Configuration {
             changelog,
             bookingRepository
         )
-        val bookingService = BookingService(datasource, bookingRepository, authorizationService)
+        val bookingService = BookingService(datasource, bookingRepository, authorizationService, changelog)
         val accountService = AccountService(
-            datasource,
             authorizationService,
             accountsRepository,
             bookingRepository,
-            unbookedBankTransactionMatcherRepository
+            unbookedBankTransactionMatcherRepository,
+            changelog,
         )
 
         val readService = ReadService(
             executorService,
-            UserStateService(datasource, userStateRepository, userService),
+            UserStateService(datasource, userStateRepository, userService, changelog),
             datasource,
             authorizationService,
             OverviewRapportService(datasource, bookingRepository, accountsRepository),
@@ -93,6 +94,7 @@ class Configuration {
             accountsRepository,
             unbookedBankTransactionMatcherService,
             bookingService,
+            changelog
         )
 
 
@@ -101,7 +103,7 @@ class Configuration {
         beans[UserService::class] = userService
         beans[BankTransactionImportService::class] = bankTransactionImportService
         beans[BankAccountService::class] = bankAccountService
-        beans[UserStateService::class] = UserStateService(datasource, userStateRepository, userService)
+        beans[UserStateService::class] = UserStateService(datasource, userStateRepository, userService, changelog)
         beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
         beans[BookingService::class] = bookingService
         beans[AccountService::class] = accountService

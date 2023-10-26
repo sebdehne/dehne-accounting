@@ -1,17 +1,15 @@
 package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.*
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.StandardAccount
 import java.util.*
-import javax.sql.DataSource
 
 class AccountService(
-    private val dataSource: DataSource,
     private val authorizationService: AuthorizationService,
     private val accountsRepository: AccountsRepository,
     private val bookingRepository: BookingRepository,
     private val unbookedBankTransactionMatcherRepository: UnbookedBankTransactionMatcherRepository,
+    private val changelog: Changelog,
 ) {
 
     fun merge(
@@ -21,7 +19,7 @@ class AccountService(
         targetAccountId: String
     ) {
 
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(
                 conn,
                 userId,
@@ -52,7 +50,7 @@ class AccountService(
     }
 
     fun createOrUpdateAccount(userId: String, realmId: String, account: AccountDto) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(
                 conn,
                 userId,

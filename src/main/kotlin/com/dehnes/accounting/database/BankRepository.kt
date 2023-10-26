@@ -1,12 +1,12 @@
 package com.dehnes.accounting.database
 
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
 import java.sql.Connection
 import javax.sql.DataSource
 
 class BankRepository(
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
+    private val changelog: Changelog,
 ) {
 
     fun getByName(connection: Connection, name: String) = getAll(connection).firstOrNull { it.name == name }
@@ -28,7 +28,7 @@ class BankRepository(
         }
 
     fun insert(bank: BankDto) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             insert(conn, bank)
         }
     }

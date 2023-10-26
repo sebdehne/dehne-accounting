@@ -1,18 +1,16 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.dtos.UserStateV2
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.services.AccessLevel
 import com.dehnes.accounting.utils.toInt
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
-import javax.sql.DataSource
 
 class UserRepository(
-    private val dataSource: DataSource,
     private val objectMapper: ObjectMapper,
+    private val changelog: Changelog,
 ) {
 
     fun getUserRealms(connection: Connection): List<UserRealm> =
@@ -31,27 +29,6 @@ class UserRepository(
                 l
             }
         }
-
-    fun setUserState(conn: Connection, userId: String, userStateV2: UserStateV2) {
-        val updated = conn.prepareStatement("UPDATE user_state SET frontend_state = ? WHERE user_id = ?")
-            .use { preparedStatement ->
-                preparedStatement.setString(1, objectMapper.writeValueAsString(userStateV2))
-                preparedStatement.setString(2, userId)
-                preparedStatement.executeUpdate() > 0
-            }
-        if (!updated) {
-            conn.prepareStatement("INSERT INTO user_state (user_id, frontend_state) VALUES (?,?)")
-                .use { preparedStatement ->
-                    preparedStatement.setString(1, userId)
-                    preparedStatement.setString(2, objectMapper.writeValueAsString(userStateV2))
-                    preparedStatement.executeUpdate()
-                }
-        }
-    }
-
-    fun setUserState(userId: String, userStateV2: UserStateV2) {
-        dataSource.writeTx { conn -> setUserState(conn, userId, userStateV2) }
-    }
 
     fun getUserState(conn: Connection, userId: String) =
         conn.prepareStatement("SELECT * FROM user_state WHERE user_id = ?").use { preparedStatement ->
@@ -80,7 +57,7 @@ class UserRepository(
         }
 
     fun insert(user: User) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             conn.prepareStatement(
                 """
                 INSERT INTO user (

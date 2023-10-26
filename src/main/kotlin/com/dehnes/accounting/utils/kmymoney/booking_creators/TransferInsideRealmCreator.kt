@@ -24,7 +24,6 @@ object TransferInsideRealmCreator : BookingCreator {
     ): List<AddBooking> {
 
         val bookings = bookingRepository.getBookings(
-            connection,
             realmId,
             Int.MAX_VALUE,
             listOf(

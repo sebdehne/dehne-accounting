@@ -67,7 +67,7 @@ class WebSocketServer : Endpoint() {
 
         val (response, error) = logAndGetError(logger) {
             when (rpcRequest.type) {
-                subscribe -> readService.doWithNotifies {
+                subscribe -> {
                     val subscribe = rpcRequest.subscribe!!
                     val subscriptionId = subscribe.subscriptionId
 
@@ -88,7 +88,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse(subscriptionRemoved = true)
                 }
 
-                createOrUpdateAccount -> readService.doWithNotifies {
+                createOrUpdateAccount -> {
                     accountService.createOrUpdateAccount(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -97,7 +97,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
-                mergeAccount -> readService.doWithNotifies {
+                mergeAccount -> {
                     accountService.merge(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -107,7 +107,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
-                createOrUpdateBooking -> readService.doWithNotifies {
+                createOrUpdateBooking -> {
                     val id = bookingService.createOrUpdateBooking(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -116,7 +116,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse(editedBookingId = id)
                 }
 
-                deleteBooking -> readService.doWithNotifies {
+                deleteBooking -> {
                     bookingService.deleteBooking(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -125,7 +125,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
-                executeMatcherUnbookedTransactionMatcher -> readService.doWithNotifies {
+                executeMatcherUnbookedTransactionMatcher -> {
                     unbookedBankTransactionMatcherService.executeMatcher(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -134,7 +134,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
-                removeUnbookedTransactionMatcher -> readService.doWithNotifies {
+                removeUnbookedTransactionMatcher -> {
                     unbookedBankTransactionMatcherService.removeMatcher(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -143,7 +143,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
-                addOrReplaceUnbookedTransactionMatcher -> readService.doWithNotifies {
+                addOrReplaceUnbookedTransactionMatcher -> {
                     unbookedBankTransactionMatcherService.addOrReplaceMatcher(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -152,7 +152,7 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
-                deleteAllUnbookedTransactions -> readService.doWithNotifies {
+                deleteAllUnbookedTransactions -> {
                     bankAccountService.deleteAllUnbookedTransactions(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -160,7 +160,7 @@ class WebSocketServer : Endpoint() {
                     )
                     RpcResponse()
                 }
-                deleteUnbookedTransaction -> readService.doWithNotifies {
+                deleteUnbookedTransaction -> {
                     bankAccountService.deleteUnbookedTransaction(
                         user.id,
                         userStateV2.selectedRealm!!,
@@ -170,13 +170,13 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
-                setUserStateV2 -> readService.doWithNotifies {
+                setUserStateV2 -> {
                     check(rpcRequest.userStateV2!!.id == userStateV2.id)
                     userStateService.setUserStateV2(user.id, rpcRequest.userStateV2)
                     RpcResponse()
                 }
 
-                importBankTransactions -> readService.doWithNotifies {
+                importBankTransactions -> {
                     val request = rpcRequest.importBankTransactionsRequest!!
 
                     RpcResponse(importBankTransactionsResult = bankTransactionImportService.doImport(

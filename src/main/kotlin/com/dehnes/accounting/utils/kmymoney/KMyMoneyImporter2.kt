@@ -2,7 +2,6 @@ package com.dehnes.accounting.utils.kmymoney
 
 import com.dehnes.accounting.bank.importers.SupportedImporters
 import com.dehnes.accounting.database.*
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.StandardAccount
 import com.dehnes.accounting.kmymoney.AccountIdMapping
 import com.dehnes.accounting.kmymoney.KMyMoneyUtils
@@ -18,7 +17,6 @@ import com.dehnes.accounting.utils.kmymoney.booking_creators.*
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.sql.Connection
-import javax.sql.DataSource
 
 enum class TransactionType(
     val bookingCreator: BookingCreator
@@ -36,7 +34,7 @@ class KMyMoneyImporter2(
     private val bankAccountRepository: BankAccountRepository,
     private val accountsRepository: AccountsRepository,
     private val bookingRepository: BookingRepository,
-    private val dataSource: DataSource,
+    private val changelog: Changelog,
 ) {
 
     fun import(
@@ -75,7 +73,7 @@ class KMyMoneyImporter2(
             realmId,
         )
 
-        val bankAccountsToImport = dataSource.writeTx { conn ->
+        val bankAccountsToImport = changelog.writeTx { conn ->
             allBanks.flatMap { kBank ->
                 kBank.accountIds.mapNotNull { kAccountId ->
                     val kAccount = accountIdMapping.getById(kAccountId)
@@ -95,7 +93,7 @@ class KMyMoneyImporter2(
         }
 
         bankAccountsToImport.forEach { (kAccountId, bankAccount, accountDto) ->
-            dataSource.writeTx { conn ->
+            changelog.writeTx { conn ->
                 val transactions = allTransactions.filter { it.splits.any { it.accountId == kAccountId } }
 
                 transactions.forEach { tx ->

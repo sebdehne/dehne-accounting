@@ -1,19 +1,17 @@
 package com.dehnes.accounting.database
 
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.domain.StandardAccount
 import com.dehnes.accounting.services.AccessLevel
 import java.sql.Connection
-import javax.sql.DataSource
 
 class RealmRepository(
-    private val dataSource: DataSource,
     private val accountsRepository: AccountsRepository,
+    private val changelog: Changelog,
 ) {
 
     fun insert(realm: Realm) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             conn.prepareStatement(
                 """
                 INSERT INTO realm (

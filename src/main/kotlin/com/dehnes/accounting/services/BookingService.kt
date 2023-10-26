@@ -2,13 +2,13 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
-import com.dehnes.accounting.database.Transactions.writeTx
 import javax.sql.DataSource
 
 class BookingService(
     private val dataSource: DataSource,
     private val bookingRepository: BookingRepository,
     private val authorizationService: AuthorizationService,
+    private val changelog: Changelog,
 ) {
 
     fun getBookings(
@@ -19,7 +19,6 @@ class BookingService(
         authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
 
         bookingRepository.getBookings(
-            conn,
             realmId,
             Int.MAX_VALUE,
             bookingsFilters
@@ -30,14 +29,13 @@ class BookingService(
         authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
 
         bookingRepository.getBookings(
-            conn,
             realmId,
             Int.MAX_VALUE,
             listOf(SingleBookingFilter(bookingId))
         ).single()
     }
 
-    fun createOrUpdateBooking(userId: String, realmId: String, booking: Booking) = dataSource.writeTx { conn ->
+    fun createOrUpdateBooking(userId: String, realmId: String, booking: Booking) = changelog.writeTx { conn ->
         authorizationService.assertAuthorization(
             conn,
             userId,
@@ -46,7 +44,6 @@ class BookingService(
         )
 
         val existingBooking = bookingRepository.getBookings(
-            conn,
             realmId,
             Int.MAX_VALUE,
             listOf(SingleBookingFilter(booking.id))
@@ -79,7 +76,7 @@ class BookingService(
     }
 
     fun deleteBooking(userId: String, realmId: String, bookingId: Long) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(
                 conn,
                 userId,

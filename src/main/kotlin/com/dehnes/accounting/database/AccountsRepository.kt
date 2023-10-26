@@ -1,19 +1,14 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.AccountsChanged
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.domain.StandardAccount
 import mu.KotlinLogging
 import java.sql.Connection
-import javax.sql.DataSource
 
-class AccountsRepository(
-    private val dataSource: DataSource,
-    private val changelog: Changelog,
-) {
+class AccountsRepository(private val changelog: Changelog) {
 
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     fun getAll(conn: Connection, realmId: String): List<AccountDto> = conn.prepareStatement(
         "SELECT * FROM account where realm_id = ?"
@@ -39,7 +34,7 @@ class AccountsRepository(
     }
 
     fun insert(accountDto: AccountDto) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             insert(conn, accountDto)
         }
     }
@@ -69,9 +64,11 @@ class AccountsRepository(
     }
 
     fun updateAccount(conn: Connection, accountDto: AccountDto) {
-        conn.prepareStatement("""
+        conn.prepareStatement(
+            """
             UPDATE account set parent_account_id = ?, name = ?, description = ? WHERE id = ?
-        """.trimIndent()).use { preparedStatement ->
+        """.trimIndent()
+        ).use { preparedStatement ->
             preparedStatement.setString(1, accountDto.parentAccountId)
             preparedStatement.setString(2, accountDto.name)
             preparedStatement.setString(3, accountDto.description)

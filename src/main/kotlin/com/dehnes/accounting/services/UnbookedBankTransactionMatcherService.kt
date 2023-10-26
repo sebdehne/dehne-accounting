@@ -6,7 +6,6 @@ import com.dehnes.accounting.api.UnbookedTransactionsChanged
 import com.dehnes.accounting.api.dtos.ExecuteMatcherRequest
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
-import com.dehnes.accounting.database.Transactions.writeTx
 import java.time.Instant
 import javax.sql.DataSource
 
@@ -33,7 +32,7 @@ class UnbookedBankTransactionMatcherService(
         realmId: String,
         executeMatcherRequest: ExecuteMatcherRequest,
     ) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 
             val unbookedTransaction = unbookedTransactionRepository.getUnbookedTransaction(
@@ -147,7 +146,7 @@ class UnbookedBankTransactionMatcherService(
             )
 
             changelog.add(UnbookedTransactionsChanged)
-            changelog.add(BookingsChanged)
+            changelog.add(BookingsChanged(realmId))
         }
     }
 
@@ -156,7 +155,7 @@ class UnbookedBankTransactionMatcherService(
         realmId: String,
         matcherId: String
     ) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 
             unbookedBankTransactionMatcherRepository.remove(
@@ -175,7 +174,7 @@ class UnbookedBankTransactionMatcherService(
         realmId: String,
         matcher: UnbookedBankTransactionMatcher
     ) {
-        dataSource.writeTx { conn ->
+        changelog.writeTx { conn ->
             authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 
             check(matcher.realmId == realmId)

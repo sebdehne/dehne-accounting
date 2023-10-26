@@ -1,124 +1,152 @@
 package com.dehnes.accounting.database
 
-import com.dehnes.accounting.api.AccountsChanged
 import com.dehnes.accounting.api.BookingsChanged
-import com.dehnes.accounting.utils.SqlUtils
+import com.dehnes.accounting.database.Transactions.readTx
 import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.*
+import javax.sql.DataSource
+
+
+data class CacheEntry(
+    val realmId: String,
+    val allBookings: List<Booking>,
+    val createdAt: Instant,
+)
 
 class BookingRepository(
     private val realmRepository: RealmRepository,
     private val changelog: Changelog,
+    private val dataSource: DataSource,
 ) {
 
-    fun getSum(conn: Connection, accountId: String, realmId: String, dateRangeFilter: DateRangeFilter): Long {
-        val (wheres, whereParams) = dateRangeFilter.whereAndParams()
-        return conn.prepareStatement(
-            """
-            SELECT 
-                sum(be.amount_in_cents) 
-            from 
-                booking b, booking_entry be 
-            where 
-                b.id = be.booking_id
-                AND be.account_id = ?
-                AND b.realm_id = ?
-                AND $wheres
-        """.trimIndent()
-        ).use { preparedStatement ->
-            val params = mutableListOf<Any>()
-            params.add(accountId)
-            params.add(realmId)
-            params.addAll(whereParams)
-
-            SqlUtils.setSqlParams(preparedStatement, params)
-
-            preparedStatement.executeQuery().use { rs ->
-                check(rs.next())
-                rs.getLong(1)
-            }
+    init {
+        UUID.randomUUID().toString().apply {
+            changelog.writeTransactionListeners[this] = Listener(
+                this,
+                { e -> e.changeLogEventTypeV2 is BookingsChanged },
+                { invalidateCache((it.changeLogEventTypeV2 as BookingsChanged).realmId) }
+            )
         }
     }
 
-    fun getLastKnownBookingDate(conn: Connection, accountId: String, realmId: String): Instant? = conn.prepareStatement(
-        """
-        SELECT 
-            max(b.datetime) 
-        from 
-            booking b, booking_entry be 
-        where 
-            b.id = be.booking_id
-            AND be.account_id = ?
-            AND b.realm_id = ?
-    """.trimIndent()
-    ).use { preparedStatement ->
-        preparedStatement.setString(1, accountId)
-        preparedStatement.setString(2, realmId)
-        preparedStatement.executeQuery().use { rs ->
-            check(rs.next())
-            rs.getTimestamp(1)?.toInstant()
+    private val bookingsCache: MutableMap<String, CacheEntry> = mutableMapOf()
+
+    private fun invalidateCache(realmId: String) {
+        synchronized(bookingsCache) {
+            bookingsCache.remove(realmId)
         }
+    }
+
+    private fun getCachedData(realmId: String, filters: List<BookingsFilter>) = synchronized(bookingsCache) {
+        val data = bookingsCache.getOrPut(realmId) {
+            dataSource.readTx { conn ->
+                readFromDatabase(conn, realmId)
+            }
+        }
+
+        data.copy(
+            allBookings = data.allBookings.filter {
+
+                val dateFilter = filters.firstOrNull { it is DateRangeFilter } as? DateRangeFilter
+                val idFilter = filters.firstOrNull { it is SingleBookingFilter } as? SingleBookingFilter
+                val accountIdFilter = filters.firstOrNull { it is AccountIdFilter } as? AccountIdFilter
+
+                if (dateFilter != null) {
+                    if (it.datetime !in dateFilter.from..<dateFilter.toExclusive) return@filter false
+                }
+                if (idFilter != null) {
+                    if (it.id != idFilter.bookingId) return@filter false
+                }
+                if (accountIdFilter != null) {
+                    if (it.entries.none { it.accountId == accountIdFilter.accountId }) return@filter false
+                }
+
+                true
+            }
+        )
+    }
+
+    private fun readFromDatabase(conn: Connection, realmId: String): CacheEntry {
+        val entries =
+            conn.prepareStatement("SELECT * FROM booking_entry where realm_id = ?").use { preparedStatement ->
+                preparedStatement.setString(1, realmId)
+                preparedStatement.executeQuery().use { rs ->
+                    val l = mutableListOf<BookingEntryRaw>()
+                    while (rs.next()) {
+                        l.add(
+                            BookingEntryRaw(
+                                rs.getLong("id"),
+                                rs.getLong("booking_id"),
+                                rs.getString("description"),
+                                rs.getString("account_id"),
+                                rs.getLong("amount_in_cents"),
+                            )
+                        )
+                    }
+                    l
+                }
+            }.groupBy { it.bookingId }
+
+
+        return CacheEntry(
+            realmId,
+            conn.prepareStatement("SELECT * FROM booking where realm_id = ?").use { preparedStatement ->
+                preparedStatement.setString(1, realmId)
+                preparedStatement.executeQuery().use { rs ->
+                    val l = mutableListOf<Booking>()
+                    while (rs.next()) {
+                        val id = rs.getLong("id")
+                        l.add(
+                            Booking(
+                                realmId,
+                                id,
+                                rs.getString("description"),
+                                rs.getTimestamp("datetime").toInstant(),
+                                entries.getOrDefault(id, emptyList()).map {
+                                    BookingEntry(
+                                        it.id,
+                                        it.description,
+                                        it.accountId,
+                                        it.amountInCents
+                                    )
+                                }
+                            )
+                        )
+                    }
+                    l
+                }
+            },
+            Instant.now(),
+        )
+    }
+
+    fun getSum(accountId: String, realmId: String, dateRangeFilter: DateRangeFilter): Long {
+        val (_, allBookings) = getCachedData(realmId, listOf(dateRangeFilter))
+
+        return allBookings.flatMap { it.entries }.filter { it.accountId == accountId }.sumOf { it.amountInCents }
+    }
+
+    fun getLastKnownBookingDate(accountId: String, realmId: String): Instant? {
+        val (_, allBookings) = getCachedData(
+            realmId,
+            listOf(AccountIdFilter(
+                accountId = accountId,
+                realmId = realmId
+            ))
+        )
+        return allBookings.maxByOrNull { it.datetime }?.datetime
     }
 
     fun getBookings(
-        connection: Connection,
         realmId: String,
         limit: Int,
         filters: List<BookingsFilter>,
     ): List<Booking> {
         check(limit >= 0)
 
-        val allEntries = connection.prepareStatement("SELECT * FROM booking_entry where realm_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, realmId)
-            preparedStatement.executeQuery().use { rs ->
-                val l = mutableListOf<BookingEntryRaw>()
-                while(rs.next()) {
-                    l.add(BookingEntryRaw(
-                        rs.getLong("id"),
-                        rs.getLong("booking_id"),
-                        rs.getString("description"),
-                        rs.getString("account_id"),
-                        rs.getLong("amount_in_cents"),
-                    ))
-                }
-                l
-            }
-        }.filter { e ->
-            filters.firstOrNull { it is AccountIdFilter }?.let {
-                e.accountId == (it as AccountIdFilter).accountId
-            } ?: true
-        }.groupBy { it.bookingId }
-
-        val allBookings = connection.prepareStatement("SELECT * FROM booking where realm_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, realmId)
-            preparedStatement.executeQuery().use { rs ->
-                val l = mutableListOf<Booking>()
-                while(rs.next()) {
-                    l.add(Booking(
-                        realmId,
-                        rs.getLong("id"),
-                        rs.getString("description"),
-                        rs.getTimestamp("datetime").toInstant(),
-                        emptyList()
-                    ))
-                }
-                l
-            }
-        }.filter {
-
-            val dateFilter = filters.firstOrNull { it is DateRangeFilter } as? DateRangeFilter
-            val idFilter = filters.firstOrNull { it is SingleBookingFilter } as? SingleBookingFilter
-
-            if (dateFilter != null) {
-                if (it.datetime !in dateFilter.from..<dateFilter.toExclusive) return@filter false
-            }
-            if (idFilter != null) {
-                if (it.id != idFilter.bookingId) return@filter false
-            }
-
-            true
-        }
+        val (_, allBookings) = getCachedData(realmId, filters)
 
         val unsorted = allBookings.map { b ->
             Booking(
@@ -126,21 +154,16 @@ class BookingRepository(
                 b.id,
                 b.description,
                 b.datetime,
-                allEntries.getOrDefault(b.id, emptyList()).map {
-                    BookingEntry(
-                        it.id,
-                        it.description,
-                        it.accountId,
-                        it.amountInCents
-                    )
-                }.sortedByDescending { it.id }
+                b.entries.sortedByDescending { it.id }
             )
         }
 
-        return unsorted.sortedWith(compareBy(
-            {it.datetime},
-            {it.id},
-        )).reversed()
+        return unsorted.sortedWith(
+            compareBy(
+                { it.datetime },
+                { it.id },
+            )
+        ).reversed()
     }
 
 
@@ -177,7 +200,7 @@ class BookingRepository(
             )
         }
 
-        changelog.add(BookingsChanged)
+        changelog.add(BookingsChanged(addBooking.realmId))
 
         return nextBookingId
     }
@@ -250,32 +273,34 @@ class BookingRepository(
                 check(preparedStatement.executeUpdate() == 1)
             }
 
-        changelog.add(BookingsChanged)
+        changelog.add(BookingsChanged(realmId))
     }
 
     fun deleteBooking(conn: Connection, realmId: String, bookingId: Long) {
-        conn.prepareStatement("DELETE FROM booking_entry where booking_id = ? and realm_id = ?").use { preparedStatement ->
-            preparedStatement.setLong(1, bookingId)
-            preparedStatement.setString(2, realmId)
-            preparedStatement.executeUpdate()
-        }
+        conn.prepareStatement("DELETE FROM booking_entry where booking_id = ? and realm_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setLong(1, bookingId)
+                preparedStatement.setString(2, realmId)
+                preparedStatement.executeUpdate()
+            }
         conn.prepareStatement("DELETE FROM booking where id = ? AND realm_id = ?").use { preparedStatement ->
             preparedStatement.setLong(1, bookingId)
             preparedStatement.setString(2, realmId)
             preparedStatement.executeUpdate()
         }
-        changelog.add(BookingsChanged)
+        changelog.add(BookingsChanged(realmId))
     }
 
     fun mergeAccount(conn: Connection, realmId: String, sourceAccountId: String, targetAccountId: String) {
-        conn.prepareStatement("UPDATE booking_entry SET account_id = ? where realm_id = ? and account_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, targetAccountId)
-            preparedStatement.setString(2, realmId)
-            preparedStatement.setString(3, sourceAccountId)
-            preparedStatement.executeUpdate()
-        }
+        conn.prepareStatement("UPDATE booking_entry SET account_id = ? where realm_id = ? and account_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, targetAccountId)
+                preparedStatement.setString(2, realmId)
+                preparedStatement.setString(3, sourceAccountId)
+                preparedStatement.executeUpdate()
+            }
 
-        changelog.add(BookingsChanged)
+        changelog.add(BookingsChanged(realmId))
     }
 }
 
@@ -316,13 +341,3 @@ data class AddBookingEntry(
     val amountInCents: Long,
 )
 
-data class BookingBookingRecordV2(
-    val realmId: String,
-    val bookingId: Long,
-    val bookingDescription: String?,
-    val datetime: Instant,
-    val bookingEntryId: Long,
-    val bookingEntryDescription: String?,
-    val accountId: String,
-    val amountInCents: Long,
-)

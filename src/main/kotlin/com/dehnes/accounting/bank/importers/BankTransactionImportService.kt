@@ -1,22 +1,20 @@
 package com.dehnes.accounting.bank.importers
 
 import com.dehnes.accounting.database.*
-import com.dehnes.accounting.database.Transactions.writeTx
 import com.dehnes.accounting.services.AccessRequest
 import com.dehnes.accounting.services.AuthorizationService
 import com.dehnes.accounting.services.BankAccountService
 import com.dehnes.accounting.services.BankAccountTransaction
 import com.dehnes.accounting.utils.DateTimeUtils.plusDays
 import java.io.InputStream
-import javax.sql.DataSource
 
 class BankTransactionImportService(
-    private val dataSource: DataSource,
     private val authorizationService: AuthorizationService,
     private val bankAccountRepository: BankAccountRepository,
     private val bankAccountService: BankAccountService,
     private val unbookedTransactionRepository: UnbookedTransactionRepository,
     private val bankRepository: BankRepository,
+    private val changelog: Changelog,
 ) {
     fun doImport(
         userId: String,
@@ -25,7 +23,7 @@ class BankTransactionImportService(
         data: InputStream,
         filename: String,
         duplicationHandler: DuplicationHandler,
-    ) = dataSource.writeTx { conn ->
+    ) = changelog.writeTx { conn ->
 
         authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 

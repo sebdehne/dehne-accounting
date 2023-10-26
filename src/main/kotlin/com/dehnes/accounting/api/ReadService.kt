@@ -7,15 +7,16 @@ import com.dehnes.accounting.api.dtos.ReadResponse
 import com.dehnes.accounting.api.dtos.UserStateV2
 import com.dehnes.accounting.database.AccountIdFilter
 import com.dehnes.accounting.database.AccountsRepository
+import com.dehnes.accounting.database.Changelog
+import com.dehnes.accounting.database.Listener
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
 import java.sql.Connection
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
+
 
 class ReadService(
     private val executorService: ExecutorService,
@@ -27,87 +28,49 @@ class ReadService(
     private val accountsRepository: AccountsRepository,
     private val unbookedBankTransactionMatcherService: UnbookedBankTransactionMatcherService,
     private val bookingService: BookingService,
+    private val changelog: Changelog,
 ) {
 
     private val logger = KotlinLogging.logger { }
 
-    private val listeners = ConcurrentHashMap<String, WebSocketServer.Subscription>()
-
-    private val threadLocalChangeLog = ThreadLocal<Queue<ChangeEvent>>()
-
-    fun <T> doWithNotifies(fn: () -> T): T {
-        threadLocalChangeLog.set(LinkedList())
-        val result: T?
-        try {
-            result = fn()
-        } finally {
-            sendOutNotifies(threadLocalChangeLog.get())
-            threadLocalChangeLog.remove()
-        }
-
-        return result!!
-    }
-
     fun addSubscription(sub: WebSocketServer.Subscription) {
         logger.info { "Added subscription id=${sub.subscriptionId}" }
-        listeners[sub.subscriptionId] = sub
-        onChangelogEvent(sub.subscriptionId)
+
+        val listener = Listener(
+            sub.subscriptionId,
+            { changeEvent ->
+                (changeEvent.changeLogEventTypeV2 == null
+                        || (changeEvent.changeLogEventTypeV2::class in sub.readRequest.type.listensOnV2
+                        && changeEvent.changeLogEventTypeV2.additionalFilter(sub.readRequest, sub.sessionId)))
+            },
+            { event ->
+                executorService.submit(wrap(logger) {
+                    dataSource.readTx { conn ->
+                        sub.onEvent(
+                            Notify(
+                                sub.subscriptionId,
+                                handleRequest(
+                                    conn,
+                                    sub.userId,
+                                    sub.readRequest,
+                                    userStateService.getUserStateV2(conn, sub.sessionId),
+                                )
+                            )
+                        )
+                    }
+                })
+            }
+        )
+        changelog.writeTransactionListeners[sub.subscriptionId] = listener
+
+        executorService.submit(wrap(logger) {
+            listener.onEvent(ChangeEvent(null))
+        })
     }
 
     fun removeSubscription(subId: String) {
         logger.info { "Removed subscription id=${subId}" }
-        listeners.remove(subId)
-    }
-
-    fun onChangelogEvent(subId: String? = null) {
-        threadLocalChangeLog.get()?.add(ChangeEvent(null, subId))
-    }
-
-    fun onChangelogEvent(changeEvent: ChangeEvent) {
-        threadLocalChangeLog.get()?.add(changeEvent)
-    }
-
-    private fun sendOutNotifies(changeEvent: Collection<ChangeEvent>) {
-        val compressed = changeEvent.toSet()
-
-        compressed.forEach { changeEvent ->
-
-            listeners.values
-                .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
-                .filter {
-                    (changeEvent.changeLogEventTypeV2 == null
-                            || (changeEvent.changeLogEventTypeV2::class in it.readRequest.type.listensOnV2
-                            && changeEvent.changeLogEventTypeV2.triggerNotify(it.readRequest, it.sessionId)))
-                }
-                .forEach { sub ->
-
-                    executorService.submit(wrap(logger) {
-                        dataSource.readTx { conn ->
-
-                            val userState = userStateService.getUserStateV2(conn, sub.sessionId)
-
-                            try {
-                                sub.onEvent(
-                                    Notify(
-                                        sub.subscriptionId,
-                                        handleRequest(
-                                            conn,
-                                            sub.userId,
-                                            sub.readRequest,
-                                            userState,
-                                        )
-                                    )
-                                )
-                            } catch (e: Throwable) {
-                                logger.error(e) { "" }
-                            }
-
-                        }
-
-                    })
-                }
-
-        }
+        changelog.writeTransactionListeners.remove(subId)
     }
 
     fun handleRequest(
@@ -124,7 +87,10 @@ class ReadService(
                     realmId = userStateV2!!.selectedRealm!!,
                     bookingsFilters = listOf(
                         userStateV2.rangeFilter!!,
-                        AccountIdFilter(readRequest.accountId!!, userStateV2.selectedRealm!!)
+                        AccountIdFilter(
+                            accountId = readRequest.accountId!!,
+                            realmId = userStateV2.selectedRealm!!
+                        )
                     )
                 )
             )
@@ -211,42 +177,29 @@ class ReadService(
 
 data class ChangeEvent(
     val changeLogEventTypeV2: ChangeLogEventTypeV2?,
-    val subId: String?,
 )
 
 sealed class ChangeLogEventTypeV2 {
-    abstract fun triggerNotify(readRequest: ReadRequest, sessionId: String): Boolean
+    open fun additionalFilter(readRequest: ReadRequest, sessionId: String): Boolean = true
 }
 
 data class UserStateUpdated(
     val affectedSessionsId: List<String>
 ) : ChangeLogEventTypeV2() {
-    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = sessionId in affectedSessionsId
+    override fun additionalFilter(readRequest: ReadRequest, sessionId: String) = sessionId in affectedSessionsId
 }
 
 data class RealmChanged(
     val realmId: String
 ) : ChangeLogEventTypeV2() {
-    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = readRequest.type == getAllRealms
+    override fun additionalFilter(readRequest: ReadRequest, sessionId: String) = readRequest.type == getAllRealms
 }
 
-object AccountsChanged : ChangeLogEventTypeV2() {
-    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
-}
+object AccountsChanged : ChangeLogEventTypeV2()
 
-object BookingsChanged : ChangeLogEventTypeV2() {
-    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
-}
+data class BookingsChanged(val realmId: String) : ChangeLogEventTypeV2()
 
-object PartiesChanged : ChangeLogEventTypeV2() {
-    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
-}
+object UnbookedTransactionsChanged : ChangeLogEventTypeV2()
 
-object UnbookedTransactionsChanged : ChangeLogEventTypeV2() {
-    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
-}
-
-object UnbookedTransactionMatchersChanged : ChangeLogEventTypeV2() {
-    override fun triggerNotify(readRequest: ReadRequest, sessionId: String) = true
-}
+object UnbookedTransactionMatchersChanged : ChangeLogEventTypeV2()
 
