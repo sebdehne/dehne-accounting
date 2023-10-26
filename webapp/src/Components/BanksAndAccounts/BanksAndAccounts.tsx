@@ -16,7 +16,7 @@ export const BanksAndAccounts = () => {
     useEffect(() => {
         let sub = WebsocketClient.subscribe(
             {type: "getBanksAndAccountsOverview"},
-            notify => setBanksAndAccounts(notify.readResponse.banksAndAccountsOverview!)
+            readResponse => setBanksAndAccounts(readResponse.banksAndAccountsOverview!)
         );
         return () => WebsocketClient.unsubscribe(sub);
     }, [setBanksAndAccounts]);

@@ -54,9 +54,9 @@ export const BookingViewerEditor = () => {
         if (bookingId) {
             let subscribe = WebsocketClient.subscribe(
                 {type: "getBooking", getBookingId: parseInt(bookingId)},
-                notify => {
-                    setBooking(notify.readResponse.booking!);
-                    setOriginalBooking(clone(notify.readResponse.booking!));
+                readResponse => {
+                    setBooking(readResponse.booking!);
+                    setOriginalBooking(clone(readResponse.booking!));
                 }
             );
             return () => WebsocketClient.unsubscribe(subscribe);

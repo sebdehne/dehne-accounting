@@ -26,7 +26,7 @@ export const BankTransactionsV2 = () => {
         if (accountId) {
             let subscribe = WebsocketClient.subscribe(
                 {type: "getBankAccountTransactions", accountId: accountId},
-                notify => setTransactions(notify.readResponse.getBankAccountTransactions!)
+                readResponse => setTransactions(readResponse.getBankAccountTransactions!)
             );
             return () => WebsocketClient.unsubscribe(subscribe);
         }

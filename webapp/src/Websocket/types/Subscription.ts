@@ -22,7 +22,8 @@ export type Unsubscribe = {
 
 export type Notify = {
     subscriptionId: string;
-    readResponse: ReadResponse;
+    readResponse?: ReadResponse;
+    generatingNotify?: boolean;
 }
 
 export type ReadRequestType = 'getAllRealms'

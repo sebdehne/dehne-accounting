@@ -37,14 +37,14 @@ export const RealmMain = () => {
     useEffect(() => {
         const sub = WebsocketClient.subscribe(
             {type: "getOverviewRapport"},
-            notify => setOverviewRapport(notify.readResponse.overViewRapport)
+            readResponse => setOverviewRapport(readResponse.overViewRapport)
         )
         return () => WebsocketClient.unsubscribe(sub);
     }, [setOverviewRapport]);
     useEffect(() => {
         WebsocketClient.subscribe(
             {type: "getTotalUnbookedTransactions"},
-            notify => setTotalUnbookedTransactions(notify.readResponse.totalUnbookedTransactions!)
+            readResponse => setTotalUnbookedTransactions(readResponse.totalUnbookedTransactions!)
         )
     }, [setTotalUnbookedTransactions]);
 

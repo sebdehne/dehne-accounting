@@ -19,7 +19,7 @@ export const BookingForAccountViewer = () => {
         if (accountId) {
             const sub = WebsocketClient.subscribe(
                 {type: "getBookings", accountId},
-                notify => setBookings(notify.readResponse.bookings!)
+                readResponse => setBookings(readResponse.bookings!)
             );
             return () => WebsocketClient.unsubscribe(sub);
         }

@@ -29,8 +29,8 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
         if (userStateV2?.selectedRealm) {
             const subId = WebsocketClient.subscribe(
                 {type: "getAllRealms"},
-                notify => {
-                    setRealm(notify.readResponse.realms!.find(l => l.id === userStateV2.selectedRealm))
+                readResponse => {
+                    setRealm(readResponse.realms!.find(l => l.id === userStateV2.selectedRealm))
                 }
             );
             return () => WebsocketClient.unsubscribe(subId);
@@ -40,8 +40,8 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
             {type: 'getUserState'},
-            notify => {
-                setUserStateV2(notify.readResponse.userStateV2);
+            readResponse => {
+                setUserStateV2(readResponse.userStateV2);
             }
         )
         return () => WebsocketClient.unsubscribe(subId);
@@ -50,13 +50,12 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
             {type: 'getAllAccounts'},
-            notify => {
-                setAccounts(new Accounts(notify.readResponse.allAccounts!));
+            readResponse => {
+                setAccounts(new Accounts(readResponse.allAccounts!));
             }
         )
         return () => WebsocketClient.unsubscribe(subId);
     }, [setAccounts]);
-
 
     const updateStateV2 = (fn: (prev: UserStateV2) => UserStateV2) => {
         if (userStateV2) {

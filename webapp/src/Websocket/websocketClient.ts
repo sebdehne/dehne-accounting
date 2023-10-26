@@ -1,6 +1,6 @@
 import {v4 as uuidv4} from 'uuid';
 import {RpcRequest, RpcResponse} from "./types/Rpc";
-import {Notify, ReadRequest, ReadResponse} from "./types/Subscription";
+import {ReadRequest, ReadResponse} from "./types/Subscription";
 import {WebsocketMessage} from "./types/WebsocketMessage";
 import {sha256} from 'js-sha256';
 
@@ -25,16 +25,19 @@ let connectionStatusWithError: ConnectionStatusAndError = {
     status: ConnectionStatus.closed
 };
 
+function serverIsBusy() {
+    return Object.values(SubscriptionsById).map(s => s.serverIsGeneratingNewNotify).includes(true)
+}
 
 const readCache: { [key: string]: ReadResponse } = {};
 
 function subscribe(
     readRequest: ReadRequest,
-    onNotify: (notify: Notify) => void) {
+    onNotify: (readResponse: ReadResponse) => void) {
 
     const subscriptionId = uuidv4();
 
-    SubscriptionsById[subscriptionId] = {readRequest, onNotify, initialNotifyReceived: false}
+    SubscriptionsById[subscriptionId] = {readRequest, onNotify, initialNotifyReceived: false, serverIsGeneratingNewNotify: false}
 
     rpc({
         type: "subscribe",
@@ -46,7 +49,7 @@ function subscribe(
     const cachedReadResponse = readCache[cacheKey];
     if (cachedReadResponse) {
         setTimeout(() => {
-            onNotify({subscriptionId, readResponse: cachedReadResponse})
+            onNotify(cachedReadResponse)
         }, 0);
     }
 
@@ -178,12 +181,16 @@ function reconnect() {
             let subscription = SubscriptionsById[subId];
             if (subscription) {
 
-                const cacheKey = sha256(JSON.stringify(subscription.readRequest));
-                readCache[cacheKey] = notify.readResponse;
-
-                subscription.onNotify(notify);
-                if (!subscription.initialNotifyReceived) {
-                    subscription.initialNotifyReceived = true;
+                if (notify.readResponse) {
+                    const cacheKey = sha256(JSON.stringify(subscription.readRequest));
+                    readCache[cacheKey] = notify.readResponse;
+                    subscription.onNotify(notify.readResponse);
+                    if (!subscription.initialNotifyReceived) {
+                        subscription.initialNotifyReceived = true;
+                    }
+                    subscription.serverIsGeneratingNewNotify = false;
+                } else if (notify.generatingNotify) {
+                    subscription.serverIsGeneratingNewNotify = true;
                 }
             } else {
                 console.log("Could not send notify - sub not found");
@@ -196,7 +203,7 @@ function reconnect() {
         const subsInitializing = Object.values(SubscriptionsById).filter((sub) => !sub.initialNotifyReceived).length;
         const rpcsInProgress = Object.entries(OngoingRPCsById).length
 
-        if (subsInitializing + rpcsInProgress > 0) {
+        if ((subsInitializing + rpcsInProgress) > 0 || serverIsBusy()) {
             setConnectionStatusChanged(ConnectionStatus.connectedAndWorking)
         } else {
             setConnectionStatusChanged(ConnectionStatus.connected)
@@ -240,8 +247,9 @@ export default WebsocketService;
 
 export type Subscription = {
     readRequest: ReadRequest;
-    onNotify: (notify: Notify) => void;
+    onNotify: (readResponse: ReadResponse) => void;
     initialNotifyReceived: boolean;
+    serverIsGeneratingNewNotify: boolean;
 }
 
 class Rpc {

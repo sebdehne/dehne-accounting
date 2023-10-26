@@ -36,8 +36,8 @@ export const TransactionMatchingV2 = () => {
                     unbookedTransactionId
                 } : undefined
             },
-            notify => setMatchers(
-                notify.readResponse.unbookedBankTransactionMatchers!
+            readResponse => setMatchers(
+                readResponse.unbookedBankTransactionMatchers!
                     .sort((a, b) => {
                         if (a.matches === b.matches) {
                             return a.matcher.name.localeCompare(b.matcher.name)
@@ -58,8 +58,8 @@ export const TransactionMatchingV2 = () => {
                         unbookedTransactionId
                     }
                 },
-                notify => {
-                    const unbookedTransaction = notify.readResponse.unbookedTransaction!;
+                readResponse => {
+                    const unbookedTransaction = readResponse.unbookedTransaction!;
                     setUnbookedTransaction(unbookedTransaction);
                 }
             );

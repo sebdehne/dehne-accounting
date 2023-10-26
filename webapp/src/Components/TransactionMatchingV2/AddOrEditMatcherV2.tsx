@@ -67,8 +67,8 @@ export const AddOrEditMatcherV2 = () => {
         if (matcherId && !initialized) {
             const subId = WebsocketClient.subscribe(
                 {type: "getUnbookedBankTransactionMatchers"},
-                notify => {
-                    let matcher = notify.readResponse.unbookedBankTransactionMatchers!.find(m => m.matcher.id === matcherId)!.matcher;
+                readResponse => {
+                    let matcher = readResponse.unbookedBankTransactionMatchers!.find(m => m.matcher.id === matcherId)!.matcher;
                     setName(matcher.name);
                     setActionMemo(matcher.actionMemo);
                     setActionAccountId(matcher.actionAccountId);
@@ -94,8 +94,8 @@ export const AddOrEditMatcherV2 = () => {
                         unbookedTransactionId
                     }
                 },
-                notify => {
-                    const unbookedTransaction = notify.readResponse.unbookedTransaction!;
+                readResponse => {
+                    const unbookedTransaction = readResponse.unbookedTransaction!;
                     setUnbookedTransaction(unbookedTransaction);
                     setName(unbookedTransaction.memo ?? '');
                     setFilter({

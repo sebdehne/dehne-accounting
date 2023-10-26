@@ -15,7 +15,7 @@ export const ChooseRealm = () => {
     useEffect(() => {
         const sub = WebsocketClient.subscribe(
             {type: "getAllRealms"},
-            notify => setRealms(notify.readResponse.realms)
+            readResponse => setRealms(readResponse.realms)
         );
         return () => WebsocketClient.unsubscribe(sub);
     }, []);

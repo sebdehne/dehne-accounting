@@ -20,7 +20,8 @@ data class Unsubscribe(
 
 data class Notify(
     val subscriptionId: String,
-    val readResponse: ReadResponse,
+    val readResponse: ReadResponse?,
+    val generatingNotify: Boolean?,
 )
 
 enum class ReadRequestType(

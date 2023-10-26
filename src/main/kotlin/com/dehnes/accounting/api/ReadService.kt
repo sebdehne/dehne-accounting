@@ -47,6 +47,10 @@ class ReadService(
                 executorService.submit(wrap(logger) {
                     dataSource.readTx { conn ->
                         sub.onEvent(
+                            Notify(sub.subscriptionId, null, true)
+                        )
+
+                        sub.onEvent(
                             Notify(
                                 sub.subscriptionId,
                                 handleRequest(
@@ -54,7 +58,8 @@ class ReadService(
                                     sub.userId,
                                     sub.readRequest,
                                     userStateService.getUserStateV2(conn, sub.sessionId),
-                                )
+                                ),
+                                null
                             )
                         )
                     }
@@ -80,7 +85,6 @@ class ReadService(
         userStateV2: UserStateV2?,
     ): ReadResponse =
         when (readRequest.type) {
-
             getBookings -> ReadResponse(
                 bookings = bookingService.getBookings(
                     userId = userId,
