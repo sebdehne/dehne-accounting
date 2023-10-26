@@ -100,8 +100,7 @@ const AccountViewer = ({account, level, filter, selectedAccountId, setSelectedAc
             {selectedAccountId === account.account.id && <ButtonGroup>
                 <IconButton
                     onClick={() => navigate('/account?parentAccountId=' + account.account.id)}><AddIcon/></IconButton>
-                {!account.account.builtIn &&
-                    <IconButton onClick={() => navigate('/account/' + account.account.id)}><EditIcon/></IconButton>}
+                <IconButton onClick={() => navigate('/account/' + account.account.id)}><EditIcon/></IconButton>
                 {!account.account.builtIn && <IconButton onClick={merge}><MergeIcon/></IconButton>}
                 <IconButton
                     onClick={() => navigate('/bookings/' + account.account.id)}><ListIcon/></IconButton>

@@ -1,6 +1,6 @@
 import Header from "../Header";
-import {Container, FormControlLabel, Switch} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import {Container, ListItemIcon, Menu, MenuItem} from "@mui/material";
+import React, {useCallback, useEffect, useState} from "react";
 import {useGlobalState} from "../../utils/userstate";
 import {useNavigate} from "react-router-dom";
 import {PeriodSelectorV2} from "../PeriodSelectors/PeriodSelector";
@@ -11,6 +11,8 @@ import {Amount} from "../Amount";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import {ArrowDropDownIcon} from "@mui/x-date-pickers";
 import IconButton from "@mui/material/IconButton";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import {Check} from "@mui/icons-material";
 
 export const RealmMain = () => {
     const {userStateV2, setUserStateV2, realm} = useGlobalState();
@@ -63,28 +65,125 @@ export const RealmMain = () => {
     );
 }
 
+type HideSettings = {
+    hideWithoutRecords: boolean;
+    hideThisPeriodZero: boolean;
+    hideBalanceZero: boolean;
+}
 
 type OverviewRapportViewerProps = {
-    overviewRapport: OverviewRapportAccount[]
+    overviewRapport: OverviewRapportAccount[];
 }
 const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) => {
-    const [onlyIfThisPeriod, setOnlyIfThisPeriod] = useState(true);
+    const [hideSettings, setHideSettings] = useState<HideSettings>({
+        hideBalanceZero: false,
+        hideThisPeriodZero: false,
+        hideWithoutRecords: true
+    });
+
+    const filter = useCallback((a: OverviewRapportAccount) => {
+        if (hideSettings.hideWithoutRecords) {
+            if (a.deepEntrySize === 0 && a.children.length === 0) {
+                return false;
+            }
+        }
+        if (hideSettings.hideBalanceZero && a.openBalance === 0 && a.closeBalance === 0) {
+            return false;
+        }
+        if (hideSettings.hideThisPeriodZero && a.thisPeriod === 0) {
+            return false;
+        }
+        return true;
+    }, [hideSettings]);
 
     return (<div>
         <div style={{display: "flex", flexDirection: "row", justifyContent: "flex-end"}}>
-            <FormControlLabel control={<Switch value={onlyIfThisPeriod} onChange={(event, checked) => setOnlyIfThisPeriod(checked)} />} label="Hide empty" labelPlacement={"start"}/>
+            <HideSettingsMenu hideSettings={hideSettings} setHideSettings={setHideSettings}/>
         </div>
 
         <ul className="OverviewRapportViewerAccounts">
-            {overviewRapport.map((a, index) => (<OverviewRapportViewerAccount
+            {overviewRapport.filter(filter).map((a, index) => (<OverviewRapportViewerAccount
                 key={a.name}
                 account={a}
                 level={0}
                 isLast={index === overviewRapport.length - 1}
-                filter={a => onlyIfThisPeriod ? a.thisPeriod !== 0 : true}
+                filter={filter}
             />))}
         </ul>
     </div>)
+}
+
+type HideSettingsMenuProps = {
+    hideSettings: HideSettings;
+    setHideSettings: React.Dispatch<React.SetStateAction<HideSettings>>;
+}
+const ITEM_HEIGHT = 48;
+const HideSettingsMenu = ({hideSettings, setHideSettings}: HideSettingsMenuProps) => {
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = (option?: string) => {
+        setAnchorEl(null);
+        if (option) {
+            setHideSettings(prevState => {
+                const map = prevState as any
+                return ({
+                    ...map,
+                    [option]: !map[option]
+                });
+            })
+        }
+    };
+
+    return (
+        <div>
+            <IconButton
+                aria-label="more"
+                id="long-button"
+                aria-controls={open ? 'long-menu' : undefined}
+                aria-expanded={open ? 'true' : undefined}
+                aria-haspopup="true"
+                onClick={handleClick}
+            >
+                <MoreVertIcon/>
+            </IconButton>
+            <Menu
+                id="long-menu"
+                MenuListProps={{
+                    'aria-labelledby': 'long-button',
+                }}
+                anchorEl={anchorEl}
+                open={open}
+                onClose={() => handleClose()}
+                PaperProps={{
+                    style: {
+                        maxHeight: ITEM_HEIGHT * 4.5,
+                        width: '30ch',
+                    },
+                }}
+            >
+
+                <MenuItem onClick={() => handleClose('hideWithoutRecords')}>
+                    {hideSettings.hideWithoutRecords && <ListItemIcon>
+                        <Check/>
+                    </ListItemIcon>}
+                    Hide without records
+                </MenuItem>
+                <MenuItem onClick={() => handleClose('hideThisPeriodZero')}>
+                    {hideSettings.hideThisPeriodZero && <ListItemIcon>
+                        <Check/>
+                    </ListItemIcon>}
+                    Hide zero period</MenuItem>
+                <MenuItem onClick={() => handleClose('hideBalanceZero')}>
+                    {hideSettings.hideBalanceZero && <ListItemIcon>
+                        <Check/>
+                    </ListItemIcon>}
+                    Hide zero balance</MenuItem>
+            </Menu>
+        </div>
+    );
 }
 
 

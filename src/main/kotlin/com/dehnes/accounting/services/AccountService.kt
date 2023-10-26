@@ -60,8 +60,12 @@ class AccountService(
                 AccessRequest.owner
             )
 
-            check(StandardAccount.entries.none { a -> a.toAccountId(realmId) == account.id })
-            check(account.parentAccountId != null)
+            val standardAccount = StandardAccount.entries.firstOrNull { a -> a.toAccountId(realmId) == account.id }
+            if (standardAccount != null) {
+                check(account.parentAccountId == standardAccount.parent?.toAccountId(realmId))
+            } else {
+                check(account.parentAccountId != null)
+            }
 
             val existing = accountsRepository.getAll(conn, realmId).firstOrNull { it.id == account.id }
 

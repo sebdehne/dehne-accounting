@@ -11,7 +11,7 @@ import WebsocketClient from "../../Websocket/websocketClient";
 
 export const Account = () => {
     const {accountId} = useParams();
-    let [searchParams, setSearchParams] = useSearchParams();
+    let [searchParams] = useSearchParams();
     const {accounts} = useGlobalState();
     const [account, setAccount] = useState<AccountDto>({
         builtIn: false,
@@ -56,7 +56,7 @@ export const Account = () => {
             fullWidth={true}
         />
 
-        <AccountSearchBox
+        {!account.builtIn && <AccountSearchBox
             onSelectedAccountId={accountId1 => {
                 if (accountId1) {
                     setAccount(prevState => ({
@@ -67,7 +67,7 @@ export const Account = () => {
             }}
             value={account.parentAccountId}
             title={"Parent account"}
-        />
+        />}
 
         <div style={{marginTop: "20px"}}>
             <Button
