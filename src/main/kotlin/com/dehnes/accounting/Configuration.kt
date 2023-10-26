@@ -93,7 +93,6 @@ class Configuration {
             accountsRepository,
             unbookedBankTransactionMatcherService,
             bookingService,
-            accountService
         )
 
 

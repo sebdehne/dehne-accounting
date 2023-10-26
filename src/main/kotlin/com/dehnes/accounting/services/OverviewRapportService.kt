@@ -6,6 +6,7 @@ import com.dehnes.accounting.database.BookingRepository
 import com.dehnes.accounting.database.DateRangeFilter
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.domain.StandardAccount
+import java.time.Duration
 import java.time.Instant
 import javax.sql.DataSource
 
@@ -19,12 +20,14 @@ class OverviewRapportService(
     fun createRapport(realmId: String, rangeFilter: DateRangeFilter) =
         dataSource.readTx { conn ->
             val allAccounts = accountsRepository.getAll(conn, realmId)
+
             val openingBalanceBookings = bookingRepository.getBookings(
                 conn,
                 realmId,
                 Int.MAX_VALUE,
                 listOf(DateRangeFilter(toExclusive = rangeFilter.from))
             )
+
             val thisPeriodBookings = bookingRepository.getBookings(
                 conn,
                 realmId,

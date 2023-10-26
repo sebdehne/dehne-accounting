@@ -240,7 +240,7 @@ class DateRangeFilter(
 }
 
 class AccountIdFilter(
-    private val accountId: String,
+    val accountId: String,
     private val realmId: String,
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> =
@@ -248,7 +248,7 @@ class AccountIdFilter(
 }
 
 class SingleBookingFilter(
-    private val bookingId: Long,
+    val bookingId: Long,
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> =
         "b.id = ?" to listOf(bookingId)

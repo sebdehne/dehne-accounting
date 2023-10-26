@@ -69,74 +69,80 @@ class BookingRepository(
     ): List<Booking> {
         check(limit >= 0)
 
-        val params = mutableListOf<Any>()
-        params.add(realmId)
-
-        val filterData = filters.map { it.whereAndParams() }
-        val wheres = filterData.map { it.first }.joinToString(" AND ") { "($it)" }
-        filterData.map { it.second }.forEach { params.addAll(it) }
-
-        val finalQuery = """
-            SELECT
-                b.id, 
-                b.description, 
-                b.datetime, 
-                be.id beId, 
-                be.description beDescription, 
-                be.account_id, 
-                be.amount_in_cents 
-            FROM
-                booking b
-            LEFT JOIN
-                booking_entry be on b.id = be.booking_id AND b.realm_id = be.realm_id
-            WHERE
-                b.realm_id = ? ${if (wheres.isNotBlank()) "AND $wheres" else ""}
-            ORDER BY b.datetime DESC, b.id DESC, beId DESC
-            LIMIT $limit
-        """.trimIndent()
-
-        val records = connection.prepareStatement(finalQuery).use { preparedStatement ->
-            SqlUtils.setSqlParams(preparedStatement, params)
-
+        val allEntries = connection.prepareStatement("SELECT * FROM booking_entry where realm_id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, realmId)
             preparedStatement.executeQuery().use { rs ->
-                val l = mutableListOf<BookingBookingRecordV2>()
-                while (rs.next()) {
-                    l.add(
-                        BookingBookingRecordV2(
-                            realmId,
-                            rs.getLong("id"),
-                            rs.getString("description"),
-                            rs.getTimestamp("datetime").toInstant(),
-                            rs.getLong("beId"),
-                            rs.getString("beDescription"),
-                            rs.getString("account_id"),
-                            rs.getLong("amount_in_cents"),
-                        )
-                    )
+                val l = mutableListOf<BookingEntryRaw>()
+                while(rs.next()) {
+                    l.add(BookingEntryRaw(
+                        rs.getLong("id"),
+                        rs.getLong("booking_id"),
+                        rs.getString("description"),
+                        rs.getString("account_id"),
+                        rs.getLong("amount_in_cents"),
+                    ))
                 }
                 l
             }
+        }.filter { e ->
+            filters.firstOrNull { it is AccountIdFilter }?.let {
+                e.accountId == (it as AccountIdFilter).accountId
+            } ?: true
+        }.groupBy { it.bookingId }
+
+        val allBookings = connection.prepareStatement("SELECT * FROM booking where realm_id = ?").use { preparedStatement ->
+            preparedStatement.setString(1, realmId)
+            preparedStatement.executeQuery().use { rs ->
+                val l = mutableListOf<Booking>()
+                while(rs.next()) {
+                    l.add(Booking(
+                        realmId,
+                        rs.getLong("id"),
+                        rs.getString("description"),
+                        rs.getTimestamp("datetime").toInstant(),
+                        emptyList()
+                    ))
+                }
+                l
+            }
+        }.filter {
+
+            val dateFilter = filters.firstOrNull { it is DateRangeFilter } as? DateRangeFilter
+            val idFilter = filters.firstOrNull { it is SingleBookingFilter } as? SingleBookingFilter
+
+            if (dateFilter != null) {
+                if (it.datetime !in dateFilter.from..<dateFilter.toExclusive) return@filter false
+            }
+            if (idFilter != null) {
+                if (it.id != idFilter.bookingId) return@filter false
+            }
+
+            true
         }
 
-        return records.groupBy { it.bookingId }.map { (bId, bRecords) ->
-            val bookingRecord = records.first { it.bookingId == bId }
-            val bookingEntries = bRecords.map { r ->
-                BookingEntry(
-                    r.bookingEntryId,
-                    r.bookingEntryDescription,
-                    r.accountId,
-                    r.amountInCents,
-                )
-            }
+        val unsorted = allBookings.map { b ->
             Booking(
                 realmId,
-                bId,
-                bookingRecord.bookingDescription,
-                bookingRecord.datetime,
-                bookingEntries,
+                b.id,
+                b.description,
+                b.datetime,
+                allEntries.getOrDefault(b.id, emptyList()).map {
+                    BookingEntry(
+                        it.id,
+                        it.description,
+                        it.accountId,
+                        it.amountInCents
+                    )
+                }.sortedByDescending { it.id }
             )
         }
+
+        return unsorted.sortedWith(compareBy(
+            {it.datetime},
+            {it.id},
+        )).reversed()
     }
+
 
     fun insert(
         connection: Connection,
@@ -284,6 +290,14 @@ data class Booking(
 
 data class BookingEntry(
     val id: Long,
+    val description: String?,
+    val accountId: String,
+    val amountInCents: Long,
+)
+
+data class BookingEntryRaw(
+    val id: Long,
+    val bookingId: Long,
     val description: String?,
     val accountId: String,
     val amountInCents: Long,

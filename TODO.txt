@@ -1,5 +1,3 @@
-- slow performance
-
 - matcher action: percent split?
 - re-fresh all subscriptions after realm change
 
@@ -11,6 +9,8 @@ Users:
 - add
 - edit
 - remove
+
+Budget support
 
 User-profile:
 - change locate

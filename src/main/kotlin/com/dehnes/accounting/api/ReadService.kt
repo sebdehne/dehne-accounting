@@ -27,7 +27,6 @@ class ReadService(
     private val accountsRepository: AccountsRepository,
     private val unbookedBankTransactionMatcherService: UnbookedBankTransactionMatcherService,
     private val bookingService: BookingService,
-    private val accountService: AccountService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -73,20 +72,17 @@ class ReadService(
 
         compressed.forEach { changeEvent ->
 
-            executorService.submit(wrap(logger) {
+            listeners.values
+                .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
+                .filter {
+                    (changeEvent.changeLogEventTypeV2 == null
+                            || (changeEvent.changeLogEventTypeV2::class in it.readRequest.type.listensOnV2
+                            && changeEvent.changeLogEventTypeV2.triggerNotify(it.readRequest, it.sessionId)))
+                }
+                .forEach { sub ->
 
-
-                dataSource.readTx { conn ->
-
-                    listeners.values
-                        .filter { changeEvent.subId == null || it.subscriptionId == changeEvent.subId }
-                        .filter {
-                            (changeEvent.changeLogEventTypeV2 == null
-                                    || (changeEvent.changeLogEventTypeV2::class in it.readRequest.type.listensOnV2
-                                    && changeEvent.changeLogEventTypeV2.triggerNotify(it.readRequest, it.sessionId)))
-                        }
-                        .forEach { sub ->
-
+                    executorService.submit(wrap(logger) {
+                        dataSource.readTx { conn ->
 
                             val userState = userStateService.getUserStateV2(conn, sub.sessionId)
 
@@ -108,14 +104,9 @@ class ReadService(
 
                         }
 
-
-
-
+                    })
                 }
 
-
-
-            })
         }
     }
 
