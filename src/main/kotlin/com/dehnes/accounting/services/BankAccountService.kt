@@ -11,12 +11,47 @@ class BankAccountService(
     private val bookingRepository: BookingRepository,
     private val bankRepository: BankRepository,
     private val bankAccountRepository: BankAccountRepository,
-    private val accountsRepository: AccountsRepository,
     private val dataSource: DataSource,
     private val authorizationService: AuthorizationService,
     private val unbookedTransactionRepository: UnbookedTransactionRepository,
     private val changelog: Changelog,
 ) {
+
+    fun getBankAccount(userId: String, realmId: String, accountId: String) =
+        changelog.writeTx { conn ->
+            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.admin)
+            val bankAccountDto =
+                bankAccountRepository.getAllBankAccounts(conn, realmId).first { it.accountId == accountId }
+            BankAccount(
+                bankAccountDto.accountId,
+                bankAccountDto.bankId,
+                bankAccountDto.accountNumber,
+                bankAccountDto.openDate,
+                bankAccountDto.closeDate,
+            )
+        }
+
+    fun deleteBankAccount(userId: String, realmId: String, accountId: String) {
+        changelog.writeTx { conn ->
+            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.admin)
+            bankAccountRepository.deleteBankAccount(conn, accountId)
+        }
+    }
+
+    fun createOrUpdateBankAccount(userId: String, realmId: String, bankAccount: BankAccount) {
+        changelog.writeTx { conn ->
+            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.admin)
+
+            val existing = bankAccountRepository.getAllBankAccounts(conn, realmId)
+                .firstOrNull { it.accountId == bankAccount.accountId }
+            if (existing != null) {
+                bankAccountRepository.updateBankAccount(conn, bankAccount)
+            } else {
+                bankAccountRepository.insertBankAccount(conn, bankAccount)
+            }
+        }
+    }
+
 
     fun deleteAllUnbookedTransactions(userId: String, realmId: String, accountId: String) {
         changelog.writeTx { conn ->
@@ -33,7 +68,6 @@ class BankAccountService(
 
     private fun getOverview(conn: Connection, realmId: String): List<BankWithAccounts> {
         val allBanks = bankRepository.getAll(conn)
-        val allAccounts = accountsRepository.getAll(conn, realmId)
 
         val allBankAccounts = bankAccountRepository.getAllBankAccounts(conn, realmId)
 
@@ -60,7 +94,7 @@ class BankAccountService(
 
 
                     BankAccountView(
-                        allAccounts.first { it.id == ba.accountId },
+                        ba.accountId,
                         ba.accountNumber,
                         ba.openDate,
                         ba.closeDate,
@@ -78,7 +112,7 @@ class BankAccountService(
                             lastKnownUnbookedTransactionDate
                         ).maxOrNull()
                     )
-                }
+                },
             )
         }
     }
@@ -204,6 +238,7 @@ class BankAccountService(
     }
 
 
+
 }
 
 data class BankWithAccounts(
@@ -214,7 +249,7 @@ data class BankWithAccounts(
 ) : InformationElement()
 
 data class BankAccountView(
-    val account: AccountDto,
+    val accountId: String,
     val accountNumber: String?,
     val openDate: Instant,
     val closeDate: Instant?,

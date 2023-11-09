@@ -10,27 +10,40 @@ class AccountsRepository(private val changelog: Changelog) {
 
     private val logger = KotlinLogging.logger { }
 
-    fun getAll(conn: Connection, realmId: String): List<AccountDto> = conn.prepareStatement(
-        "SELECT * FROM account where realm_id = ?"
-    ).use { preparedStatement ->
-        preparedStatement.setString(1, realmId)
-        preparedStatement.executeQuery().use { rs ->
-            val l = mutableListOf<AccountDto>()
-            while (rs.next()) {
-                val accountId = rs.getString("id")
-                l.add(
-                    AccountDto(
-                        accountId,
-                        rs.getString("name"),
-                        rs.getString("description"),
-                        realmId,
-                        rs.getString("parent_account_id"),
-                        StandardAccount.entries.any { it.toAccountId(realmId) == accountId }
+    fun getAll(conn: Connection, realmId: String): AllAccounts {
+        val accountDtos = conn.prepareStatement(
+            "SELECT * FROM account where realm_id = ?"
+        ).use { preparedStatement ->
+            preparedStatement.setString(1, realmId)
+            preparedStatement.executeQuery().use { rs ->
+                val l = mutableListOf<AccountDto>()
+                while (rs.next()) {
+                    val accountId = rs.getString("id")
+                    l.add(
+                        AccountDto(
+                            accountId,
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            realmId,
+                            rs.getString("parent_account_id"),
+                            StandardAccount.entries.any { it.toAccountId(realmId) == accountId }
+                        )
                     )
+                }
+                l
+            }
+        }
+
+        return AllAccounts(
+            accountDtos,
+            StandardAccount.entries.map {
+                StandardAccountView(
+                    it.toAccountId(realmId),
+                    it.name,
+                    it.parent?.toAccountId(realmId)
                 )
             }
-            l
-        }
+        )
     }
 
     fun insert(accountDto: AccountDto) {
@@ -98,3 +111,13 @@ data class AccountDto(
     val builtIn: Boolean,
 ) : InformationElement()
 
+data class AllAccounts(
+    val allAccounts: List<AccountDto>,
+    val standardAccounts: List<StandardAccountView>,
+)
+
+data class StandardAccountView(
+    val id: String,
+    val originalName: String,
+    val parentAccountId: String?,
+)

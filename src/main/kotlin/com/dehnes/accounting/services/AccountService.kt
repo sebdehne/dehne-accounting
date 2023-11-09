@@ -42,7 +42,7 @@ class AccountService(
 
 
             // if the account has no children-accounts, remove it
-            if (accountsRepository.getAll(conn, realmId).none { it.parentAccountId == sourceAccountId }) {
+            if (accountsRepository.getAll(conn, realmId).allAccounts.none { it.parentAccountId == sourceAccountId }) {
                 accountsRepository.remove(conn, sourceAccountId)
             }
 
@@ -65,7 +65,7 @@ class AccountService(
                 check(account.parentAccountId != null)
             }
 
-            val existing = accountsRepository.getAll(conn, realmId).firstOrNull { it.id == account.id }
+            val existing = accountsRepository.getAll(conn, realmId).allAccounts.firstOrNull { it.id == account.id }
 
             if (existing == null) {
                 accountsRepository.insert(

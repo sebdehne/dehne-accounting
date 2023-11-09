@@ -44,13 +44,12 @@ class Configuration {
         val bookingRepository = BookingRepository(realmRepository, changelog, datasource)
         val authorizationService = AuthorizationService(userRepository, realmRepository)
         val bankRepository = BankRepository(datasource, changelog)
-        val bankAccountRepository = BankAccountRepository()
+        val bankAccountRepository = BankAccountRepository(changelog)
         val unbookedTransactionRepository = UnbookedTransactionRepository(changelog)
         val bankAccountService = BankAccountService(
             bookingRepository,
             bankRepository,
             bankAccountRepository,
-            accountsRepository,
             datasource,
             authorizationService,
             unbookedTransactionRepository,

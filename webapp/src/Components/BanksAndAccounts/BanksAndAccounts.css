@@ -16,6 +16,17 @@
     cursor: pointer;
 }
 
+.BankAccountNoPointer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+    background-color: #3f3f3f;
+    align-items: center;
+    border-radius: 10px;
+    padding: 10px;
+}
+
 .BankAccountLeft {
     display: flex;
     flex-direction: column;
@@ -23,12 +34,17 @@
 .BankAccountRight {
     display: flex;
     flex-direction: column;
-    align-items: end;
+    align-items: flex-end;
 }
 
 .BankAccountLeft01 {
     font-size: x-large;
     font-weight: bold;
+}
+.BankAccountLeft01Closed {
+    font-size: x-large;
+    font-weight: bold;
+    text-decoration: line-through;
 }
 .BankAccountLeft02 {
     font-size: smaller;
@@ -44,4 +60,8 @@
 }
 .BankAccountRight03 {
     font-size: smaller;
+}
+
+.BanksHeader {
+    text-align: center;
 }

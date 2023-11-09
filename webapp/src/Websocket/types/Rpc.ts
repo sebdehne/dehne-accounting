@@ -4,6 +4,7 @@ import {UserStateV2} from "./UserStateV2";
 import {UnbookedBankTransactionMatcher} from "./unbookedTransactions";
 import {Booking} from "./bookings";
 import {AccountDto} from "./accounts";
+import {BankAccount} from "./bankaccount";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
@@ -18,6 +19,8 @@ export type RequestType = "subscribe"
     | 'deleteBooking'
     | 'mergeAccount'
     | 'createOrUpdateAccount'
+    | 'deleteBankAccount'
+    | 'createOrUpdateBankAccount'
     ;
 
 export type RpcRequest = {
@@ -37,6 +40,7 @@ export type RpcRequest = {
     deleteBookingId?: number;
     createOrUpdateBooking?: Booking;
     createOrUpdateAccount?: AccountDto;
+    bankAccount?: BankAccount;
 }
 
 export type RpcResponse = {

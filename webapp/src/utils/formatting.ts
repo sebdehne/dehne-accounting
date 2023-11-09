@@ -1,40 +1,40 @@
-import moment from "moment";
+import dayjs from "dayjs";
 
-export function formatLocalDate(m: moment.Moment) {
+export function formatLocalDate(m: dayjs.Dayjs) {
     return m.format('YYYY-MM-DD');
 }
 
-export function formatLocalDayMonth(m: moment.Moment) {
+export function formatLocalDayMonth(m: dayjs.Dayjs) {
     return m.format('DD. MMM');
 }
 
-export function formatLocalDayMonthYear(m: moment.Moment) {
+export function formatLocalDayMonthYear(m: dayjs.Dayjs) {
     return m.format('DD. MMM YYYY');
 }
 
-export function formatYearMonth(m: moment.Moment) {
+export function formatYearMonth(m: dayjs.Dayjs) {
     return m.format('MMMM, YYYY');
 }
-export function formatMonth(m: moment.Moment) {
+export function formatMonth(m: dayjs.Dayjs) {
     return m.format('MMMM');
 }
 
-export function formatYear(m: moment.Moment) {
+export function formatYear(m: dayjs.Dayjs) {
     return m.format('YYYY');
 }
-export function formatIso(m: moment.Moment) {
+export function formatIso(m: dayjs.Dayjs) {
     return m.format();
 }
 
-export function startOfCurrentMonth(): moment.Moment {
-    return moment().clone().startOf('month');
+export function startOfCurrentMonth(): dayjs.Dayjs {
+    return dayjs().clone().startOf('month');
 }
 
-export function monthDelta(m: moment.Moment, delta: number): moment.Moment {
-    return m.clone().add(delta, 'months');
+export function monthDelta(m: dayjs.Dayjs, delta: number): dayjs.Dayjs {
+    return m.clone().add(delta, "months");
 }
-export function yearDelta(m: moment.Moment, delta: number): moment.Moment {
-    return m.clone().add(delta, 'years');
+export function yearDelta(m: dayjs.Dayjs, delta: number): dayjs.Dayjs {
+    return m.clone().add(delta, "years");
 }
 
 export const arrayBufferToBase64 = (buffer: ArrayBuffer ) => {

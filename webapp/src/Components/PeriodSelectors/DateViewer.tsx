@@ -1,10 +1,10 @@
 import {formatLocalDayMonth, formatLocalDayMonthYear} from "../../utils/formatting";
-import moment from "moment";
 import {useGlobalState} from "../../utils/userstate";
+import dayjs from "dayjs";
 
 
 type DateViewerProps = {
-    date: string | moment.Moment | undefined;
+    date: string | dayjs.Dayjs | undefined;
 }
 export const DateViewer = ({date}: DateViewerProps) => {
     const {userStateV2} = useGlobalState()
@@ -14,7 +14,7 @@ export const DateViewer = ({date}: DateViewerProps) => {
     if (!date) return null;
 
     return <div>
-        {formatFn(moment(date))}
+        {formatFn(dayjs(date))}
     </div>
 }
 

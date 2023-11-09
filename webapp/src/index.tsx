@@ -12,8 +12,8 @@ import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {BankTransactionsImporter} from "./Components/BankTransactionsV2/BankTransactionsImporter";
 import {GlobalStateProvider} from "./utils/userstate";
 import {LocalizationProvider} from '@mui/x-date-pickers';
-import {AdapterMoment} from '@mui/x-date-pickers/AdapterMoment'
-import 'moment/locale/nb';
+import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
+import 'dayjs/locale/nb';
 import {ChooseRealm} from "./Components/ChooseRealm/ChooseRealm";
 import {RealmMain} from "./Components/RealmMain/RealmMain";
 import {BanksAndAccounts} from "./Components/BanksAndAccounts/BanksAndAccounts";
@@ -25,6 +25,7 @@ import {BookingForAccountViewer} from "./Components/BookingForAccountViewer/Book
 import {BookingViewerEditor} from "./Components/BookingViewerEditor/BookingViewerEditor";
 import {Accounts} from "./Components/Accounts/Accounts";
 import {Account} from "./Components/Accounts/Account";
+import {AddOrReplaceBankAccount} from "./Components/BanksAndAccounts/AddOrReplaceBankAccount";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -36,7 +37,7 @@ root.render(
         <GlobalStateProvider>
             <ThemeProvider theme={theme}>
                 <DialogsProvider>
-                    <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="nb">
+                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="nb">
                         <CssBaseline/>
                         <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
                             <Routes>
@@ -45,8 +46,11 @@ root.render(
                                 <Route path="/realm" element={<ChooseRealm/>}/>
 
                                 <Route path="/bankaccounts" element={<BanksAndAccounts/>}/>
-                                <Route path="/bankaccount/:accountId" element={<BankTransactionsV2/>}/>
-                                <Route path="/bankaccount/:accountId/import" element={<BankTransactionsImporter/>}/>
+                                <Route path="/bankaccount_tx/:accountId" element={<BankTransactionsV2/>}/>
+                                <Route path="/bankaccount_tx/:accountId/import" element={<BankTransactionsImporter/>}/>
+
+                                <Route path="/bankaccount" element={<AddOrReplaceBankAccount/>}/>
+                                <Route path="/bankaccount/:accountId" element={<AddOrReplaceBankAccount/>}/>
 
                                 <Route path="/matchers" element={<TransactionMatchingV2/>}/>
                                 <Route path="/matchers/:accountId/:txId" element={<TransactionMatchingV2/>}/>

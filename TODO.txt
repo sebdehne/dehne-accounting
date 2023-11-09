@@ -1,8 +1,8 @@
 - matcher action: percent split?
 - re-fresh all subscriptions after realm change
 
-Bank accounts:
-- add/edit
+Bank:
+- add/edit/delete
 
 Users:
 - list

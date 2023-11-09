@@ -9,7 +9,6 @@ import {
 import WebsocketClient from "../../Websocket/websocketClient";
 import Header from "../Header";
 import {TransactionView} from "../BankTransactionsV2/BankTransactionsV2";
-import moment from "moment/moment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import IconButton from "@mui/material/IconButton";
@@ -18,6 +17,7 @@ import "./TransactionMatchingV2.css"
 import CheckIcon from "@mui/icons-material/Check";
 import AddIcon from "@mui/icons-material/Add";
 import {MatcherView} from "./MatcherView";
+import dayjs from "dayjs";
 
 export const TransactionMatchingV2 = () => {
     const {accountId, txId} = useParams();
@@ -103,7 +103,7 @@ export const TransactionMatchingV2 = () => {
                                 matcherId: matcher.id,
                                 overrideMemo: memo
                             }
-                        }).then(() => navigate('/bankaccount/' + accountId))
+                        }).then(() => navigate('/bankaccount_tx/' + accountId))
                     }
                 }
             )
@@ -119,7 +119,7 @@ export const TransactionMatchingV2 = () => {
             <TransactionView
                 amountInCents={unbookedTransaction.amountInCents}
                 memo={unbookedTransaction.memo}
-                datetime={moment(unbookedTransaction.datetime)}
+                datetime={dayjs(unbookedTransaction.datetime)}
                 unbookedId={unbookedTransaction.id}
                 bookingId={undefined}
             />

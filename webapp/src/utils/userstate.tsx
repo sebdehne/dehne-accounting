@@ -22,7 +22,7 @@ export type UserStateProviderProps = {
 export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
     const [userStateV2, setUserStateV2] = useState<UserStateV2 | undefined>();
     const [realm, setRealm] = useState<Realm>();
-    const [accounts, setAccounts] = useState<Accounts>(new Accounts([]));
+    const [accounts, setAccounts] = useState<Accounts>(new Accounts({standardAccounts: [], allAccounts: []}));
     const [localState, setLocalState] = useState<LocalState>({accountTree: new AccountTree()})
 
     useEffect(() => {
@@ -92,7 +92,6 @@ export const useGlobalState = () => {
     }
     return context;
 };
-
 
 
 export type PeriodWindowType = 'month' | 'betweenDates'

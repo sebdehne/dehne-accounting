@@ -73,7 +73,7 @@ const AccountViewer = ({account, level, filter, selectedAccountId, setSelectedAc
                 })
             }
         });
-    }, [showMergeAccountDialog]);
+    }, [showMergeAccountDialog, account.account.id]);
 
     if (children === undefined) return null;
 

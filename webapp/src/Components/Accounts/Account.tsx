@@ -22,15 +22,17 @@ export const Account = () => {
         realmId: ""
     });
 
+    const accountsHasData = accounts.hasData();
+
     useEffect(() => {
-        if (accounts.hasData() && accountId) {
+        if (accountsHasData && accountId) {
             setAccount(accounts.getById(accountId)!)
         }
-    }, [accounts.hasData(), accountId]);
+    }, [accountsHasData, accountId, accounts]);
 
     const navigate = useNavigate();
 
-    if (!accounts.hasData()) return null;
+    if (!accountsHasData) return null;
 
     const isValid = !!account.name && !!account.parentAccountId
 

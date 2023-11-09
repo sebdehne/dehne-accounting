@@ -2,7 +2,6 @@ import {Button, Container, FormControl, TextField} from "@mui/material";
 import {useNavigate, useParams} from "react-router-dom";
 import {useCallback, useEffect, useState} from "react";
 import {Booking, BookingEntry} from "../../Websocket/types/bookings";
-import moment from "moment";
 import {formatIso, formatLocalDayMonthYear} from "../../utils/formatting";
 import WebsocketClient from "../../Websocket/websocketClient";
 import IconButton from "@mui/material/IconButton";
@@ -20,6 +19,7 @@ import {AmountTextField} from "../AmountTextfield/AmountTextfield";
 import {clone, removeItemWithSlice} from "../../utils/utils";
 import {Amount} from "../Amount";
 import {useGlobalState} from "../../utils/userstate";
+import dayjs from "dayjs";
 
 export const BookingViewerEditor = () => {
     const {bookingId} = useParams();
@@ -27,7 +27,7 @@ export const BookingViewerEditor = () => {
     const [originalBooking, setOriginalBooking] = useState<Booking>();
     const [booking, setBooking] = useState<Booking>({
         entries: [],
-        datetime: formatIso(moment()),
+        datetime: formatIso(dayjs()),
         id: 0,
         realmId: ""
     });
@@ -148,13 +148,13 @@ export const BookingViewerEditor = () => {
                         ...prevState!,
                         datetime: formatIso(value!)
                     }))}
-                    value={moment(booking.datetime)}
+                    value={dayjs(booking.datetime)}
                     label={"Date"}
                 />
             </FormControl>}
             {!editMode && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <div>Date:</div>
-                <div>{formatLocalDayMonthYear(moment(booking.datetime))}</div>
+                <div>{formatLocalDayMonthYear(dayjs(booking.datetime))}</div>
             </div>}
 
         </div>

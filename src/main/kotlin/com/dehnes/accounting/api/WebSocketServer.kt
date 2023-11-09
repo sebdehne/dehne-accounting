@@ -5,7 +5,6 @@ import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.services.*
-import com.dehnes.accounting.services.BankAccountService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.websocket.CloseReason
@@ -86,6 +85,24 @@ class WebSocketServer : Endpoint() {
                     subscriptions.remove(subscriptionId)?.close()
                     logger.info { "$instanceId Removed subscription id=$subscriptionId" }
                     RpcResponse(subscriptionRemoved = true)
+                }
+
+                deleteBankAccount -> {
+                    bankAccountService.deleteBankAccount(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.accountId!!
+                    )
+                    RpcResponse()
+                }
+
+                createOrUpdateBankAccount -> {
+                    bankAccountService.createOrUpdateBankAccount(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.bankAccount!!
+                    )
+                    RpcResponse()
                 }
 
                 createOrUpdateAccount -> {
@@ -179,14 +196,16 @@ class WebSocketServer : Endpoint() {
                 importBankTransactions -> {
                     val request = rpcRequest.importBankTransactionsRequest!!
 
-                    RpcResponse(importBankTransactionsResult = bankTransactionImportService.doImport(
-                        user.id,
-                        userStateV2.selectedRealm!!,
-                        request.accountId,
-                        ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
-                        request.filename,
-                        request.duplicationHandlerType.duplicationHandler
-                    ))
+                    RpcResponse(
+                        importBankTransactionsResult = bankTransactionImportService.doImport(
+                            user.id,
+                            userStateV2.selectedRealm!!,
+                            request.accountId,
+                            ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
+                            request.filename,
+                            request.duplicationHandlerType.duplicationHandler
+                        )
+                    )
                 }
             }
         }

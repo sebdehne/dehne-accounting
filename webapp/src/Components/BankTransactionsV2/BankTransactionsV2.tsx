@@ -6,7 +6,6 @@ import {BankAccountTransaction} from "../../Websocket/types/banktransactions";
 import {useGlobalState} from "../../utils/userstate";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {amountInCentsToString} from "../../utils/formatting";
-import moment from "moment";
 import "./BankTransactionsV2.css"
 import CheckIcon from "@mui/icons-material/Check";
 import IconButton from "@mui/material/IconButton";
@@ -15,6 +14,7 @@ import {PeriodSelectorV2} from "../PeriodSelectors/PeriodSelector";
 import {useDialogs} from "../../utils/dialogs";
 import {DateViewer} from "../PeriodSelectors/DateViewer";
 import DeleteIcon from "@mui/icons-material/Delete";
+import dayjs from "dayjs";
 
 export const BankTransactionsV2 = () => {
     const {accountId} = useParams();
@@ -36,7 +36,7 @@ export const BankTransactionsV2 = () => {
     const navigate = useNavigate();
 
     const onImport = () => {
-        navigate('/bankaccount/' + accountId + '/import');
+        navigate('/bankaccount_tx/' + accountId + '/import');
     }
 
     const {showConfirmationDialog} = useDialogs();
@@ -69,7 +69,7 @@ export const BankTransactionsV2 = () => {
                     balance={transaction.balance}
                     amountInCents={transaction.amountInCents}
                     memo={transaction.memo}
-                    datetime={moment(transaction.datetime)}
+                    datetime={dayjs(transaction.datetime)}
                     unbookedId={transaction.unbookedReference?.unbookedId}
                     bookingId={transaction.bookingReference?.bookingId}
                 />
@@ -88,7 +88,7 @@ export type TransactionViewProps = {
     bookingId: number | undefined;
     amountInCents: number;
     memo: string | undefined;
-    datetime: moment.Moment;
+    datetime: dayjs.Dayjs;
 }
 export const TransactionView = ({
                                     showRightAccountId,

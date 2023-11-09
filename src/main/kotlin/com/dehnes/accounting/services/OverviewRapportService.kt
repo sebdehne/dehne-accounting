@@ -6,7 +6,6 @@ import com.dehnes.accounting.database.BookingRepository
 import com.dehnes.accounting.database.DateRangeFilter
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.domain.StandardAccount
-import java.time.Duration
 import java.time.Instant
 import javax.sql.DataSource
 
@@ -34,7 +33,7 @@ class OverviewRapportService(
             )
 
             fun getForAccount(a: AccountDto): OverviewRapportAccount {
-                val children = allAccounts
+                val children = allAccounts.allAccounts
                     .filter { it.parentAccountId == a.id }
                     .map { getForAccount(it) }
 
@@ -70,7 +69,7 @@ class OverviewRapportService(
 
             StandardAccount.entries
                 .filter { it.parent == null }
-                .map { root -> allAccounts.first { it.id == root.toAccountId(realmId) } }
+                .map { root -> allAccounts.allAccounts.first { it.id == root.toAccountId(realmId) } }
                 .map { getForAccount(it) }
         }
 

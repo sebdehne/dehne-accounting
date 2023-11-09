@@ -6,10 +6,10 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import './PeriodSelector.css'
-import moment from "moment";
 import {useGlobalState} from "../../utils/userstate";
 import {Button, ButtonGroup} from "@mui/material";
 import {PeriodType} from "../../Websocket/types/UserStateV2";
+import dayjs from "dayjs";
 
 export const PeriodSelectorV2 = () => {
     const {userStateV2, setUserStateV2} = useGlobalState();
@@ -43,8 +43,8 @@ export const PeriodSelectorV2 = () => {
                 ...prev,
                 periodType: "all",
                 rangeFilter: {
-                    from: formatIso(moment("1970-01-01")),
-                    toExclusive: formatIso(moment("2999-01-01")),
+                    from: formatIso(dayjs("1970-01-01")),
+                    toExclusive: formatIso(dayjs("2999-01-01")),
                 },
             }));
         }
@@ -64,7 +64,7 @@ export const PeriodSelectorV2 = () => {
             </div>}
             {userStateV2.periodType === "month" && <MonthPeriodSelector
                 openModeEditor={() => setShowModeEditor(true)}
-                period={[moment(userStateV2.rangeFilter.from), moment(userStateV2.rangeFilter.toExclusive)]}
+                period={[dayjs(userStateV2.rangeFilter.from), dayjs(userStateV2.rangeFilter.toExclusive)]}
                 setPeriod={p => setUserStateV2(prev => ({
                     ...prev,
                     rangeFilter: {
@@ -83,8 +83,8 @@ export const PeriodSelectorV2 = () => {
 }
 
 type MonthPeriodSelectorProps = {
-    period: moment.Moment[];
-    setPeriod: (p: moment.Moment[]) => void;
+    period: dayjs.Dayjs[];
+    setPeriod: (p: dayjs.Dayjs[]) => void;
     openModeEditor: () => void;
 }
 const MonthPeriodSelector = ({period, setPeriod, openModeEditor}: MonthPeriodSelectorProps) => {

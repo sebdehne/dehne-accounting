@@ -1,13 +1,12 @@
 import {InformationElement} from "./InformationElement";
-import {AccountDto} from "./accounts";
 
 
 export interface BankWithAccounts extends InformationElement {
-    accounts: BankAccountViewV2[];
+    accounts: BankAccountView[];
 }
 
-export type BankAccountViewV2 = {
-    account: AccountDto;
+export type BankAccountView = {
+    accountId: string;
     accountNumber?: string;
     openDate: string;
     closeDate?: string;
@@ -15,3 +14,12 @@ export type BankAccountViewV2 = {
     lastKnownTransactionDate?: string;
     totalUnbooked: number;
 }
+
+export type BankAccount = {
+    accountId: string;
+    bankId: string;
+    accountNumber?: string;
+    openDate: string;
+    closeDate?: string;
+}
+

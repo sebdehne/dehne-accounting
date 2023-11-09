@@ -1,4 +1,4 @@
-import {AccountDto} from "../Websocket/types/accounts";
+import {AccountDto, AllAccounts, StandardAccountView} from "../Websocket/types/accounts";
 
 
 export class Accounts {
@@ -6,13 +6,20 @@ export class Accounts {
     public tree: AccountExpanded[];
     public flat: AccountExpanded[];
     public byId: { [key: string]: AccountExpanded };
+    public standardAccounts: StandardAccountView[];
 
-    constructor(accounts: AccountDto[]) {
-        this.accounts = accounts;
-        const [tree, flat] = buildAccountExpanded(accounts);
+    constructor(allAccounts: AllAccounts) {
+        this.accounts = allAccounts.allAccounts;
+        const [tree, flat] = buildAccountExpanded(this.accounts);
         this.tree = tree;
         this.flat = flat;
         this.byId = Object.fromEntries(this.flat.map(a => ([a.account.id, a])));
+        this.standardAccounts = allAccounts.standardAccounts;
+    }
+
+    getStandardAccountName(originalName: string): string {
+        const s = this.standardAccounts.find(s => s.originalName === originalName)!
+        return this.getById(s.id)!.name
     }
 
     hasData(): boolean {
@@ -20,7 +27,12 @@ export class Accounts {
     }
 
     getById(id: string): AccountDto | undefined {
-        return this.byId[id]?.account;
+        let accountExpanded = this.byId[id];
+        if (!accountExpanded) {
+            console.log("Could not find " + id);
+            console.log(this.byId);
+        }
+        return accountExpanded?.account;
     }
     getByIdExpanded(id: string): AccountExpanded {
         return this.byId[id];

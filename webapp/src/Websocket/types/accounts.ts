@@ -23,6 +23,17 @@ const matchedPath = (path: AccountDto[], expected: StandardAccount[]): boolean =
     return matches;
 }
 
+export type AllAccounts = {
+    allAccounts: AccountDto[];
+    standardAccounts: StandardAccountView[];
+}
+
+export type StandardAccountView = {
+    id: string;
+    originalName: string;
+    parentAccountId?: string;
+}
+
 export type StandardAccount = 'Asset'
     | 'Liability'
     | 'Equity'

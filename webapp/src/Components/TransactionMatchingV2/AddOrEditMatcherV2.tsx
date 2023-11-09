@@ -29,10 +29,10 @@ import {Amount} from "../Amount";
 import "./AddOrEditMatcherV2.css"
 import DeleteIcon from "@mui/icons-material/Delete";
 import {v4 as uuidv4} from "uuid";
-import moment from "moment";
 import {formatIso} from "../../utils/formatting";
 import {removeItemWithSlice} from "../../utils/utils";
 import {TransactionView} from "../BankTransactionsV2/BankTransactionsV2";
+import dayjs from "dayjs";
 
 export const AddOrEditMatcherV2 = () => {
     const {userStateV2, accounts} = useGlobalState();
@@ -171,7 +171,7 @@ export const AddOrEditMatcherV2 = () => {
                     action: type === "transfer" ? TransferAction : type === "payable" ? accountActionPayable : accountActionReceivable,
                     actionAccountId: actionAccountId!,
                     actionMemo,
-                    lastUsed: formatIso(moment()),
+                    lastUsed: formatIso(dayjs()),
                     filter
                 }
             }).then(() => navigate(-1))
@@ -200,7 +200,7 @@ export const AddOrEditMatcherV2 = () => {
             <TransactionView
                 amountInCents={unbookedTransaction.amountInCents}
                 memo={unbookedTransaction.memo}
-                datetime={moment(unbookedTransaction.datetime)}
+                datetime={dayjs(unbookedTransaction.datetime)}
                 unbookedId={unbookedTransaction.id}
                 bookingId={undefined}
             />

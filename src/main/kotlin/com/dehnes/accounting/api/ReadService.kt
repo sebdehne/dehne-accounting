@@ -85,6 +85,13 @@ class ReadService(
         userStateV2: UserStateV2?,
     ): ReadResponse =
         when (readRequest.type) {
+            getBankAccount -> ReadResponse(
+                bankAccount = bankAccountService.getBankAccount(
+                    userId,
+                    userStateV2!!.selectedRealm!!,
+                    readRequest.accountId!!
+                )
+            )
             getBookings -> ReadResponse(
                 bookings = bookingService.getBookings(
                     userId = userId,
@@ -206,4 +213,6 @@ data class BookingsChanged(val realmId: String) : ChangeLogEventTypeV2()
 object UnbookedTransactionsChanged : ChangeLogEventTypeV2()
 
 object UnbookedTransactionMatchersChanged : ChangeLogEventTypeV2()
+
+object BankAccountChanged : ChangeLogEventTypeV2()
 

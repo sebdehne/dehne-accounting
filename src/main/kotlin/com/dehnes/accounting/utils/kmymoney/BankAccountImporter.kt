@@ -1,10 +1,7 @@
 package com.dehnes.accounting.utils.kmymoney
 
 import com.dehnes.accounting.bank.importers.SupportedImporters
-import com.dehnes.accounting.database.BankAccount
-import com.dehnes.accounting.database.BankAccountRepository
-import com.dehnes.accounting.database.BankDto
-import com.dehnes.accounting.database.BankRepository
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.kmymoney.AccountIdMapping
 import com.dehnes.accounting.kmymoney.KMyMoneyUtils
 import com.dehnes.accounting.utils.DateTimeUtils
@@ -43,13 +40,16 @@ class BankAccountImporter(
 
         val accountDtoWrapper = accountImporter.getImported(connection, account.id)
 
-        val bankAccount = bankAccountRepository.insertBankAccount(
-            connection,
-            accountDtoWrapper.accountDto,
+        val bankAccount = BankAccount(
+            accountDtoWrapper.accountDto.id,
             bank.id,
             null,
             (account.opened ?: LocalDate.now()).atStartOfDay().atZone(DateTimeUtils.zoneId).toInstant(),
             null
+        )
+        bankAccountRepository.insertBankAccount(
+            connection,
+            bankAccount
         )
 
         bankAccount to accountDtoWrapper

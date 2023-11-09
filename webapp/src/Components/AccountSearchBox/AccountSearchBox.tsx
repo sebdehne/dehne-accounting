@@ -41,6 +41,7 @@ export const AccountSearchBox = ({
 
     const options = accounts.flat
         .filter(a => includeStartsWithPath?.length === 0 || includeStartsWithPath.some(path => a.startsWith(path)))
+        .filter(a => exclude?.length === 0 || !exclude!.includes(a.account.id))
         .sort((a, b) => a.compare(b))
     ;
 
