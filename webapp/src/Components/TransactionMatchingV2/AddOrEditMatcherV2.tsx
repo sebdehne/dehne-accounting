@@ -128,21 +128,14 @@ export const AddOrEditMatcherV2 = () => {
     const type: ActionType = useMemo(() => {
         const selectedAccount = actionAccountId ? accounts.getByIdExpanded(actionAccountId) : undefined;
 
-        if (selectedAccount) {
-            if (isAccountPayable(selectedAccount.parentPath)) return 'payable';
-            if (isAccountReceivable(selectedAccount.parentPath)) return 'income';
-            if (isBankAccountAsset(selectedAccount.parentPath)) return 'transfer';
-            if (isBankAccountLiability(selectedAccount.parentPath)) return 'transfer';
+        if (selectedAccount && accounts.hasData()) {
+            if (isAccountPayable(accounts, selectedAccount.parentPath)) return 'payable';
+            if (isAccountReceivable(accounts, selectedAccount.parentPath)) return 'income';
+            if (isBankAccountAsset(accounts, selectedAccount.parentPath)) return 'transfer';
+            if (isBankAccountLiability(accounts, selectedAccount.parentPath)) return 'transfer';
         }
         return 'undecided'
     }, [accounts, actionAccountId]);
-
-    const includeList = [
-        ['Asset', 'AccountReceivable'],
-        ['Asset', 'BankAccountAsset'],
-        ['Liability', 'AccountPayable'],
-        ['Liability', 'BankAccountLiability'],
-    ];
 
     const isValid = useMemo(() => {
 
@@ -190,6 +183,14 @@ export const AddOrEditMatcherV2 = () => {
         navigate
     ]);
 
+    if (!accounts.hasData()) return null;
+
+    const includeList = [
+        [accounts.getStandardAccountName('Asset'), accounts.getStandardAccountName('AccountReceivable')],
+        [accounts.getStandardAccountName('Asset'), accounts.getStandardAccountName('BankAccountAsset')],
+        [accounts.getStandardAccountName('Liability'), accounts.getStandardAccountName('AccountPayable')],
+        [accounts.getStandardAccountName('Liability'), accounts.getStandardAccountName('BankAccountLiability')],
+    ];
 
     return (<Container maxWidth="xs">
         <Header title={matcherId ? 'Edit matcher' : 'Add new matcher'}/>

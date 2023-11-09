@@ -1,4 +1,5 @@
 import {InformationElement} from "./InformationElement";
+import {Accounts} from "../../utils/accounts";
 
 
 export interface AccountDto extends InformationElement {
@@ -8,15 +9,27 @@ export interface AccountDto extends InformationElement {
     realmId: string;
 }
 
-export const isAccountPayable = (path: AccountDto[]): boolean => matchedPath(path, ['Liability', 'AccountPayable'])
+export const isAccountPayable = (accounts: Accounts, path: AccountDto[]): boolean => matchedPath(path, [
+    accounts.getStandardAccountName('Liability'),
+    accounts.getStandardAccountName('AccountPayable')
+])
 
-export const isAccountReceivable = (path: AccountDto[]): boolean => matchedPath(path, ['Asset', 'AccountReceivable'])
+export const isAccountReceivable = (accounts: Accounts, path: AccountDto[]): boolean => matchedPath(path, [
+    accounts.getStandardAccountName('Asset'),
+    accounts.getStandardAccountName('AccountReceivable'),
+])
 
-export const isBankAccountAsset = (path: AccountDto[]): boolean => matchedPath(path, ['Asset', 'BankAccountAsset'])
+export const isBankAccountAsset = (accounts: Accounts, path: AccountDto[]): boolean => matchedPath(path, [
+    accounts.getStandardAccountName('Asset'),
+    accounts.getStandardAccountName('BankAccountAsset')
+])
 
-export const isBankAccountLiability = (path: AccountDto[]): boolean => matchedPath(path, ['Liability', 'BankAccountLiability'])
+export const isBankAccountLiability = (accounts: Accounts, path: AccountDto[]): boolean => matchedPath(path, [
+    accounts.getStandardAccountName('Liability'),
+    accounts.getStandardAccountName('BankAccountLiability'),
+])
 
-const matchedPath = (path: AccountDto[], expected: StandardAccount[]): boolean => {
+const matchedPath = (path: AccountDto[], expected: string[]): boolean => {
     const pathNames = path.map(a => a.name);
     let matches = true;
     expected.forEach((p, index) => matches = matches && pathNames[index] === p)
@@ -33,20 +46,6 @@ export type StandardAccountView = {
     originalName: string;
     parentAccountId?: string;
 }
-
-export type StandardAccount = 'Asset'
-    | 'Liability'
-    | 'Equity'
-    | 'Income'
-    | 'Expense'
-    | 'AccountPayable'
-    | 'AccountReceivable'
-    | 'OpeningBalances'
-    | 'OtherBankTransfers'
-    | 'BankAccountAsset'
-    | 'BankAccountLiability'
-    ;
-
 
 export type Party = InformationElement & {
     realmId: string;
