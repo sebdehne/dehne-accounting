@@ -55,6 +55,9 @@ export const AddOrReplaceBankAccount = () => {
 
     if (!accounts.hasData()) return null;
 
+    console.log(accounts.getStandardAccountName('Asset'));
+    console.log(accounts.getStandardAccountName('BankAccountAsset'));
+
     return (<Container maxWidth="xs">
         <Header title={'Bank account'}/>
 
@@ -64,7 +67,10 @@ export const AddOrReplaceBankAccount = () => {
                 accountId: accountId!
             }))}
             value={account.accountId}
-            includeStartsWithPath={[[accounts.getStandardAccountName('Asset'), accounts.getStandardAccountName('BankAccountAsset')]]}
+            includeStartsWithPath={[
+                [accounts.getStandardAccountName('Asset'), accounts.getStandardAccountName('BankAccountAsset')],
+                [accounts.getStandardAccountName('Liability'), accounts.getStandardAccountName('BankAccountLiability')],
+            ]}
             exclude={banksAndAccounts.flatMap(b => b.accounts).filter(a => a.accountId !== account.accountId).map(a => a.accountId)}
         />
 
