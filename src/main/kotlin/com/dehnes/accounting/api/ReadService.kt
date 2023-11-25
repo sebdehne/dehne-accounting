@@ -14,8 +14,11 @@ import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
 import java.sql.Connection
+import java.util.*
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.locks.ReentrantLock
 import javax.sql.DataSource
+import kotlin.concurrent.withLock
 
 
 class ReadService(
@@ -33,6 +36,41 @@ class ReadService(
 
     private val logger = KotlinLogging.logger { }
 
+    private val readCacheLock = ReentrantLock()
+    private val readCache = mutableMapOf<String, CacheItem>()
+
+    private class CacheItem(
+        var result: ReadResponse? = null,
+        val lock: ReentrantLock = ReentrantLock(),
+    )
+
+    init {
+        UUID.randomUUID().toString().apply {
+            changelog.writeTransactionListeners[this] = Listener(
+                this,
+                { event ->
+                    when (event.changeLogEventTypeV2) {
+                        is UserStateUpdated -> false
+                        null -> false
+                        else -> true
+                    }
+                },
+                {
+                    invalidateCache()
+                }
+            )
+        }
+    }
+
+    private fun invalidateCache() {
+        readCacheLock.lock()
+        try {
+            readCache.clear()
+        } finally {
+            readCacheLock.unlock()
+        }
+    }
+
     fun addSubscription(sub: WebSocketServer.Subscription) {
         logger.info { "Added subscription id=${sub.subscriptionId}" }
 
@@ -43,26 +81,29 @@ class ReadService(
                         || (changeEvent.changeLogEventTypeV2::class in sub.readRequest.type.listensOnV2
                         && changeEvent.changeLogEventTypeV2.additionalFilter(sub.readRequest, sub.sessionId)))
             },
-            { event ->
+            { _ ->
                 executorService.submit(wrap(logger) {
-                    dataSource.readTx { conn ->
-                        sub.onEvent(
-                            Notify(sub.subscriptionId, null, true)
-                        )
-
+                    val readResponse = handleRequest(
+                        sub.userId,
+                        sub.readRequest,
+                        sub.sessionId,
+                    ) {
                         sub.onEvent(
                             Notify(
                                 sub.subscriptionId,
-                                handleRequest(
-                                    conn,
-                                    sub.userId,
-                                    sub.readRequest,
-                                    userStateService.getUserStateV2(conn, sub.sessionId),
-                                ),
-                                null
+                                null,
+                                true
                             )
                         )
                     }
+
+                    sub.onEvent(
+                        Notify(
+                            sub.subscriptionId,
+                            readResponse,
+                            null
+                        )
+                    )
                 })
             }
         )
@@ -79,32 +120,69 @@ class ReadService(
     }
 
     fun handleRequest(
+        userId: String,
+        readRequest: ReadRequest,
+        sessionId: String,
+        sendWorkingNotify: () -> Unit
+    ): ReadResponse {
+
+        val userState = userStateService.getUserStateV2(sessionId)
+        val cacheKey = "$userId $readRequest $userState"
+
+        val cacheItem = readCacheLock.withLock {
+            readCache.getOrPut(cacheKey) { CacheItem() }
+        }
+
+        cacheItem.result?.apply {
+            return this
+        }
+
+        return cacheItem.lock.withLock {
+            cacheItem.result ?: run {
+                cacheItem.result = dataSource.readTx { conn ->
+                    sendWorkingNotify()
+
+                    handleRequestInternal(
+                        conn,
+                        userId,
+                        readRequest,
+                        userState
+                    )
+                }
+
+                cacheItem.result!!
+            }
+        }
+    }
+
+    private fun handleRequestInternal(
         connection: Connection,
         userId: String,
         readRequest: ReadRequest,
-        userStateV2: UserStateV2?,
+        userStateV2: UserStateV2,
     ): ReadResponse =
         when (readRequest.type) {
-            getAllUsers  -> ReadResponse()
-            createOrReplaceUser  -> ReadResponse()
-            deleteUser  -> ReadResponse()
+            getAllUsers -> ReadResponse()
+            createOrReplaceUser -> ReadResponse()
+            deleteUser -> ReadResponse()
 
             getBankAccount -> ReadResponse(
                 bankAccount = bankAccountService.getBankAccount(
                     userId,
-                    userStateV2!!.selectedRealm!!,
+                    userStateV2.selectedRealm!!,
                     readRequest.accountId!!
                 )
             )
+
             getBookings -> ReadResponse(
                 bookings = bookingService.getBookings(
                     userId = userId,
-                    realmId = userStateV2!!.selectedRealm!!,
+                    realmId = userStateV2.selectedRealm!!,
                     bookingsFilters = listOf(
                         userStateV2.rangeFilter!!,
                         AccountIdFilter(
                             accountId = readRequest.accountId!!,
-                            realmId = userStateV2.selectedRealm!!
+                            realmId = userStateV2.selectedRealm
                         )
                     )
                 )
@@ -113,14 +191,14 @@ class ReadService(
             getTotalUnbookedTransactions -> ReadResponse(
                 totalUnbookedTransactions = unbookedBankTransactionMatcherService.getTotalUnbookedTransactions(
                     userId,
-                    userStateV2!!.selectedRealm!!
+                    userStateV2.selectedRealm!!
                 )
             )
 
             getUnbookedBankTransaction -> ReadResponse(
                 unbookedTransaction = unbookedBankTransactionMatcherService.getUnbookedBankTransaction(
                     userId,
-                    userStateV2!!.selectedRealm!!,
+                    userStateV2.selectedRealm!!,
                     readRequest.unbookedBankTransactionReference!!
                 )
             )
@@ -128,7 +206,7 @@ class ReadService(
             getUnbookedBankTransactionMatchers -> ReadResponse(
                 unbookedBankTransactionMatchers = unbookedBankTransactionMatcherService.getMatchers(
                     userId,
-                    userStateV2!!.selectedRealm!!,
+                    userStateV2.selectedRealm!!,
                     readRequest.unbookedBankTransactionReference
                 )
             )
@@ -136,21 +214,21 @@ class ReadService(
             getAllAccounts -> ReadResponse(allAccounts = dataSource.readTx {
                 accountsRepository.getAll(
                     it,
-                    userStateV2!!.selectedRealm!!
+                    userStateV2.selectedRealm!!
                 )
             })
 
             getBanksAndAccountsOverview -> ReadResponse(
                 banksAndAccountsOverview = bankAccountService.getOverview(
                     userId,
-                    userStateV2!!.selectedRealm!!
+                    userStateV2.selectedRealm!!
                 )
             )
 
             getBankAccountTransactions -> ReadResponse(
                 getBankAccountTransactions = bankAccountService.getBankAccountTransactions(
                     userId,
-                    userStateV2!!.selectedRealm!!,
+                    userStateV2.selectedRealm!!,
                     readRequest.accountId!!,
                     userStateV2.rangeFilter!!
                 )
@@ -168,7 +246,7 @@ class ReadService(
 
             getOverviewRapport -> {
                 val readResponse = ReadResponse(
-                    overViewRapport = if (userStateV2?.rangeFilter != null && userStateV2.selectedRealm != null) {
+                    overViewRapport = if (userStateV2.rangeFilter != null && userStateV2.selectedRealm != null) {
                         overviewRapportService.createRapport(
                             userStateV2.selectedRealm,
                             userStateV2.rangeFilter
@@ -181,7 +259,7 @@ class ReadService(
             getBooking -> ReadResponse(
                 booking = bookingService.getBooking(
                     userId = userId,
-                    realmId = userStateV2!!.selectedRealm!!,
+                    realmId = userStateV2.selectedRealm!!,
                     bookingId = readRequest.getBookingId!!
                 )
             )

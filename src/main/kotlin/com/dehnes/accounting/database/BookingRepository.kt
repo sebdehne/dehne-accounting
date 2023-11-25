@@ -5,7 +5,6 @@ import com.dehnes.accounting.database.Transactions.readTx
 import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
-import java.util.*
 import javax.sql.DataSource
 
 
@@ -21,29 +20,9 @@ class BookingRepository(
     private val dataSource: DataSource,
 ) {
 
-    init {
-        UUID.randomUUID().toString().apply {
-            changelog.writeTransactionListeners[this] = Listener(
-                this,
-                { e -> e.changeLogEventTypeV2 is BookingsChanged },
-                { invalidateCache((it.changeLogEventTypeV2 as BookingsChanged).realmId) }
-            )
-        }
-    }
-
-    private val bookingsCache: MutableMap<String, CacheEntry> = mutableMapOf()
-
-    private fun invalidateCache(realmId: String) {
-        synchronized(bookingsCache) {
-            bookingsCache.remove(realmId)
-        }
-    }
-
-    private fun getCachedData(realmId: String, filters: List<BookingsFilter>) = synchronized(bookingsCache) {
-        val data = bookingsCache.getOrPut(realmId) {
-            dataSource.readTx { conn ->
-                readFromDatabase(conn, realmId)
-            }
+    private fun getFilteredData(realmId: String, filters: List<BookingsFilter>) = run {
+        val data = dataSource.readTx { conn ->
+            readFromDatabase(conn, realmId)
         }
 
         data.copy(
@@ -123,13 +102,13 @@ class BookingRepository(
     }
 
     fun getSum(accountId: String, realmId: String, dateRangeFilter: DateRangeFilter): Long {
-        val (_, allBookings) = getCachedData(realmId, listOf(dateRangeFilter))
+        val (_, allBookings) = getFilteredData(realmId, listOf(dateRangeFilter))
 
         return allBookings.flatMap { it.entries }.filter { it.accountId == accountId }.sumOf { it.amountInCents }
     }
 
     fun getLastKnownBookingDate(accountId: String, realmId: String): Instant? {
-        val (_, allBookings) = getCachedData(
+        val (_, allBookings) = getFilteredData(
             realmId,
             listOf(AccountIdFilter(
                 accountId = accountId,
@@ -146,7 +125,7 @@ class BookingRepository(
     ): List<Booking> {
         check(limit >= 0)
 
-        val (_, allBookings) = getCachedData(realmId, filters)
+        val (_, allBookings) = getFilteredData(realmId, filters)
 
         val unsorted = allBookings.map { b ->
             Booking(

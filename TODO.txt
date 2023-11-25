@@ -1,6 +1,5 @@
 - matcher action: percent split?
 - fix hardcoded standardAccount names
-- add caching layer before DB + do not execute the same DB-requests multiple times in parallel
 
 Bank:
 - add/edit/delete

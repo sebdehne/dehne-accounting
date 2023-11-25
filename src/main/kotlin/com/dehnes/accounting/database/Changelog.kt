@@ -53,9 +53,11 @@ class Changelog(private val dataSource: DataSource) {
         val compressed = events.toSet()
 
         compressed.forEach { event ->
-            writeTransactionListeners.filter { it.value.filter(event) }.forEach { (_, l) ->
-                l.onEvent(event)
-            }
+            writeTransactionListeners
+                .filter { it.value.filter(event) }
+                .forEach { (_, l) ->
+                    l.onEvent(event)
+                }
         }
     }
 

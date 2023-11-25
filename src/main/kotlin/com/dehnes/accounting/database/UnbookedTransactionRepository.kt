@@ -227,7 +227,7 @@ interface QueryFilter {
 interface BookingsFilter : QueryFilter
 interface BankAccountTransactionsFilter : QueryFilter
 
-class DateRangeFilter(
+data class DateRangeFilter(
     val from: Instant = Instant.MIN,
     val toExclusive: Instant = Instant.MAX,
 ) : BookingsFilter {
