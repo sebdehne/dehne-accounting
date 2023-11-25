@@ -27,7 +27,7 @@ class AuthorizationService(
     }
 
     private fun listRealms(connection: Connection, userId: String, accessRequest: AccessRequest): List<Realm> {
-        val user = userRepository.getUser(connection, userId) ?: error("Unknown userId=$userId")
+        val user = userRepository.getUser(connection, userId)
         if (!user.active) return emptyList()
 
         val allRealms = realmRepository.getAll(connection)

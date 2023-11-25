@@ -10,6 +10,7 @@ type ContextType = {
     setUserStateV2: (fn: (prev: UserStateV2) => UserStateV2) => Promise<void>;
     realm: Realm | undefined;
     accounts: Accounts;
+    clearAccounts: () => void;
     localState: LocalState;
     setLocalState: (fn: (prev: LocalState) => LocalState) => void;
 }
@@ -60,6 +61,7 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
     const updateStateV2 = (fn: (prev: UserStateV2) => UserStateV2) => {
         if (userStateV2) {
             const updated = fn(userStateV2);
+            setUserStateV2(updated);
             return new Promise<void>(resolve => {
                 WebsocketClient.rpc({
                     type: "setUserStateV2",
@@ -70,6 +72,10 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
         return new Promise<void>(resolve => resolve())
     }
 
+    const clearAccounts = () => {
+        setAccounts(new Accounts({standardAccounts: [], allAccounts: []}))
+    }
+
 
     return (
         <GlobalStateProviderContext.Provider value={{
@@ -78,7 +84,8 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
             realm,
             accounts,
             localState,
-            setLocalState
+            setLocalState,
+            clearAccounts,
         }}>
             {children}
         </GlobalStateProviderContext.Provider>

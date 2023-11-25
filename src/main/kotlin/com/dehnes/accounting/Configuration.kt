@@ -131,6 +131,8 @@ fun datasourceSetup(sqliteFile: String): DataSource {
     config.schema = "dehne-accounting"
     config.driverClassName = "org.sqlite.JDBC"
     config.isAutoCommit = false
+    config.minimumIdle = 10
+    config.maximumPoolSize = 50
 
     sqLiteConfig.toProperties().forEach { key, value ->
         config.addDataSourceProperty(key.toString(), value)

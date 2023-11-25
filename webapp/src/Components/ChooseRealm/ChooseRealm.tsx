@@ -8,7 +8,7 @@ import {useNavigate} from "react-router-dom";
 
 export const ChooseRealm = () => {
     const [realms, setRealms] = useState<Realm[]>();
-    const {setUserStateV2} = useGlobalState();
+    const {setUserStateV2, clearAccounts} = useGlobalState();
 
     const navigate = useNavigate()
 
@@ -20,11 +20,14 @@ export const ChooseRealm = () => {
         return () => WebsocketClient.unsubscribe(sub);
     }, []);
 
-    const openLedger = (realmId: string) => {
+    const onRealmSelected = (realmId: string) => {
+        clearAccounts();
         setUserStateV2(prev => ({
             ...prev,
             selectedRealm: realmId
-        })).then(() => navigate('/'));
+        })).then(() => {
+            navigate('/');
+        });
     }
 
     return (<Container maxWidth="xs" className="App">
@@ -36,7 +39,7 @@ export const ChooseRealm = () => {
         >
             {realms?.map(lv => (<div key={lv.id} style={{width: "80%"}}>
                 <Button variant="contained" color="primary"
-                        onClick={() => openLedger(lv.id)}>{lv.name}</Button>
+                        onClick={() => onRealmSelected(lv.id)}>{lv.name}</Button>
             </div>))}
 
         </div>

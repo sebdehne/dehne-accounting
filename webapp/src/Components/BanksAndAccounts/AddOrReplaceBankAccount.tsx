@@ -55,9 +55,6 @@ export const AddOrReplaceBankAccount = () => {
 
     if (!accounts.hasData()) return null;
 
-    console.log(accounts.getStandardAccountName('Asset'));
-    console.log(accounts.getStandardAccountName('BankAccountAsset'));
-
     return (<Container maxWidth="xs">
         <Header title={'Bank account'}/>
 

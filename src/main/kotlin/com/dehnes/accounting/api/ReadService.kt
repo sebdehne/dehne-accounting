@@ -85,6 +85,10 @@ class ReadService(
         userStateV2: UserStateV2?,
     ): ReadResponse =
         when (readRequest.type) {
+            getAllUsers  -> ReadResponse()
+            createOrReplaceUser  -> ReadResponse()
+            deleteUser  -> ReadResponse()
+
             getBankAccount -> ReadResponse(
                 bankAccount = bankAccountService.getBankAccount(
                     userId,

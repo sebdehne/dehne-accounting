@@ -27,12 +27,21 @@ class Changelog(private val dataSource: DataSource) {
 
         try {
             dataSource.connection.use { conn ->
-                conn.autoCommit = false
-                result = fn(conn)
-                conn.commit()
+                val cnt = Transactions.dbConnectionCounter.incrementAndGet()
+                Transactions.logger.debug { "Opened connection. new cnt=$cnt" }
 
-                handleChanges(threadLocalChangeLog.get())
+                conn.autoCommit = false
+                try {
+                    result = fn(conn)
+                    conn.commit()
+                } finally {
+                    val cnt2 = Transactions.dbConnectionCounter.decrementAndGet()
+                    Transactions.logger.debug { "Closed connection. new cnt=$cnt2" }
+                    conn.rollback()
+                }
             }
+
+            handleChanges(threadLocalChangeLog.get())
         } finally {
             threadLocalChangeLog.remove()
         }

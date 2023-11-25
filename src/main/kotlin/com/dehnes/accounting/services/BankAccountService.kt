@@ -18,7 +18,7 @@ class BankAccountService(
 ) {
 
     fun getBankAccount(userId: String, realmId: String, accountId: String) =
-        changelog.writeTx { conn ->
+        dataSource.readTx { conn ->
             authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.admin)
             val bankAccountDto =
                 bankAccountRepository.getAllBankAccounts(conn, realmId).first { it.accountId == accountId }

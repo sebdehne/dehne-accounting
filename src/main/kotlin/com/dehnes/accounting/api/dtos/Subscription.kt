@@ -24,6 +24,13 @@ data class Notify(
 enum class ReadRequestType(
     val listensOnV2: List<KClass<out ChangeLogEventTypeV2>> = emptyList(),
 ) {
+
+    // admin commands
+    getAllUsers(),
+    createOrReplaceUser(),
+    deleteUser(),
+
+    //
     getAllRealms(listOf(RealmChanged::class)),
     getUserState(listOf(UserStateUpdated::class)),
     getOverviewRapport(listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
@@ -33,6 +40,7 @@ enum class ReadRequestType(
             BookingsChanged::class,
             BankAccountChanged::class,
             UnbookedTransactionsChanged::class,
+            UserStateUpdated::class,
         )
     ),
     getBankAccountTransactions(
@@ -43,13 +51,13 @@ enum class ReadRequestType(
             UserStateUpdated::class,
         )
     ),
-    getAllAccounts(listOf(AccountsChanged::class)),
-    getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class)),
-    getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class)),
-    getTotalUnbookedTransactions(listOf(UnbookedTransactionsChanged::class)),
+    getAllAccounts(listOf(AccountsChanged::class, UserStateUpdated::class)),
+    getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class, UserStateUpdated::class,)),
+    getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class,)),
+    getTotalUnbookedTransactions(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class,)),
     getBookings(listOf(BookingsChanged::class, UserStateUpdated::class)),
     getBooking(listOf(BookingsChanged::class, UserStateUpdated::class)),
-    getBankAccount(listOf(BankAccountChanged::class)),
+    getBankAccount(listOf(BankAccountChanged::class, UserStateUpdated::class,)),
     ;
 
 }

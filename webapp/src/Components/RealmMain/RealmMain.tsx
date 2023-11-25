@@ -37,7 +37,9 @@ export const RealmMain = () => {
     useEffect(() => {
         const sub = WebsocketClient.subscribe(
             {type: "getOverviewRapport"},
-            readResponse => setOverviewRapport(readResponse.overViewRapport)
+            readResponse => {
+                setOverviewRapport(readResponse.overViewRapport);
+            }
         )
         return () => WebsocketClient.unsubscribe(sub);
     }, [setOverviewRapport]);
@@ -199,7 +201,9 @@ const OverviewRapportViewerAccount = ({account, level, isLast, filter}: Overview
 
     const overviewRapportAccounts = account.children.filter(filter);
 
-    if (!accounts.hasData()) return null;
+    if (!accounts.hasData()) {
+        return null;
+    }
 
     return (<li className="OverviewRapportViewerAccount" style={{marginLeft: (level * 5) + 'px'}}>
 
