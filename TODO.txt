@@ -1,12 +1,13 @@
 - matcher action: percent split?
 - fix hardcoded standardAccount names
 
-Bank:
-- add/edit/delete
-
 Users:
 - list
 - add/edit/remove
+- access permissions
+
+Bank:
+- add/edit/delete
 
 Back-ups
 
