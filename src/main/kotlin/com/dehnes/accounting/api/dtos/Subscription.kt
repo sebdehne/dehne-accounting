@@ -26,9 +26,7 @@ enum class ReadRequestType(
 ) {
 
     // admin commands
-    getAllUsers(),
-    createOrReplaceUser(),
-    deleteUser(),
+    getAllUsers(listOf(UserUpdated::class)),
 
     //
     getAllRealms(listOf(RealmChanged::class)),
@@ -83,5 +81,6 @@ data class ReadResponse(
     val bookings: List<Booking>? = null,
     val booking: Booking? = null,
     val bankAccount: BankAccount? = null,
+    val allUsers: List<User>? = null,
 )
 

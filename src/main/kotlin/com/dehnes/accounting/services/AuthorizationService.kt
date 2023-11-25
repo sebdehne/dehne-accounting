@@ -14,7 +14,7 @@ class AuthorizationService(
         connection: Connection,
         userId: String,
         accessRequest: AccessRequest,
-    ) = listRealms(connection, userId, accessRequest)
+    ) = listAuthorizedRealms(connection, userId, accessRequest)
 
     fun assertAuthorization(
         connection: Connection,
@@ -22,24 +22,40 @@ class AuthorizationService(
         realmId: String,
         accessRequest: AccessRequest,
     ) {
-        listRealms(connection, userId, accessRequest).firstOrNull { it.id == realmId }
+        listAuthorizedRealms(connection, userId, accessRequest).firstOrNull { it.id == realmId }
             ?: error("User $userId has not access to $realmId")
     }
 
-    private fun listRealms(connection: Connection, userId: String, accessRequest: AccessRequest): List<Realm> {
+    fun assertIsAdmin(
+        connection: Connection,
+        userId: String,
+    ) {
+        check(userRepository.getUser(connection, userId).admin) { "User $userId is not an admin" }
+    }
+
+    private fun listAuthorizedRealms(
+        connection: Connection,
+        userId: String,
+        accessRequest: AccessRequest
+    ): List<Realm> {
         val user = userRepository.getUser(connection, userId)
         if (!user.active) return emptyList()
 
-        val allRealms = realmRepository.getAll(connection)
-        val userRealms = userRepository.getUserRealms(connection).filter { it.userId == user.id }
+        val realmList = realmRepository.getAll(connection)
 
-        return allRealms
-            .map { realm ->
-                val userRealm = userRealms.firstOrNull { it.ledgerId == realm.id }
-                realm to userRealm
+        val permissions = if (user.admin) {
+            realmList.associate {
+                it.id to AccessLevel.admin
             }
-            .filter { user.admin || it.second?.accessLevel?.hasAccess(accessRequest) == true }
-            .map { it.first }
+        } else {
+            user.realmIdToAccessLevel
+        }
+
+        return permissions.entries
+            .filter { user.admin || it.value.hasAccess(accessRequest) }
+            .map { entry ->
+                realmList.first { it.id == entry.key }
+            }
     }
 }
 
@@ -52,16 +68,16 @@ enum class AccessRequest {
 
 enum class AccessLevel {
     admin,
-    legderOwner,
-    legderReadWrite,
-    legderRead,
+    realmOwner,
+    realmReadWrite,
+    realmRead,
     none,
     ;
 
     fun hasAccess(req: AccessRequest) = when (req) {
         AccessRequest.admin -> this == admin
-        AccessRequest.owner -> this in listOf(admin, legderOwner)
-        AccessRequest.write -> this in listOf(admin, legderOwner, legderReadWrite)
-        AccessRequest.read -> this in listOf(admin, legderOwner, legderReadWrite, legderRead)
+        AccessRequest.owner -> this in listOf(admin, realmOwner)
+        AccessRequest.write -> this in listOf(admin, realmOwner, realmReadWrite)
+        AccessRequest.read -> this in listOf(admin, realmOwner, realmReadWrite, realmRead)
     }
 }

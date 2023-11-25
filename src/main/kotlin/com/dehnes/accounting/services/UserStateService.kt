@@ -71,7 +71,7 @@ class UserStateService(
 
     fun getLatestSessionIdOrCreateNew(userEmail: String, existingCookie: String?) = changelog.writeTx { conn ->
         val user = userService.getOrCreateUserByEmail(conn, userEmail)
-
+        check(user.active) { "User $userEmail not active" }
         userStateRepository.getOrCreateUserStateId(
             conn,
             user.id,

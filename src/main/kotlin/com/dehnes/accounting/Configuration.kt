@@ -36,13 +36,13 @@ class Configuration {
         SchemaHandler.initSchema(datasource)
 
         val changelog = Changelog(datasource)
-        val userService = UserService(datasource)
-        val userStateRepository = UserStateRepository(objectMapper, changelog)
         val userRepository = UserRepository(objectMapper, changelog)
         val accountsRepository = AccountsRepository(changelog)
         val realmRepository = RealmRepository(accountsRepository, changelog)
-        val bookingRepository = BookingRepository(realmRepository, changelog, datasource)
         val authorizationService = AuthorizationService(userRepository, realmRepository)
+        val userService = UserService(datasource, userRepository, authorizationService, changelog)
+        val userStateRepository = UserStateRepository(objectMapper, changelog)
+        val bookingRepository = BookingRepository(realmRepository, changelog, datasource)
         val bankRepository = BankRepository(datasource, changelog)
         val bankAccountRepository = BankAccountRepository(changelog)
         val unbookedTransactionRepository = UnbookedTransactionRepository(changelog)
@@ -86,6 +86,7 @@ class Configuration {
         val readService = ReadService(
             executorService,
             UserStateService(datasource, userStateRepository, userService, changelog),
+            userService,
             datasource,
             authorizationService,
             OverviewRapportService(datasource, bookingRepository, accountsRepository),

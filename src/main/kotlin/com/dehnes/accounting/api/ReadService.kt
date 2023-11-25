@@ -24,6 +24,7 @@ import kotlin.concurrent.withLock
 class ReadService(
     private val executorService: ExecutorService,
     private val userStateService: UserStateService,
+    private val userService: UserService,
     private val dataSource: DataSource,
     private val authorizationService: AuthorizationService,
     private val overviewRapportService: OverviewRapportService,
@@ -162,9 +163,9 @@ class ReadService(
         userStateV2: UserStateV2,
     ): ReadResponse =
         when (readRequest.type) {
-            getAllUsers -> ReadResponse()
-            createOrReplaceUser -> ReadResponse()
-            deleteUser -> ReadResponse()
+            getAllUsers -> ReadResponse(
+                allUsers = userService.getAllUsers(userId)
+            )
 
             getBankAccount -> ReadResponse(
                 bankAccount = bankAccountService.getBankAccount(
@@ -287,6 +288,8 @@ data class RealmChanged(
 ) : ChangeLogEventTypeV2() {
     override fun additionalFilter(readRequest: ReadRequest, sessionId: String) = readRequest.type == getAllRealms
 }
+
+object UserUpdated : ChangeLogEventTypeV2()
 
 object AccountsChanged : ChangeLogEventTypeV2()
 

@@ -87,6 +87,22 @@ class WebSocketServer : Endpoint() {
                     RpcResponse(subscriptionRemoved = true)
                 }
 
+                addOrReplaceUser -> {
+                    userService.addOrReplaceUser(
+                        user.id,
+                        rpcRequest.user!!
+                    )
+                    RpcResponse()
+                }
+
+                deleteUser -> {
+                    userService.deleteUser(
+                        user.id,
+                        rpcRequest.deleteUserId!!
+                    )
+                    RpcResponse()
+                }
+
                 deleteBankAccount -> {
                     bankAccountService.deleteBankAccount(
                         user.id,

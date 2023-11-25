@@ -31,6 +31,10 @@ enum class RequestType {
 
     deleteBankAccount,
     createOrUpdateBankAccount,
+
+    // admin commands
+    addOrReplaceUser,
+    deleteUser,
 }
 
 data class RpcRequest(
@@ -50,6 +54,8 @@ data class RpcRequest(
     val createOrUpdateBooking: Booking?,
     val createOrUpdateAccount: AccountDto?,
     val bankAccount: BankAccount?,
+    val user: User?,
+    val deleteUserId: String?,
 )
 
 data class RpcResponse(

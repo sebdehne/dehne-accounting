@@ -95,8 +95,3 @@ data class Realm(
     val lastBookingId: Long,
 ) : InformationElement()
 
-data class UserRealm(
-    val userId: String,
-    val ledgerId: String,
-    val accessLevel: AccessLevel,
-)
