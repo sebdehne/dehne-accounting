@@ -31,8 +31,6 @@ enum class ReadRequestType(
     //
     getUserInfo(listOf(UserUpdated::class)),
 
-    getAllRealms(listOf(RealmChanged::class)),
-
     getUserState(listOf(UserStateUpdated::class)),
 
     getOverviewRapport(listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),

@@ -13,7 +13,6 @@ import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
 import mu.KotlinLogging
-import java.sql.Connection
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.locks.ReentrantLock
@@ -26,7 +25,6 @@ class ReadService(
     private val userStateService: UserStateService,
     private val userService: UserService,
     private val dataSource: DataSource,
-    private val authorizationService: AuthorizationService,
     private val overviewRapportService: OverviewRapportService,
     private val bankAccountService: BankAccountService,
     private val accountsRepository: AccountsRepository,
@@ -144,7 +142,6 @@ class ReadService(
                     sendWorkingNotify()
 
                     handleRequestInternal(
-                        conn,
                         userId,
                         readRequest,
                         userState
@@ -157,7 +154,6 @@ class ReadService(
     }
 
     private fun handleRequestInternal(
-        connection: Connection,
         userId: String,
         readRequest: ReadRequest,
         userStateV2: UserStateV2,
@@ -239,14 +235,6 @@ class ReadService(
                 )
             )
 
-            getAllRealms -> ReadResponse(
-                realms = authorizationService.getAuthorizedRealms(
-                    connection,
-                    userId,
-                    AccessRequest.read
-                )
-            )
-
             getUserState -> ReadResponse(userStateV2 = userStateV2)
 
             getOverviewRapport -> {
@@ -285,12 +273,6 @@ data class UserStateUpdated(
     val affectedSessionsId: List<String>
 ) : ChangeLogEventTypeV2() {
     override fun additionalFilter(readRequest: ReadRequest, sessionId: String) = sessionId in affectedSessionsId
-}
-
-data class RealmChanged(
-    val realmId: String
-) : ChangeLogEventTypeV2() {
-    override fun additionalFilter(readRequest: ReadRequest, sessionId: String) = readRequest.type == getAllRealms
 }
 
 object UserUpdated : ChangeLogEventTypeV2()

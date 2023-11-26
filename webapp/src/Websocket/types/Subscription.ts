@@ -26,8 +26,7 @@ export type Notify = {
     generatingNotify?: boolean;
 }
 
-export type ReadRequestType = 'getAllRealms'
-    | 'getUserState'
+export type ReadRequestType = 'getUserState'
     | 'getOverviewRapport'
     | 'getBanksAndAccountsOverview'
     | 'getBankAccountTransactions'

@@ -12,11 +12,6 @@ class AuthorizationService(
     private val realmRepository: RealmRepository,
 ) {
 
-    fun getAuthorizedRealms(
-        connection: Connection,
-        userId: String,
-        accessRequest: AccessRequest,
-    ) = listAuthorizedRealms(connection, userId, accessRequest)
 
     fun assertAuthorization(
         connection: Connection,

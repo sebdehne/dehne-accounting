@@ -90,7 +90,6 @@ class Configuration {
             userStateService,
             userService,
             datasource,
-            authorizationService,
             OverviewRapportService(datasource, bookingRepository, accountsRepository),
             bankAccountService,
             accountsRepository,
