@@ -6,7 +6,7 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import './PeriodSelector.css'
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {Button, ButtonGroup} from "@mui/material";
 import {PeriodType} from "../../Websocket/types/UserStateV2";
 import dayjs from "dayjs";

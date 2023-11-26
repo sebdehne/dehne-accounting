@@ -167,6 +167,10 @@ class ReadService(
                 allUsers = userService.getAllUsers(userId)
             )
 
+            getUserInfo -> ReadResponse(
+                userInfo = userService.getUserInfo(userId)
+            )
+
             getBankAccount -> ReadResponse(
                 bankAccount = bankAccountService.getBankAccount(
                     userId,

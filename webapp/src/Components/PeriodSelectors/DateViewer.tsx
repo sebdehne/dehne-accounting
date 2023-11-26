@@ -1,5 +1,5 @@
 import {formatLocalDayMonth, formatLocalDayMonthYear} from "../../utils/formatting";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import dayjs from "dayjs";
 
 

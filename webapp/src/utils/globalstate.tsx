@@ -1,14 +1,15 @@
 import React, {useContext, useEffect, useState} from 'react';
 import WebsocketClient from "../Websocket/websocketClient";
 import {UserStateV2} from "../Websocket/types/UserStateV2";
-import {Realm} from "../Websocket/types/realm";
 import {Accounts} from "./accounts";
 import {AccountTree, LocalState} from "../Websocket/types/localstate";
+import {RealmInfo, UserInfo} from "../Websocket/types/User";
 
 type ContextType = {
+    userInfo: UserInfo;
+    realm: RealmInfo | undefined;
     userStateV2: UserStateV2 | undefined;
     setUserStateV2: (fn: (prev: UserStateV2) => UserStateV2) => Promise<void>;
-    realm: Realm | undefined;
     accounts: Accounts;
     clearAccounts: () => void;
     localState: LocalState;
@@ -22,28 +23,22 @@ export type UserStateProviderProps = {
 }
 export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
     const [userStateV2, setUserStateV2] = useState<UserStateV2 | undefined>();
-    const [realm, setRealm] = useState<Realm>();
     const [accounts, setAccounts] = useState<Accounts>(new Accounts({standardAccounts: [], allAccounts: []}));
     const [localState, setLocalState] = useState<LocalState>({accountTree: new AccountTree()})
+    const [userInfo, setUserInfo] = useState<UserInfo>({isAdmin: false, accessibleRealms: []});
 
     useEffect(() => {
-        if (userStateV2?.selectedRealm) {
-            const subId = WebsocketClient.subscribe(
-                {type: "getAllRealms"},
-                readResponse => {
-                    setRealm(readResponse.realms!.find(l => l.id === userStateV2.selectedRealm))
-                }
-            );
-            return () => WebsocketClient.unsubscribe(subId);
-        }
-    }, [setRealm, userStateV2?.selectedRealm]);
+        const subId = WebsocketClient.subscribe(
+            {type: "getUserInfo"},
+            readResponse => setUserInfo(readResponse.userInfo!)
+        );
+        return () => WebsocketClient.unsubscribe(subId);
+    }, [setUserInfo]);
 
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
             {type: 'getUserState'},
-            readResponse => {
-                setUserStateV2(readResponse.userStateV2);
-            }
+            readResponse => setUserStateV2(readResponse.userStateV2)
         )
         return () => WebsocketClient.unsubscribe(subId);
     }, [setUserStateV2]);
@@ -52,6 +47,7 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
         const subId = WebsocketClient.subscribe(
             {type: 'getAllAccounts'},
             readResponse => {
+                console.log("UPDATED accounts received")
                 setAccounts(new Accounts(readResponse.allAccounts!));
             }
         )
@@ -79,9 +75,10 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
 
     return (
         <GlobalStateProviderContext.Provider value={{
+            userInfo,
             setUserStateV2: updateStateV2,
             userStateV2,
-            realm,
+            realm: userInfo.accessibleRealms.find(ri => ri.id === userStateV2?.selectedRealm),
             accounts,
             localState,
             setLocalState,

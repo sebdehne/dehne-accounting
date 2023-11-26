@@ -1,15 +1,15 @@
 import {BankAccount, BankWithAccounts} from "./bankaccount";
 import {BankAccountTransaction} from "./banktransactions";
-import {Realm} from "./realm";
 import {UserStateV2} from "./UserStateV2";
 import {OverviewRapportAccount} from "./OverviewRapportAccount";
-import {AccountDto, AllAccounts, Party} from "./accounts";
+import {AllAccounts, Party} from "./accounts";
 import {
     MatchedUnbookedBankTransactionMatcher,
     UnbookedBankTransactionReference,
     UnbookedTransaction
 } from "./unbookedTransactions";
 import {Booking} from "./bookings";
+import {User, UserInfo} from "./User";
 
 export type Subscribe = {
     subscriptionId: string;
@@ -39,6 +39,8 @@ export type ReadRequestType = 'getAllRealms'
     | 'getBooking'
     | 'getAllParties'
     | 'getBankAccount'
+    | 'getAllUsers'
+    | 'getUserInfo'
     ;
 
 export type ReadRequest = {
@@ -49,7 +51,7 @@ export type ReadRequest = {
 }
 
 export type ReadResponse = {
-    realms?: Realm[];
+    userInfo?: UserInfo;
     userStateV2?: UserStateV2;
     overViewRapport?: OverviewRapportAccount[];
     banksAndAccountsOverview?: BankWithAccounts[];
@@ -62,5 +64,6 @@ export type ReadResponse = {
     booking?: Booking;
     parties?: Party[];
     bankAccount?: BankAccount;
+    allUsers?: User[];
 }
 

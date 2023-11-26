@@ -10,7 +10,7 @@ import {
     UnbookedTransactionMatcherFilter
 } from "../../Websocket/types/unbookedTransactions";
 import React, {useState} from "react";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {BorderedSection} from "../borderedSection/borderedSection";
 import {Amount} from "../Amount";
 import "./MatcherView.css"

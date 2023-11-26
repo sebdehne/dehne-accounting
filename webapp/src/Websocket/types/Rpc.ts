@@ -5,6 +5,7 @@ import {UnbookedBankTransactionMatcher} from "./unbookedTransactions";
 import {Booking} from "./bookings";
 import {AccountDto} from "./accounts";
 import {BankAccount} from "./bankaccount";
+import {User} from "./User";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
@@ -21,6 +22,9 @@ export type RequestType = "subscribe"
     | 'createOrUpdateAccount'
     | 'deleteBankAccount'
     | 'createOrUpdateBankAccount'
+    // admin commands:
+    | 'addOrReplaceUser'
+    | 'deleteUser'
     ;
 
 export type RpcRequest = {
@@ -41,6 +45,8 @@ export type RpcRequest = {
     createOrUpdateBooking?: Booking;
     createOrUpdateAccount?: AccountDto;
     bankAccount?: BankAccount;
+    user?: User;
+    deleteUserId?: string;
 }
 
 export type RpcResponse = {

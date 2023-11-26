@@ -1,5 +1,5 @@
 import {AccountDto} from "../../Websocket/types/accounts";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {useMemo} from "react";
 import {Autocomplete, FormControl, TextField} from "@mui/material";
 import {AccountExpanded} from "../../utils/accounts";

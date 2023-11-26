@@ -1,7 +1,6 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.domain.InformationElement
-import com.dehnes.accounting.services.AccessLevel
 
 data class User(
     override val id: String,
@@ -10,6 +9,23 @@ data class User(
     val userEmail: String,
     val active: Boolean,
     val admin: Boolean,
-    val realmIdToAccessLevel: Map<String, AccessLevel>,
+    val realmIdToAccessLevel: Map<String, RealmAccessLevel>,
 ) : InformationElement()
 
+data class UserInfo(
+    val isAdmin: Boolean,
+    val accessibleRealms: List<RealmInfo>,
+)
+
+data class RealmInfo(
+    override val id: String,
+    override val name: String,
+    override val description: String?,
+    val accessLevel: RealmAccessLevel,
+) : InformationElement()
+
+enum class RealmAccessLevel {
+    read,
+    readWrite,
+    owner
+}

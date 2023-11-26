@@ -1,6 +1,7 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.UserUpdated
+import com.dehnes.accounting.api.dtos.RealmAccessLevel
 import com.dehnes.accounting.api.dtos.User
 import com.dehnes.accounting.api.dtos.UserStateV2
 import com.dehnes.accounting.services.AccessLevel
@@ -56,7 +57,16 @@ class UserRepository(
             }
         }
 
-        return user.copy(realmIdToAccessLevel = userRealms.toMap())
+        return user.copy(realmIdToAccessLevel = userRealms.associate {
+            it.first to when (it.second) {
+                AccessLevel.admin,
+                AccessLevel.realmOwner -> RealmAccessLevel.owner
+
+                AccessLevel.realmReadWrite -> RealmAccessLevel.readWrite
+                AccessLevel.realmRead -> RealmAccessLevel.read
+                else -> error("Impossible")
+            }
+        })
     }
 
     fun addOrReplace(conn: Connection, user: User) {

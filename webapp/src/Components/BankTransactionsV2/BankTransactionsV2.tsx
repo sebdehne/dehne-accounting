@@ -3,7 +3,7 @@ import {Container} from "@mui/material";
 import Header from "../Header";
 import {useNavigate, useParams} from "react-router-dom";
 import {BankAccountTransaction} from "../../Websocket/types/banktransactions";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {amountInCentsToString} from "../../utils/formatting";
 import "./BankTransactionsV2.css"

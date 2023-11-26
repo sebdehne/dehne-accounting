@@ -10,7 +10,7 @@ import theme from "./theme";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {BankTransactionsImporter} from "./Components/BankTransactionsV2/BankTransactionsImporter";
-import {GlobalStateProvider} from "./utils/userstate";
+import {GlobalStateProvider} from "./utils/globalstate";
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
 import 'dayjs/locale/nb';
@@ -26,6 +26,7 @@ import {BookingViewerEditor} from "./Components/BookingViewerEditor/BookingViewe
 import {Accounts} from "./Components/Accounts/Accounts";
 import {Account} from "./Components/Accounts/Account";
 import {AddOrReplaceBankAccount} from "./Components/BanksAndAccounts/AddOrReplaceBankAccount";
+import {UserManagement} from "./Components/Users/UserManagement";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -65,6 +66,8 @@ root.render(
                                 <Route path="/accounts" element={<Accounts/>}/>
                                 <Route path="/account" element={<Account/>}/>
                                 <Route path="/account/:accountId" element={<Account/>}/>
+
+                                <Route path="/users" element={<UserManagement/>}/>
                             </Routes>
                         </BrowserRouter>
                     </LocalizationProvider>

@@ -13,7 +13,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import {useDialogs} from "../../utils/dialogs";
 import {AccountDto} from "../../Websocket/types/accounts";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import dayjs from "dayjs";
 
 export const BanksAndAccounts = () => {

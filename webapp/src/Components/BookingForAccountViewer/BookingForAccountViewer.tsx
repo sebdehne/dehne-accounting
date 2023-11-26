@@ -5,7 +5,7 @@ import "./BookingForAccountViewer.css";
 import {PeriodSelectorV2} from "../PeriodSelectors/PeriodSelector";
 import {Booking, BookingEntry} from "../../Websocket/types/bookings";
 import WebsocketClient from "../../Websocket/websocketClient";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {Amount} from "../Amount";
 import {useNavigate, useParams} from "react-router-dom";
 import {DateViewer} from "../PeriodSelectors/DateViewer";

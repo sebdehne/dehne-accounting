@@ -18,7 +18,7 @@ import {AccountSearchBox} from "../AccountSearchBox/AccountSearchBox";
 import {AmountTextField} from "../AmountTextfield/AmountTextfield";
 import {clone, removeItemWithSlice} from "../../utils/utils";
 import {Amount} from "../Amount";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import dayjs from "dayjs";
 
 export const BookingViewerEditor = () => {

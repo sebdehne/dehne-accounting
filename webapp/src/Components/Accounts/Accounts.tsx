@@ -1,6 +1,6 @@
 import {ButtonGroup, Container, TextField} from "@mui/material";
 import Header from "../Header";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import "./Accounts.css"
 import {AccountExpanded} from "../../utils/accounts";
 import IconButton from "@mui/material/IconButton";

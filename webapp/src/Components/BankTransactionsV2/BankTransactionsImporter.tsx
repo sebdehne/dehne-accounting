@@ -5,7 +5,7 @@ import {Button, Checkbox, Container, FormControlLabel, styled} from "@mui/materi
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {arrayBufferToBase64} from "../../utils/formatting";
 import {ImportBankTransactionsResult} from "../../Websocket/types/Rpc";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {useParams} from "react-router-dom";
 
 const VisuallyHiddenInput = styled('input')({

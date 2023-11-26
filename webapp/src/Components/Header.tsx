@@ -12,9 +12,10 @@ type HeaderProps = {
     subTitle?: string;
     clickable?: () => void;
     extraMenuOptions?: [string, () => void][];
+    userIsAdmin?: boolean;
 }
 
-const Header = ({title, subTitle, clickable, extraMenuOptions}: HeaderProps) => {
+const Header = ({title, subTitle, clickable, extraMenuOptions, userIsAdmin = false}: HeaderProps) => {
     const [connectionStatusAndError, setConnectionStatusAndError] = useState<ConnectionStatusAndError>({
         status: ConnectionStatus.connecting
     });
@@ -53,7 +54,7 @@ const Header = ({title, subTitle, clickable, extraMenuOptions}: HeaderProps) => 
                 {displayStatus && <span>{displayStatus}</span>}
             </div>
             <div className="HeaderButtonsRight">
-                <BasicMenu extraMenuOptions={extraMenuOptions ?? []}/>
+                <BasicMenu extraMenuOptions={extraMenuOptions ?? []} showAdminOptions={userIsAdmin}/>
             </div>
         </div>
 
@@ -70,8 +71,9 @@ export default Header;
 
 type BasicMenuProps = {
     extraMenuOptions: [string, () => void][];
+    showAdminOptions: boolean;
 }
-const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
+const BasicMenu = ({extraMenuOptions, showAdminOptions}: BasicMenuProps) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -131,6 +133,12 @@ const BasicMenu = ({extraMenuOptions}: BasicMenuProps) => {
                     </ListItemIcon>
                     <ListItemText>Add booking</ListItemText>
                 </MenuItem>
+                {showAdminOptions && <MenuList>
+                    <Divider/>
+                    <MenuItem onClick={() => navigate('/users')}>
+                        <ListItemText>User management</ListItemText>
+                    </MenuItem>
+                </MenuList>}
             </Menu>
         </div>
     );

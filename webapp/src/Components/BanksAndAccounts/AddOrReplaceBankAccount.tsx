@@ -5,7 +5,7 @@ import {useEffect, useState} from "react";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {BankAccount, BankWithAccounts} from "../../Websocket/types/bankaccount";
 import dayjs from "dayjs";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {AccountSearchBox} from "../AccountSearchBox/AccountSearchBox";
 import {DatePicker} from "@mui/x-date-pickers";
 import {formatIso} from "../../utils/formatting";

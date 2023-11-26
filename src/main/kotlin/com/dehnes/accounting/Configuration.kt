@@ -83,9 +83,11 @@ class Configuration {
             changelog,
         )
 
+        val userStateService = UserStateService(datasource, userStateRepository, userService, changelog)
+
         val readService = ReadService(
             executorService,
-            UserStateService(datasource, userStateRepository, userService, changelog),
+            userStateService,
             userService,
             datasource,
             authorizationService,
@@ -103,7 +105,7 @@ class Configuration {
         beans[UserService::class] = userService
         beans[BankTransactionImportService::class] = bankTransactionImportService
         beans[BankAccountService::class] = bankAccountService
-        beans[UserStateService::class] = UserStateService(datasource, userStateRepository, userService, changelog)
+        beans[UserStateService::class] = userStateService
         beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
         beans[BookingService::class] = bookingService
         beans[AccountService::class] = accountService

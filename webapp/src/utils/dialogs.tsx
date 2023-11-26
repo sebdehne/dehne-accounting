@@ -2,7 +2,7 @@ import React, {useCallback, useContext, useState} from "react";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import {UnbookedBankTransactionMatcher} from "../Websocket/types/unbookedTransactions";
 import {MatcherView} from "../Components/TransactionMatchingV2/MatcherView";
-import {useGlobalState} from "./userstate";
+import {useGlobalState} from "./globalstate";
 import {AccountSearchBox} from "../Components/AccountSearchBox/AccountSearchBox";
 
 

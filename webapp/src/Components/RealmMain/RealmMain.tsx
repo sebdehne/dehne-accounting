@@ -1,7 +1,7 @@
 import Header from "../Header";
 import {Container, ListItemIcon, Menu, MenuItem} from "@mui/material";
 import React, {useCallback, useEffect, useState} from "react";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {useNavigate} from "react-router-dom";
 import {PeriodSelectorV2} from "../PeriodSelectors/PeriodSelector";
 import {OverviewRapportAccount} from "../../Websocket/types/OverviewRapportAccount";
@@ -15,7 +15,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {Check} from "@mui/icons-material";
 
 export const RealmMain = () => {
-    const {userStateV2, setUserStateV2, realm} = useGlobalState();
+    const {userStateV2, setUserStateV2, realm, userInfo} = useGlobalState();
     const [overviewRapport, setOverviewRapport] = useState<OverviewRapportAccount[]>();
     const [totalUnbookedTransactions, setTotalUnbookedTransactions] = useState(0);
 
@@ -55,6 +55,7 @@ export const RealmMain = () => {
             <Header
                 title={realm?.name ?? ""}
                 clickable={onHeaderClick}
+                userIsAdmin={userInfo.isAdmin}
             />
 
             {totalUnbookedTransactions > 0 &&

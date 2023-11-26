@@ -1,6 +1,6 @@
 import {Button, Container, TextField} from "@mui/material";
 import Header from "../Header";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import "./Account.css"
 import {useEffect, useState} from "react";

@@ -2,7 +2,7 @@ import {Button, Container, FormControl, InputLabel, MenuItem, Select, TextField}
 import {useNavigate, useParams} from "react-router-dom";
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import Header from "../Header";
-import {useGlobalState} from "../../utils/userstate";
+import {useGlobalState} from "../../utils/globalstate";
 import WebsocketClient from "../../Websocket/websocketClient";
 import SaveIcon from "@mui/icons-material/Save";
 import {AccountSearchBox} from "../AccountSearchBox/AccountSearchBox";

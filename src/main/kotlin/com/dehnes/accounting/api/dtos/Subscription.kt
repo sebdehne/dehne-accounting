@@ -29,9 +29,14 @@ enum class ReadRequestType(
     getAllUsers(listOf(UserUpdated::class)),
 
     //
+    getUserInfo(listOf(UserUpdated::class)),
+
     getAllRealms(listOf(RealmChanged::class)),
+
     getUserState(listOf(UserStateUpdated::class)),
+
     getOverviewRapport(listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
+
     getBanksAndAccountsOverview(
         listOf(
             AccountsChanged::class,
@@ -69,6 +74,7 @@ data class ReadRequest(
 
 data class ReadResponse(
     val realms: List<Realm>? = null,
+    val userInfo: UserInfo? = null,
     val userState: UserState? = null,
     val userStateV2: UserStateV2? = null,
     val overViewRapport: List<OverviewRapportAccount>? = null,

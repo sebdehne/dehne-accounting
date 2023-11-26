@@ -1,20 +1,16 @@
+- user administration frontend
+- support for creating and restoring backups
 - matcher action: percent split?
 - fix hardcoded standardAccount names
 
-Users:
-- list
-- add/edit/remove
-- access permissions
 
 Bank:
 - add/edit/delete
 
-Back-ups
-
 Budget support
 
 User-profile:
-- change locate
+- change locale
 
 ==== lower priority ==== :
 - open close bank accounts
