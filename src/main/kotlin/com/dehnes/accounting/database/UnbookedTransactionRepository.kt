@@ -59,6 +59,8 @@ class UnbookedTransactionRepository(
             it.executeUpdate()
         }
 
+        changelog.add(UnbookedTransactionsChanged)
+
         return newId
     }
 
