@@ -1,14 +1,8 @@
 package com.dehnes.accounting.api
 
-import com.dehnes.accounting.api.dtos.Notify
-import com.dehnes.accounting.api.dtos.ReadRequest
+import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
-import com.dehnes.accounting.api.dtos.ReadResponse
-import com.dehnes.accounting.api.dtos.UserStateV2
-import com.dehnes.accounting.database.AccountIdFilter
-import com.dehnes.accounting.database.AccountsRepository
-import com.dehnes.accounting.database.Changelog
-import com.dehnes.accounting.database.Listener
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
@@ -23,6 +17,7 @@ import kotlin.concurrent.withLock
 class ReadService(
     private val executorService: ExecutorService,
     private val userStateService: UserStateService,
+    private val realmRepository: RealmRepository,
     private val userService: UserService,
     private val dataSource: DataSource,
     private val overviewRapportService: OverviewRapportService,
@@ -160,6 +155,13 @@ class ReadService(
     ): ReadResponse =
         when (readRequest.type) {
             getAllUsers -> ReadResponse(
+                realms = dataSource.readTx { conn -> realmRepository.getAll(conn).map {
+                    RealmInfo(
+                        it.id,
+                        it.name,
+                        it.description
+                    )
+                } },
                 allUsers = userService.getAllUsers(userId)
             )
 

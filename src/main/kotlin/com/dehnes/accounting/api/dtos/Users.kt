@@ -14,10 +14,16 @@ data class User(
 
 data class UserInfo(
     val isAdmin: Boolean,
-    val accessibleRealms: List<RealmInfo>,
+    val accessibleRealms: List<RealmInfoWithAccessLevel>,
 )
 
 data class RealmInfo(
+    override val id: String,
+    override val name: String,
+    override val description: String?,
+) : InformationElement()
+
+data class RealmInfoWithAccessLevel(
     override val id: String,
     override val name: String,
     override val description: String?,

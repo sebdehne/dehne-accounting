@@ -10,6 +10,7 @@ import {
 } from "./unbookedTransactions";
 import {Booking} from "./bookings";
 import {User, UserInfo} from "./User";
+import {InformationElement} from "./InformationElement";
 
 export type Subscribe = {
     subscriptionId: string;
@@ -64,5 +65,6 @@ export type ReadResponse = {
     parties?: Party[];
     bankAccount?: BankAccount;
     allUsers?: User[];
+    realms?: InformationElement[];
 }
 

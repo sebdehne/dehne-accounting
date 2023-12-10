@@ -5,15 +5,15 @@ export type User = InformationElement & {
     userEmail: string;
     active: boolean;
     admin: boolean;
-    realmIdToAccessLevel: Map<String, RealmAccessLevel>,
+    realmIdToAccessLevel: {[key: string]: RealmAccessLevel};
 }
 
 export type UserInfo = {
     isAdmin: boolean;
-    accessibleRealms: RealmInfo[];
+    accessibleRealms: RealmInfoWithAccessLevel[];
 }
 
-export type RealmInfo = InformationElement & {
+export type RealmInfoWithAccessLevel = InformationElement & {
     accessLevel: RealmAccessLevel;
 }
 

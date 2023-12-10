@@ -1,7 +1,7 @@
 package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.RealmAccessLevel
-import com.dehnes.accounting.api.dtos.RealmInfo
+import com.dehnes.accounting.api.dtos.RealmInfoWithAccessLevel
 import com.dehnes.accounting.database.Realm
 import com.dehnes.accounting.database.RealmRepository
 import com.dehnes.accounting.database.UserRepository
@@ -55,7 +55,7 @@ class AuthorizationService(
             }
     }
 
-    fun getRealmInfo(connection: Connection, userId: String): List<RealmInfo> {
+    fun getRealmInfo(connection: Connection, userId: String): List<RealmInfoWithAccessLevel> {
         val user = userRepository.getUser(connection, userId)
         if (!user.active) return emptyList()
 
@@ -73,7 +73,7 @@ class AuthorizationService(
             .filter { user.admin || it.value.hasAccess(AccessRequest.read) }
             .map { e ->
                 val realm = realmList.first { it.id == e.key }
-                RealmInfo(
+                RealmInfoWithAccessLevel(
                     realm.id,
                     realm.name,
                     realm.description,

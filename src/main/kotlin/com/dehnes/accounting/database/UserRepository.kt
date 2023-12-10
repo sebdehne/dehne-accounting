@@ -47,10 +47,10 @@ class UserRepository(
             preparedStatement.setString(1, user.id)
 
             preparedStatement.executeQuery().use { rs ->
-                val l = mutableListOf<Pair<String, AccessLevel>>()
+                val l = mutableListOf<Pair<String, RealmAccessLevel>>()
                 while (rs.next()) {
                     l.add(
-                        rs.getString("realm_id") to AccessLevel.valueOf(rs.getString("access_level"))
+                        rs.getString("realm_id") to RealmAccessLevel.valueOf(rs.getString("access_level"))
                     )
                 }
                 l
@@ -58,14 +58,7 @@ class UserRepository(
         }
 
         return user.copy(realmIdToAccessLevel = userRealms.associate {
-            it.first to when (it.second) {
-                AccessLevel.admin,
-                AccessLevel.realmOwner -> RealmAccessLevel.owner
-
-                AccessLevel.realmReadWrite -> RealmAccessLevel.readWrite
-                AccessLevel.realmRead -> RealmAccessLevel.read
-                else -> error("Impossible")
-            }
+            it.first to it.second
         })
     }
 
@@ -104,7 +97,7 @@ class UserRepository(
                 preparedStatement.setString(3, user.description)
                 preparedStatement.setString(4, user.userEmail)
                 preparedStatement.setInt(5, user.active.toInt())
-                preparedStatement.setInt(6, user.active.toInt())
+                preparedStatement.setInt(6, user.admin.toInt())
                 preparedStatement.executeUpdate()
             }
 

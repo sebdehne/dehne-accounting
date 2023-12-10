@@ -3,11 +3,11 @@ import WebsocketClient from "../Websocket/websocketClient";
 import {UserStateV2} from "../Websocket/types/UserStateV2";
 import {Accounts} from "./accounts";
 import {AccountTree, LocalState} from "../Websocket/types/localstate";
-import {RealmInfo, UserInfo} from "../Websocket/types/User";
+import {RealmInfoWithAccessLevel, UserInfo} from "../Websocket/types/User";
 
 type ContextType = {
     userInfo: UserInfo;
-    realm: RealmInfo | undefined;
+    realm: RealmInfoWithAccessLevel | undefined;
     userStateV2: UserStateV2 | undefined;
     setUserStateV2: (fn: (prev: UserStateV2) => UserStateV2) => Promise<void>;
     accounts: Accounts;

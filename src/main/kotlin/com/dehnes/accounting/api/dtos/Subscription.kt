@@ -71,7 +71,7 @@ data class ReadRequest(
 )
 
 data class ReadResponse(
-    val realms: List<Realm>? = null,
+    val realms: List<RealmInfo>? = null,
     val userInfo: UserInfo? = null,
     val userState: UserState? = null,
     val userStateV2: UserStateV2? = null,
