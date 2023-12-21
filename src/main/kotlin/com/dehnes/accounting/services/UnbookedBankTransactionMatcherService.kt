@@ -40,7 +40,7 @@ class UnbookedBankTransactionMatcherService(
                 realmId,
                 executeMatcherRequest.accountId,
                 executeMatcherRequest.transactionId
-            )
+            ) ?: return@writeTx
 
             val transactionMatcher =
                 unbookedBankTransactionMatcherRepository.getAll(conn, realmId)

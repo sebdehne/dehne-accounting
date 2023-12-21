@@ -186,16 +186,19 @@ class UnbookedTransactionRepository(
                 preparedStatement.setString(2, accountId)
                 preparedStatement.setLong(3, unbookedTransactionId)
                 preparedStatement.executeQuery().use { rs ->
-                    check(rs.next())
-                    UnbookedTransaction(
-                        rs.getString("account_id"),
-                        rs.getString("realm_id"),
-                        rs.getLong("id"),
-                        rs.getString("memo"),
-                        rs.getTimestamp("datetime").toInstant(),
-                        rs.getLong("amount_in_cents"),
-                        rs.getString("other_account_number")
-                    )
+                    if (rs.next()) {
+                        UnbookedTransaction(
+                            rs.getString("account_id"),
+                            rs.getString("realm_id"),
+                            rs.getLong("id"),
+                            rs.getString("memo"),
+                            rs.getTimestamp("datetime").toInstant(),
+                            rs.getLong("amount_in_cents"),
+                            rs.getString("other_account_number")
+                        )
+                    } else {
+                        null
+                    }
                 }
             }
 

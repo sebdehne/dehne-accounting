@@ -153,7 +153,7 @@ class BankAccountService(
             )
         ).map {
             val mainEntry = it.entries.single { it.accountId == accountId }
-            val otherEntry = it.entries.single { it.accountId != accountId }
+            val otherEntry = it.entries.first { it.accountId != accountId }
 
             BankAccountTransaction(
                 BookingReference(

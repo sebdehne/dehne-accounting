@@ -1,5 +1,5 @@
-- user administration frontend
 - support for creating and restoring backups
+- Budget support
 - matcher action: percent split?
 - fix hardcoded standardAccount names
 
@@ -7,13 +7,10 @@
 Bank:
 - add/edit/delete
 
-Budget support
-
 User-profile:
 - change locale
 
 ==== lower priority ==== :
-- open close bank accounts
 - close periods - and prevent editing
 - bulk edit - how?
 
