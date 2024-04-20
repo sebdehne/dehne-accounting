@@ -7,19 +7,17 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-class SBankenCsvExportImporter : Importer {
+class DnbCsvImporter : Importer {
 
     val supportedHeaderLines = listOf(
         listOf(
-            "BOKFØRINGSDATO",
-            "RENTEDATO",
-            "ARKIVREFERANSE",
-            "MOTKONTO",
-            "TYPE",
-            "TEKST",
-            "UT FRA KONTO",
-            "INN PÅ KONTO",
+            "Dato",
+            "Forklaring",
+            "Rentedato",
+            "Ut fra konto",
+            "Inn på konto",
         )
     )
 
@@ -31,7 +29,7 @@ class SBankenCsvExportImporter : Importer {
 
         val records = mutableListOf<BankTransactionImportRecord>()
 
-        BufferedReader(InputStreamReader(dataSource, StandardCharsets.ISO_8859_1)).use { reader ->
+        BufferedReader(InputStreamReader(dataSource, StandardCharsets.UTF_8)).use { reader ->
             // skip forward until the first headerLine
 
             var detectedHeader: List<String>? = null
@@ -64,19 +62,19 @@ class SBankenCsvExportImporter : Importer {
 
                 if (parts.size != detectedHeader.size) continue
 
-                val datoStr = getValue(parts, "BOKFØRINGSDATO") ?: continue
-                val date = LocalDate.parse(datoStr)
-                val text = getValue(parts, "TEKST")
+                val datoStr = getValue(parts, "Rentedato") ?: continue
+                val date = LocalDate.parse(datoStr, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                val text = getValue(parts, "Forklaring")
 
-                val debit = getValue(parts, "INN PÅ KONTO")?.parseAmount()
-                val credit = getValue(parts, "UT FRA KONTO")?.parseAmount()
+                val debit = getValue(parts, "Inn på konto")?.parseAmount()
+                val credit = getValue(parts, "Ut fra konto")?.parseAmount()
 
                 records.add(
                     BankTransactionImportRecord(
                         text,
                         date.atStartOfDay().atZone(DateTimeUtils.zoneId).toInstant(),
                         debit ?: (credit!! * -1L),
-                        getValue(parts, "MOTKONTO")
+                        null
                     )
                 )
             }
@@ -88,7 +86,10 @@ class SBankenCsvExportImporter : Importer {
     private fun String.parseAmount(): Long {
         var str = this
 
-        val parts = str.split(",")
+        val parts = str.split(".")
+        if (parts.size == 1) {
+            return parts[0].toLong() * 100
+        }
         check(parts.size == 2)
         return ((parts[0].toLong() * 100) + parts[1].toLong())
     }

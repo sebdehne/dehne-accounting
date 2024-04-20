@@ -113,6 +113,7 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
+                            <apiVersion>1.9</apiVersion>
                             <sourceDirs>
                                 <source>src/main/kotlin</source>
                                 <source>src/main/java</source>
@@ -221,7 +222,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20230227</version>
+            <version>20231013</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>

@@ -130,7 +130,7 @@ export const TransactionView = ({
 
     return (<div className="TransactionV2">
         <div className="TransactionLeft" onClick={() => {
-            if (bookingId !== unbookedId) {
+            if (bookingId && bookingId !== unbookedId) {
                 navigate("/booking/" + bookingId);
             }
         }}>

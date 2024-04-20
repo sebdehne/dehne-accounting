@@ -74,11 +74,9 @@ type UserProps = {
 }
 const UserComponent = ({user, realms, setUser, hasChanges, forgetChanges}: UserProps) => {
 
-    console.log(user);
-
     const levelIs = useCallback((realmId: string, l: RealmAccessLevel) =>
             user.realmIdToAccessLevel[realmId] === l,
-        [user, realms]);
+        [user]);
 
     const toggleAccess = useCallback((realmId: string, l: RealmAccessLevel) => {
         const currentLevel = user.realmIdToAccessLevel[realmId];
