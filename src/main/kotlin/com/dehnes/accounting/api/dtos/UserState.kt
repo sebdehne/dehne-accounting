@@ -11,6 +11,8 @@ data class UserStateV2(
     val id: String,
     val selectedRealm: String? = null,
     val rangeFilter: DateRangeFilter? = null,
-    val periodType: String? = null
+    val periodType: String? = null,
+    val frontendState: Map<String, Any> = emptyMap(),
 )
+
 

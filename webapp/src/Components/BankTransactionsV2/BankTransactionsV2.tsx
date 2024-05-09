@@ -17,14 +17,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {Check} from "@mui/icons-material";
+import {UserStateV2} from "../../Websocket/types/UserStateV2";
 
 export const BankTransactionsV2 = () => {
     const {accountId} = useParams();
     const [transactions, setTransactions] = useState<BankAccountTransaction[]>([]);
-    const {accounts} = useGlobalState();
-    const [settings, setSettings] = useState<Settings>({
-        hideBooked: false
-    });
+    const {accounts, userStateV2} = useGlobalState();
 
     useEffect(() => {
         if (accountId) {
@@ -66,39 +64,34 @@ export const BankTransactionsV2 = () => {
         <PeriodSelectorV2/>
 
         <div style={{display: "flex", flexDirection: "row", justifyContent: "flex-end"}}>
-            <SettingsMenu settings={settings} setSettings={setSettings}/>
+            {userStateV2 && <SettingsMenu userStateV2={userStateV2}/>}
         </div>
 
         <ul className="TransactionsV2">
             {transactions
-                .filter(tx => settings.hideBooked ? !!tx.unbookedReference : true)
+                .filter(tx => userStateV2?.frontendState?.hideBookedBankTransactions ? !!tx.unbookedReference : true)
                 .map((transaction, index) => (<li key={index} style={{padding: '0'}}>
-                <TransactionView
-                    showRightAccountId={accountId}
-                    otherAccountName={transaction.bookingReference?.otherAccountId ? accounts.getById(transaction.bookingReference?.otherAccountId)?.name : undefined}
-                    balance={transaction.balance}
-                    amountInCents={transaction.amountInCents}
-                    memo={transaction.memo}
-                    datetime={dayjs(transaction.datetime)}
-                    unbookedId={transaction.unbookedReference?.unbookedId}
-                    bookingId={transaction.bookingReference?.bookingId}
-                />
-            </li>))}
+                    <TransactionView
+                        showRightAccountId={accountId}
+                        otherAccountName={transaction.bookingReference?.otherAccountId ? accounts.getById(transaction.bookingReference?.otherAccountId)?.name : undefined}
+                        balance={transaction.balance}
+                        amountInCents={transaction.amountInCents}
+                        memo={transaction.memo}
+                        datetime={dayjs(transaction.datetime)}
+                        unbookedId={transaction.unbookedReference?.unbookedId}
+                        bookingId={transaction.bookingReference?.bookingId}
+                    />
+                </li>))}
         </ul>
 
     </Container>)
 }
 
-type Settings = {
-    hideBooked: boolean;
+type SettingsMenuProps = {
+    userStateV2: UserStateV2;
 }
 
-type SettingsMenuProps = {
-    settings: Settings;
-    setSettings: React.Dispatch<React.SetStateAction<Settings>>;
-}
-const ITEM_HEIGHT = 48;
-const SettingsMenu = ({settings, setSettings}: SettingsMenuProps) => {
+const SettingsMenu = ({userStateV2}: SettingsMenuProps) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -107,13 +100,16 @@ const SettingsMenu = ({settings, setSettings}: SettingsMenuProps) => {
     const handleClose = (option?: string) => {
         setAnchorEl(null);
         if (option) {
-            setSettings(prevState => {
-                const map = prevState as any
-                return ({
-                    ...map,
-                    [option]: !map[option]
-                });
-            })
+            const map = userStateV2.frontendState as any
+            WebsocketClient.rpc({
+                type: "setUserStateV2", userStateV2: {
+                    ...userStateV2,
+                    frontendState: {
+                        ...map,
+                        [option]: !map[option]
+                    }
+                }
+            });
         }
     };
 
@@ -139,8 +135,8 @@ const SettingsMenu = ({settings, setSettings}: SettingsMenuProps) => {
                 onClose={() => handleClose()}
             >
 
-                <MenuItem onClick={() => handleClose('hideBooked')}>
-                    {settings.hideBooked && <ListItemIcon>
+                <MenuItem onClick={() => handleClose('hideBookedBankTransactions')}>
+                    {userStateV2.frontendState?.hideBookedBankTransactions && <ListItemIcon>
                         <Check/>
                     </ListItemIcon>}
                     Hide already booked
