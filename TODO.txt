@@ -1,4 +1,3 @@
-- option to only show unbooked transactions
 - when adding booking: auto-fill amount after the first leg
 - visual graphs and reporting
 - support for creating and restoring backups

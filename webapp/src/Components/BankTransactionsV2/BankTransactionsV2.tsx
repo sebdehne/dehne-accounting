@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Container} from "@mui/material";
+import {Container, ListItemIcon, Menu, MenuItem} from "@mui/material";
 import Header from "../Header";
 import {useNavigate, useParams} from "react-router-dom";
 import {BankAccountTransaction} from "../../Websocket/types/banktransactions";
@@ -15,12 +15,16 @@ import {useDialogs} from "../../utils/dialogs";
 import {DateViewer} from "../PeriodSelectors/DateViewer";
 import DeleteIcon from "@mui/icons-material/Delete";
 import dayjs from "dayjs";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import {Check} from "@mui/icons-material";
 
 export const BankTransactionsV2 = () => {
     const {accountId} = useParams();
     const [transactions, setTransactions] = useState<BankAccountTransaction[]>([]);
     const {accounts} = useGlobalState();
-
+    const [settings, setSettings] = useState<Settings>({
+        hideBooked: false
+    });
 
     useEffect(() => {
         if (accountId) {
@@ -61,8 +65,14 @@ export const BankTransactionsV2 = () => {
 
         <PeriodSelectorV2/>
 
+        <div style={{display: "flex", flexDirection: "row", justifyContent: "flex-end"}}>
+            <SettingsMenu settings={settings} setSettings={setSettings}/>
+        </div>
+
         <ul className="TransactionsV2">
-            {transactions.map((transaction, index) => (<li key={index} style={{padding: '0'}}>
+            {transactions
+                .filter(tx => settings.hideBooked ? !!tx.unbookedReference : true)
+                .map((transaction, index) => (<li key={index} style={{padding: '0'}}>
                 <TransactionView
                     showRightAccountId={accountId}
                     otherAccountName={transaction.bookingReference?.otherAccountId ? accounts.getById(transaction.bookingReference?.otherAccountId)?.name : undefined}
@@ -77,6 +87,67 @@ export const BankTransactionsV2 = () => {
         </ul>
 
     </Container>)
+}
+
+type Settings = {
+    hideBooked: boolean;
+}
+
+type SettingsMenuProps = {
+    settings: Settings;
+    setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+}
+const ITEM_HEIGHT = 48;
+const SettingsMenu = ({settings, setSettings}: SettingsMenuProps) => {
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = (option?: string) => {
+        setAnchorEl(null);
+        if (option) {
+            setSettings(prevState => {
+                const map = prevState as any
+                return ({
+                    ...map,
+                    [option]: !map[option]
+                });
+            })
+        }
+    };
+
+    return (
+        <div>
+            <IconButton
+                aria-label="more"
+                id="long-button"
+                aria-controls={open ? 'long-menu' : undefined}
+                aria-expanded={open ? 'true' : undefined}
+                aria-haspopup="true"
+                onClick={handleClick}
+            >
+                <MoreVertIcon/>
+            </IconButton>
+            <Menu
+                id="long-menu"
+                MenuListProps={{
+                    'aria-labelledby': 'long-button',
+                }}
+                anchorEl={anchorEl}
+                open={open}
+                onClose={() => handleClose()}
+            >
+
+                <MenuItem onClick={() => handleClose('hideBooked')}>
+                    {settings.hideBooked && <ListItemIcon>
+                        <Check/>
+                    </ListItemIcon>}
+                    Hide already booked
+                </MenuItem>
+            </Menu>
+        </div>
+    );
 }
 
 
