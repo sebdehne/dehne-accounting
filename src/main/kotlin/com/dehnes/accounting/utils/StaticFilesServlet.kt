@@ -67,15 +67,13 @@ fun pathToResource(path: String): String? {
 
 
     while (resultResource.size > 1) {
-        val dirs = resultResource.subList(0, resultResource.size - 1)
+        val dirs = resultResource.dropLast(1)
         val dirsString = dirs.joinToString(separator = "/")
-        if (allowedDirs.any {
-                it.matches(dirsString)
-            }) {
+        if (allowedDirs.any { it.matches(dirsString) }) {
             return resultResource.joinToString("/")
         }
-        resultResource = resultResource.subList(1, resultResource.size)
+        resultResource = resultResource.drop(1).toMutableList()
     }
 
-    return resultResource.firstOrNull() ?: defaultFile
+    return defaultFile
 }
