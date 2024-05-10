@@ -71,10 +71,9 @@ class BankAccountService(
 
         val allBankAccounts = bankAccountRepository.getAllBankAccounts(conn, realmId)
 
-        return allBanks.mapNotNull { bank ->
+        return allBanks.map { bank ->
 
             val accounts = allBankAccounts.filter { it.bankId == bank.id }
-            if (accounts.isEmpty()) return@mapNotNull null
 
             BankWithAccounts(
                 bank.id,
