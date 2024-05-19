@@ -17,7 +17,7 @@ import "./MatcherView.css"
 
 export type MatcherViewProps = {
     matcher: UnbookedBankTransactionMatcher;
-    buttons: React.ReactNode;
+    buttons: (collapsed: boolean) => React.ReactNode;
     initialCollapsed?: boolean;
 }
 export const MatcherView = ({matcher, buttons, initialCollapsed = false}: MatcherViewProps) => {
@@ -43,7 +43,7 @@ export const MatcherView = ({matcher, buttons, initialCollapsed = false}: Matche
     return (<div className="MatcherView" onClick={() => setCollapsed(!collapsed)}>
         <div className="MatcherViewSummary">
             <div className="MatcherViewSummaryName">{matcher.name}</div>
-            {buttons}
+            {buttons(collapsed)}
         </div>
         {!collapsed && <>
             <BorderedSection title={"Filter:"}>

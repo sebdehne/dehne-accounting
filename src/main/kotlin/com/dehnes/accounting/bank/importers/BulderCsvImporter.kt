@@ -64,7 +64,7 @@ class BulderCsvImporter :Importer {
                 val amount = if (innPaaKonto != null) {
                     innPaaKonto.parseAmount()
                 } else if (utFraPaaKonto != null) {
-                    utFraPaaKonto.parseAmount() * -1
+                    utFraPaaKonto.parseAmount()
                 } else {
                     continue
                 }

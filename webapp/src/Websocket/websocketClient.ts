@@ -191,6 +191,8 @@ function reconnect() {
                     subscription.serverIsGeneratingNewNotify = false;
                 } else if (notify.generatingNotify) {
                     subscription.serverIsGeneratingNewNotify = true;
+                } else {
+                    subscription.serverIsGeneratingNewNotify = false;
                 }
             } else {
                 console.log("Could not send notify - sub not found");

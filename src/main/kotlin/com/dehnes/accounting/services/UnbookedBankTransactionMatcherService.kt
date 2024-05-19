@@ -46,9 +46,6 @@ class UnbookedBankTransactionMatcherService(
                 unbookedBankTransactionMatcherRepository.getAll(conn, realmId)
                     .single { m -> m.id == executeMatcherRequest.matcherId }
 
-
-            check(transactionMatcher.filter.matches(unbookedTransaction))
-
             val memo = executeMatcherRequest.overrideMemo?.ifBlank { null }
                 ?: transactionMatcher.actionMemo?.ifBlank { null }
 
@@ -98,12 +95,13 @@ class UnbookedBankTransactionMatcherService(
                     )
 
                     listOf(
-                        // payable/receivable
                         AddBooking(
                             realmId,
                             memo,
                             unbookedTransaction.datetime,
                             listOf(
+
+                                // payable/receivable
                                 AddBookingEntry(
                                     null,
                                     unbookedTransaction.accountId,
@@ -113,17 +111,9 @@ class UnbookedBankTransactionMatcherService(
                                     null,
                                     transactionMatcher.actionAccountId,
                                     unbookedTransaction.amountInCents * -1
-                                )
-                            )
-                        ),
+                                ),
 
-
-                        // income/expense
-                        AddBooking(
-                            realmId,
-                            memo,
-                            unbookedTransaction.datetime,
-                            listOf(
+                                // income/expense
                                 AddBookingEntry(
                                     null,
                                     transactionMatcher.actionAccountId,

@@ -144,14 +144,13 @@ export const TransactionMatchingV2 = () => {
                     <MatcherView
                         key={m.matcher.id}
                         initialCollapsed={true}
-                        matcher={m.matcher} buttons={
-                        <div>
-                            {m.matches &&
-                                <Button variant={"contained"} onClick={() => bookNow(m.matcher)}>
-                                    <CheckIcon/></Button>}
-                            <IconButton onClick={() => navigate('/matcher/' + m.matcher.id)}><EditIcon/></IconButton>
-                            <IconButton onClick={() => deleteMatcher(m.matcher)}><DeleteIcon/></IconButton>
-                        </div>
+                        matcher={m.matcher} buttons={(collapsed) => (<div>
+                        {(m.matches || !collapsed) &&
+                            <Button variant={"contained"} onClick={() => bookNow(m.matcher)}>
+                                <CheckIcon/></Button>}
+                        <IconButton onClick={() => navigate('/matcher/' + m.matcher.id)}><EditIcon/></IconButton>
+                        <IconButton onClick={() => deleteMatcher(m.matcher)}><DeleteIcon/></IconButton>
+                    </div>)
                     }/>
 
                 </li>
