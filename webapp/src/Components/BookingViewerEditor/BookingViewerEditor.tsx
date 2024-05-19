@@ -81,21 +81,22 @@ export const BookingViewerEditor = () => {
         });
     }), [setBooking]);
 
+    const sum = booking.entries.reduce((previousValue, currentValue) => previousValue + currentValue.amountInCents, 0);
+
     const addEntry = useCallback(() => {
         setBooking(prevState => ({
             ...prevState,
             entries: [
                 ...prevState.entries,
                 {
-                    amountInCents: 0,
+                    amountInCents: sum * -1,
                     id: prevState.entries.length,
                     accountId: ""
                 }
             ]
         }))
-    }, []);
+    }, [sum]);
 
-    let sum = booking.entries.reduce((previousValue, currentValue) => previousValue + currentValue.amountInCents, 0);
     const isValid = booking.entries.length > 0 && sum === 0 && booking.entries.every(e => !!e.accountId);
 
     const save = useCallback(() => {

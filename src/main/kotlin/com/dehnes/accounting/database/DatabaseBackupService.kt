@@ -5,6 +5,7 @@ import com.dehnes.accounting.api.DatabaseBackupChanged
 import com.dehnes.accounting.api.DatabaseRestored
 import java.io.File
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.sql.DataSource
 
 class DatabaseBackupService(
@@ -53,6 +54,6 @@ class DatabaseBackupService(
         changelog.handleChanges(setOf(ChangeEvent(DatabaseBackupChanged)))
     }
 
-    private fun newBackup() = "accounting-backup-${Instant.now()}.db"
+    private fun newBackup() = "backup-${Instant.now().truncatedTo(ChronoUnit.SECONDS)}.db"
 
 }

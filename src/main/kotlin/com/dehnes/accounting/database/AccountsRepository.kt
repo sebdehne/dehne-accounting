@@ -40,7 +40,8 @@ class AccountsRepository(private val changelog: Changelog) {
                 StandardAccountView(
                     it.toAccountId(realmId),
                     it.name,
-                    it.parent?.toAccountId(realmId)
+                    it.parent?.toAccountId(realmId),
+                    it
                 )
             }
         )
@@ -120,4 +121,5 @@ data class StandardAccountView(
     val id: String,
     val originalName: String,
     val parentAccountId: String?,
+    val standardAccount: StandardAccount,
 )

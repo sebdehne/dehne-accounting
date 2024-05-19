@@ -33,7 +33,6 @@ class Configuration {
         val objectMapper = objectMapper()
 
         val datasource = datasourceSetup(dbFile())
-        SchemaHandler.initSchema(datasource)
 
         val changelog = Changelog(datasource, executorService)
         val accountsRepository = AccountsRepository(changelog)
