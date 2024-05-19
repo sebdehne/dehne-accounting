@@ -23,11 +23,6 @@ User-profile:
 - configure port
 - configure sql file location
 
-Backups:
-- list
-- remove
-- take backup
-
 - kMyMoney import via GUI?
 - first time user screen, create admin-user
 

@@ -25,6 +25,9 @@ export type RequestType = "subscribe"
     // admin commands:
     | 'addOrReplaceUser'
     | 'deleteUser'
+    | 'createNewBackup'
+    | 'restoreBackup'
+    | 'dropBackup'
     ;
 
 export type RpcRequest = {
@@ -47,6 +50,7 @@ export type RpcRequest = {
     bankAccount?: BankAccount;
     user?: User;
     deleteUserId?: string;
+    backupName?: string;
 }
 
 export type RpcResponse = {

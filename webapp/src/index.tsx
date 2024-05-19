@@ -27,6 +27,7 @@ import {Accounts} from "./Components/Accounts/Accounts";
 import {Account} from "./Components/Accounts/Account";
 import {AddOrReplaceBankAccount} from "./Components/BanksAndAccounts/AddOrReplaceBankAccount";
 import {UserManagement} from "./Components/Users/UserManagement";
+import {Backups} from "./Components/Backups/Backups";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -68,6 +69,7 @@ root.render(
                                 <Route path="/account/:accountId" element={<Account/>}/>
 
                                 <Route path="/users" element={<UserManagement/>}/>
+                                <Route path="/backups" element={<Backups/>}/>
                             </Routes>
                         </BrowserRouter>
                     </LocalizationProvider>

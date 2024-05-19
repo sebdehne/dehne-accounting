@@ -1,12 +1,15 @@
 package com.dehnes.accounting.services
 
+import com.dehnes.accounting.api.DatabaseRestored
 import com.dehnes.accounting.api.dtos.UserStateV2
 import com.dehnes.accounting.database.Changelog
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.UserStateRepository
+import java.util.UUID
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import javax.sql.DataSource
 import kotlin.concurrent.read
+import kotlin.concurrent.withLock
 import kotlin.concurrent.write
 
 class UserStateService(
@@ -18,6 +21,18 @@ class UserStateService(
 
     private val userStateCacheLock = ReentrantReadWriteLock()
     private val userStateCache = mutableMapOf<String, UserStateV2>()
+
+    init {
+        UUID.randomUUID().toString().apply {
+            changelog.syncListeners[this] = { e ->
+                if (e.changeLogEventTypeV2 is DatabaseRestored) {
+                    userStateCacheLock.write {
+                        userStateCache.clear()
+                    }
+                }
+            }
+        }
+    }
 
     fun getUserStateV2(sessionId: String): UserStateV2 = userStateCacheLock.read {
         userStateCache[sessionId]

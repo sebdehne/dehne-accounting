@@ -35,6 +35,9 @@ enum class RequestType {
     // admin commands
     addOrReplaceUser,
     deleteUser,
+    createNewBackup,
+    restoreBackup,
+    dropBackup,
 }
 
 data class RpcRequest(
@@ -56,6 +59,7 @@ data class RpcRequest(
     val bankAccount: BankAccount?,
     val user: User?,
     val deleteUserId: String?,
+    val backupName: String?,
 )
 
 data class RpcResponse(

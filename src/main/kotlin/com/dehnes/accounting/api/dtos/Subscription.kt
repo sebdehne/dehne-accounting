@@ -59,6 +59,9 @@ enum class ReadRequestType(
     getBookings(listOf(BookingsChanged::class, UserStateUpdated::class)),
     getBooking(listOf(BookingsChanged::class, UserStateUpdated::class)),
     getBankAccount(listOf(BankAccountChanged::class, UserStateUpdated::class,)),
+
+    listBackups(listOf(DatabaseBackupChanged::class)),
+
     ;
 
 }
@@ -86,5 +89,6 @@ data class ReadResponse(
     val booking: Booking? = null,
     val bankAccount: BankAccount? = null,
     val allUsers: List<User>? = null,
+    val backups: List<String>? = null,
 )
 

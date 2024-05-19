@@ -2,9 +2,12 @@ package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.ChangeEvent
 import com.dehnes.accounting.api.ChangeLogEventTypeV2
+import com.dehnes.accounting.utils.wrap
+import mu.KotlinLogging
 import java.sql.Connection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 
 
@@ -14,10 +17,14 @@ class Listener(
     val onEvent: (event: ChangeEvent) -> Unit
 )
 
+class Changelog(
+    private val dataSource: DataSource,
+    private val executorService: ExecutorService,
+) {
+    private val logger = KotlinLogging.logger { }
 
-class Changelog(private val dataSource: DataSource) {
-
-    val writeTransactionListeners = ConcurrentHashMap<String, Listener>()
+    val syncListeners = ConcurrentHashMap<String, (e: ChangeEvent) -> Unit>()
+    val asyncListeners = ConcurrentHashMap<String, Listener>()
 
     private val threadLocalChangeLog = ThreadLocal<Queue<ChangeEvent>>()
 
@@ -27,21 +34,15 @@ class Changelog(private val dataSource: DataSource) {
 
         try {
             dataSource.connection.use { conn ->
-                val cnt = Transactions.dbConnectionCounter.incrementAndGet()
-                Transactions.logger.debug { "Opened connection. new cnt=$cnt" }
-
                 conn.autoCommit = false
                 try {
                     result = fn(conn)
                     conn.commit()
+                    handleChanges(threadLocalChangeLog.get())
                 } finally {
-                    val cnt2 = Transactions.dbConnectionCounter.decrementAndGet()
-                    Transactions.logger.debug { "Closed connection. new cnt=$cnt2" }
                     conn.rollback()
                 }
             }
-
-            handleChanges(threadLocalChangeLog.get())
         } finally {
             threadLocalChangeLog.remove()
         }
@@ -52,15 +53,23 @@ class Changelog(private val dataSource: DataSource) {
     fun handleChanges(events: Collection<ChangeEvent>) {
         val compressed = events.toSet()
 
-        compressed.forEach { event ->
-            writeTransactionListeners
-                .filter { it.value.filter(event) }
-                .forEach { (_, l) ->
-                    l.onEvent(event)
-                }
+        // sync listeners
+        compressed.forEach { change ->
+            syncListeners.forEach { (_, l) ->
+                l.invoke(change)
+            }
         }
-    }
 
+        executorService.submit(wrap(logger) {
+            compressed.forEach { event ->
+                asyncListeners
+                    .filter { it.value.filter(event) }
+                    .forEach { (_, l) ->
+                        l.onEvent(event)
+                    }
+            }
+        })
+    }
 
     fun add(type: ChangeLogEventTypeV2) {
         threadLocalChangeLog.get()?.add(ChangeEvent(type))

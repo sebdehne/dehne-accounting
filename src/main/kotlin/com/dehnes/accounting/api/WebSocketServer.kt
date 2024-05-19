@@ -4,6 +4,7 @@ import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
+import com.dehnes.accounting.database.DatabaseBackupService
 import com.dehnes.accounting.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -29,6 +30,7 @@ class WebSocketServer : Endpoint() {
     private val userStateService = configuration.getBean<UserStateService>()
     private val bookingService = configuration.getBean<BookingService>()
     private val accountService = configuration.getBean<AccountService>()
+    private val batabaseBackupService = configuration.getBean<DatabaseBackupService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
     private val unbookedBankTransactionMatcherService = configuration.getBean<UnbookedBankTransactionMatcherService>()
     private val logger = KotlinLogging.logger { }
@@ -85,6 +87,21 @@ class WebSocketServer : Endpoint() {
                     subscriptions.remove(subscriptionId)?.close()
                     logger.info { "$instanceId Removed subscription id=$subscriptionId" }
                     RpcResponse(subscriptionRemoved = true)
+                }
+
+                createNewBackup -> {
+                    batabaseBackupService.createBackup()
+                    RpcResponse()
+                }
+
+                dropBackup -> {
+                    batabaseBackupService.dropBackup(rpcRequest.backupName!!)
+                    RpcResponse()
+                }
+
+                restoreBackup -> {
+                    batabaseBackupService.restoreBackup(rpcRequest.backupName!!)
+                    RpcResponse()
                 }
 
                 addOrReplaceUser -> {

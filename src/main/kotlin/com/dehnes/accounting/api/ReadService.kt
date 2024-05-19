@@ -26,6 +26,7 @@ class ReadService(
     private val unbookedBankTransactionMatcherService: UnbookedBankTransactionMatcherService,
     private val bookingService: BookingService,
     private val changelog: Changelog,
+    private val databaseBackupService: DatabaseBackupService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -40,28 +41,20 @@ class ReadService(
 
     init {
         UUID.randomUUID().toString().apply {
-            changelog.writeTransactionListeners[this] = Listener(
-                this,
-                { event ->
-                    when (event.changeLogEventTypeV2) {
-                        is UserStateUpdated -> false
-                        null -> false
-                        else -> true
+            changelog.syncListeners[this] = { e ->
+                when {
+                    e.changeLogEventTypeV2 is UserStateUpdated -> {}
+                    else -> {
+                        invalidateCache()
                     }
-                },
-                {
-                    invalidateCache()
                 }
-            )
+            }
         }
     }
 
     private fun invalidateCache() {
-        readCacheLock.lock()
-        try {
+        readCacheLock.withLock {
             readCache.clear()
-        } finally {
-            readCacheLock.unlock()
         }
     }
 
@@ -69,13 +62,20 @@ class ReadService(
         logger.info { "Added subscription id=${sub.subscriptionId}" }
 
         val listener = Listener(
-            sub.subscriptionId,
-            { changeEvent ->
-                (changeEvent.changeLogEventTypeV2 == null
-                        || (changeEvent.changeLogEventTypeV2::class in sub.readRequest.type.listensOnV2
-                        && changeEvent.changeLogEventTypeV2.additionalFilter(sub.readRequest, sub.sessionId)))
+            id = sub.subscriptionId,
+            filter = { changeEvent ->
+                when {
+                    changeEvent.changeLogEventTypeV2 == null -> true
+                    changeEvent.changeLogEventTypeV2 is DatabaseRestored -> true
+                    changeEvent.changeLogEventTypeV2::class in sub.readRequest.type.listensOnV2 && changeEvent.changeLogEventTypeV2.additionalFilter(
+                        sub.readRequest,
+                        sub.sessionId
+                    ) -> true
+
+                    else -> false
+                }
             },
-            { _ ->
+            onEvent = { _ ->
                 executorService.submit(wrap(logger) {
                     val readResponse = handleRequest(
                         sub.userId,
@@ -101,7 +101,7 @@ class ReadService(
                 })
             }
         )
-        changelog.writeTransactionListeners[sub.subscriptionId] = listener
+        changelog.asyncListeners[sub.subscriptionId] = listener
 
         executorService.submit(wrap(logger) {
             listener.onEvent(ChangeEvent(null))
@@ -110,7 +110,7 @@ class ReadService(
 
     fun removeSubscription(subId: String) {
         logger.info { "Removed subscription id=${subId}" }
-        changelog.writeTransactionListeners.remove(subId)
+        changelog.asyncListeners.remove(subId)
     }
 
     fun handleRequest(
@@ -154,14 +154,20 @@ class ReadService(
         userStateV2: UserStateV2,
     ): ReadResponse =
         when (readRequest.type) {
+            listBackups -> ReadResponse(
+                backups = databaseBackupService.listBackups()
+            )
+
             getAllUsers -> ReadResponse(
-                realms = dataSource.readTx { conn -> realmRepository.getAll(conn).map {
-                    RealmInfo(
-                        it.id,
-                        it.name,
-                        it.description
-                    )
-                } },
+                realms = dataSource.readTx { conn ->
+                    realmRepository.getAll(conn).map {
+                        RealmInfo(
+                            it.id,
+                            it.name,
+                            it.description
+                        )
+                    }
+                },
                 allUsers = userService.getAllUsers(userId)
             )
 
@@ -289,3 +295,5 @@ object UnbookedTransactionMatchersChanged : ChangeLogEventTypeV2()
 
 object BankAccountChanged : ChangeLogEventTypeV2()
 
+object DatabaseBackupChanged : ChangeLogEventTypeV2()
+object DatabaseRestored : ChangeLogEventTypeV2()

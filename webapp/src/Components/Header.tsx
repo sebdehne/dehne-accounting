@@ -138,6 +138,9 @@ const BasicMenu = ({extraMenuOptions, showAdminOptions}: BasicMenuProps) => {
                     <MenuItem onClick={() => navigate('/users')}>
                         <ListItemText>User management</ListItemText>
                     </MenuItem>
+                    <MenuItem onClick={() => navigate('/backups')}>
+                        <ListItemText>Backups</ListItemText>
+                    </MenuItem>
                 </MenuList>}
             </Menu>
         </div>

@@ -70,7 +70,6 @@ class BulderCsvImporter :Importer {
                 }
 
                 val text = listOfNotNull(
-                    type,
                     tekst,
                     kid
                 ).joinToString("-")

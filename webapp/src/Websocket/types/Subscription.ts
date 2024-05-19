@@ -41,6 +41,7 @@ export type ReadRequestType = 'getUserState'
     | 'getBankAccount'
     | 'getAllUsers'
     | 'getUserInfo'
+    | 'listBackups'
     ;
 
 export type ReadRequest = {
@@ -66,5 +67,6 @@ export type ReadResponse = {
     bankAccount?: BankAccount;
     allUsers?: User[];
     realms?: InformationElement[];
+    backups?: string[];
 }
 

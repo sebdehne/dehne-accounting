@@ -35,7 +35,7 @@ class Configuration {
         val datasource = datasourceSetup(dbFile())
         SchemaHandler.initSchema(datasource)
 
-        val changelog = Changelog(datasource)
+        val changelog = Changelog(datasource, executorService)
         val accountsRepository = AccountsRepository(changelog)
         val realmRepository = RealmRepository(accountsRepository, changelog)
         val userRepository = UserRepository(objectMapper, changelog)
@@ -84,6 +84,7 @@ class Configuration {
         )
 
         val userStateService = UserStateService(datasource, userStateRepository, userService, changelog)
+        val databaseBackupService = DatabaseBackupService(datasource, changelog)
 
         val readService = ReadService(
             executorService,
@@ -96,7 +97,8 @@ class Configuration {
             accountsRepository,
             unbookedBankTransactionMatcherService,
             bookingService,
-            changelog
+            changelog,
+            databaseBackupService
         )
 
 
@@ -109,6 +111,7 @@ class Configuration {
         beans[UnbookedBankTransactionMatcherService::class] = unbookedBankTransactionMatcherService
         beans[BookingService::class] = bookingService
         beans[AccountService::class] = accountService
+        beans[DatabaseBackupService::class] = databaseBackupService
     }
 
     inline fun <reified T> getBeanNull(): T? {
