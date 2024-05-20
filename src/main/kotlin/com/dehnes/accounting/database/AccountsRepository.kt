@@ -3,7 +3,7 @@ package com.dehnes.accounting.database
 import com.dehnes.accounting.api.AccountsChanged
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.domain.StandardAccount
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.sql.Connection
 
 class AccountsRepository(private val changelog: Changelog) {

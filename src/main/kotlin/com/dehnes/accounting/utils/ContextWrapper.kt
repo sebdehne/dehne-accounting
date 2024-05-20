@@ -1,6 +1,6 @@
 package com.dehnes.accounting.utils
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 val errorLogger = KotlinLogging.logger("com.dehnes.accounting.utils.ErrorLogger")
 

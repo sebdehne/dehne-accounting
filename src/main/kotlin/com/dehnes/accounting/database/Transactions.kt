@@ -1,6 +1,6 @@
 package com.dehnes.accounting.database
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.sql.Connection
 import java.util.concurrent.atomic.AtomicLong
 import javax.sql.DataSource

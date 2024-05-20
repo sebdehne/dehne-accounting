@@ -12,8 +12,8 @@ import jakarta.websocket.CloseReason
 import jakarta.websocket.Endpoint
 import jakarta.websocket.EndpointConfig
 import jakarta.websocket.Session
-import mu.KLogger
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.ByteArrayInputStream
 import java.io.Closeable
 import java.util.*
@@ -37,18 +37,18 @@ class WebSocketServer : Endpoint() {
     private val subscriptions = mutableMapOf<String, Subscription>()
 
     override fun onOpen(sess: Session, p1: EndpointConfig?) {
-        logger.info("$instanceId Socket connected: $sess")
+        logger.info { "$instanceId Socket connected: $sess" }
 
         sess.addMessageHandler(String::class.java) { msg -> onWebSocketText(sess, msg) }
     }
 
     override fun onClose(session: Session, closeReason: CloseReason) {
         subscriptions.values.toList().forEach { it.close() }
-        logger.info("$instanceId Socket Closed: $closeReason")
+        logger.info { "$instanceId Socket Closed: $closeReason" }
     }
 
     override fun onError(session: Session?, cause: Throwable?) {
-        logger.warn("$instanceId ", cause)
+        logger.warn(cause) { "$instanceId " }
     }
 
     fun onWebSocketText(argSession: Session, argMessage: String) {

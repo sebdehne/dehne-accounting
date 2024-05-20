@@ -6,7 +6,7 @@ import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
 import com.dehnes.accounting.utils.wrap
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.locks.ReentrantLock

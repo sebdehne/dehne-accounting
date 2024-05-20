@@ -1,6 +1,6 @@
 package com.dehnes.accounting.utils
 
-import mu.KLogger
+import io.github.oshai.kotlinlogging.KLogger
 
 fun wrap(logger: KLogger, r: Runnable) = Runnable {
     try {

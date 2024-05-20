@@ -3,7 +3,7 @@ package com.dehnes.accounting.database
 import com.dehnes.accounting.api.ChangeEvent
 import com.dehnes.accounting.api.ChangeLogEventTypeV2
 import com.dehnes.accounting.utils.wrap
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.sql.Connection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap

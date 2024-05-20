@@ -3,17 +3,16 @@ package com.dehnes.accounting
 import com.dehnes.accounting.api.WebSocketServer
 import com.dehnes.accounting.services.UserStateService
 import com.dehnes.accounting.utils.StaticFilesServlet
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.websocket.HandshakeResponse
 import jakarta.websocket.server.HandshakeRequest
 import jakarta.websocket.server.ServerEndpointConfig
-import mu.KotlinLogging
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer
 import java.time.Duration
-import java.util.UUID
 
 val configuration = Configuration()
 
