@@ -3,39 +3,39 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "https://dehnes.com/accounting",
+  "type": "module",
   "dependencies": {
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
-    "@fontsource/roboto": "^5.0.8",
-    "@mdi/js": "^7.2.96",
-    "@mui/icons-material": "^5.14.9",
-    "@mui/material": "^5.14.10",
-    "@mui/x-date-pickers": "^6.16.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.53",
-    "@types/react": "^18.2.22",
-    "@types/react-dom": "^18.2.7",
-    "@types/uuid": "^9.0.4",
-    "dayjs": "^1.11.10",
-    "js-sha256": "^0.10.1",
-    "moment": "^2.29.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0",
-    "react-scripts": "5.0.1",
-    "sass": "^1.69.3",
-    "typescript": "^4.9.5",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@fontsource/roboto": "^5.0.13",
+    "@mdi/js": "^7.4.47",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@mui/x-date-pickers": "^7.5.0",
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^9.0.8",
+    "@vitejs/plugin-react-swc": "^3.6.0",
+    "dayjs": "^1.11.11",
+    "js-sha256": "^0.11.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1",
+    "sass": "^1.77.2",
+    "typescript": "^5.4.5",
     "uuid": "^9.0.1",
-    "web-vitals": "^2.1.4"
+    "vite": "^5.2.11",
+    "vite-plugin-svgr": "^4.2.0",
+    "vite-tsconfig-paths": "^4.3.2",
+    "web-vitals": "^4.0.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "vite",
+    "build": "tsc && vite build",
+    "serve": "vite preview",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage --watch=false"
   },
   "eslintConfig": {
     "extends": [
@@ -55,5 +55,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:9095"
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "vitest": "^1.6.0"
+  }
 }

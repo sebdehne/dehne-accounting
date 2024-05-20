@@ -1,12 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import reportWebVitals from './reportWebVitals';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import theme from "./theme";
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {BankTransactionsImporter} from "./Components/BankTransactionsV2/BankTransactionsImporter";
@@ -28,11 +26,11 @@ import {Account} from "./Components/Accounts/Account";
 import {AddOrReplaceBankAccount} from "./Components/BanksAndAccounts/AddOrReplaceBankAccount";
 import {UserManagement} from "./Components/Users/UserManagement";
 import {Backups} from "./Components/Backups/Backups";
+import {theme} from "./theme";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );
-
 
 root.render(
     <React.StrictMode>
@@ -41,7 +39,7 @@ root.render(
                 <DialogsProvider>
                     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="nb">
                         <CssBaseline/>
-                        <BrowserRouter basename={process.env.REACT_APP_BASENAME}>
+                        <BrowserRouter basename={import.meta.env.BASE_URL}>
                             <Routes>
                                 <Route path="/" element={<RealmMain/>}/>
 
@@ -79,7 +77,3 @@ root.render(
     </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

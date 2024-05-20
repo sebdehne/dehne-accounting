@@ -3,6 +3,7 @@ smarthome-server.iml
 target/
 testdir/
 backups/
+dist/
 
 node_modules/
 logs/

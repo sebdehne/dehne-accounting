@@ -1,7 +1,7 @@
-- visual graphs and reporting
 - Budget support
+- closure of periodes
+- visual graphs and reporting
 - fix hardcoded standardAccount names
-
 
 Bank:
 - add/edit/delete
