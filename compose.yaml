@@ -1,0 +1,9 @@
+services:
+  accounting:
+    build:
+      context: .
+    ports:
+      - 9095:9095
+      - 5005:5005
+    volumes:
+      - ./accounting_data:/data

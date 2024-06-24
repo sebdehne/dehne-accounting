@@ -1,5 +1,10 @@
+- Docker
+  - java jvm options memory
+  - health checks / restart
+  - auto-boot on restart
+
 - Budget support
-- closure of periodes
+- closure of periods
 - visual graphs and reporting
 - fix hardcoded standardAccount names
 
