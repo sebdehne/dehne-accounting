@@ -14,6 +14,6 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
 
 
 FROM eclipse-temurin:21 AS final
-VOLUME data
+VOLUME /data
 COPY --from=package build/target/app.jar ./
 ENTRYPOINT [ "java", "-DSQLITE_FILE=/data/sql.db", "-DCONTEXTPATH=/accounting", "-DBACKUP_DIR=/data/backups", "-jar", "app.jar" ]

@@ -3,9 +3,6 @@ services:
     build:
       network: host
       context: .
-    ports:
-      - 9095:9095
-      - 5005:5005
     network_mode: host
     volumes:
       - /home/sebas/accounting_data:/data
