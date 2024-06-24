@@ -7,10 +7,10 @@ services:
       - 9095:9095
       - 5005:5005
     networks:
-      - accounting
+      - accounting_net
     volumes:
       - ./accounting_data:/data
 
 networks:
-  accounting:
+  accounting_net:
     driver: host
