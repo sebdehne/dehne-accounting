@@ -7,3 +7,4 @@ services:
     container_name: accounting
     volumes:
       - /home/sebas/accounting_data:/data
+    restart: unless-stopped

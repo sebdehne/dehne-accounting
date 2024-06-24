@@ -9,6 +9,7 @@ Webapp (backend and frontend) for personal accounting.
 - SQL-based, currently [SQLite](https://www.sqlite.org/index.html)
 
 ## Installation
+    $ sudo docker compose up -d
 
 ### Compiling
 You need to download & compile [sebdehne/dehne-kmymoney-utils](https://github.com/sebdehne/dehne-kmymoney-utils) 
