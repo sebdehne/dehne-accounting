@@ -4,5 +4,6 @@ services:
       network: host
       context: .
     network_mode: host
+    container_name: accounting
     volumes:
       - /home/sebas/accounting_data:/data
