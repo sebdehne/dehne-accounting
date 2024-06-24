@@ -8,4 +8,4 @@ services:
       - 5005:5005
     network_mode: host
     volumes:
-      - ./accounting_data:/data
+      - /home/sebas/accounting_data:/data
