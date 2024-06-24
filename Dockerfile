@@ -16,6 +16,4 @@ RUN --mount=type=bind,source=pom.xml,target=pom.xml \
 FROM eclipse-temurin:21 AS final
 VOLUME data
 COPY --from=package build/target/app.jar ./
-EXPOSE 9095/tcp
-EXPOSE 5005/tcp
-ENTRYPOINT [ "java", "-DSQLITE_FILE=/data/sql.db", "-DCONTEXTPATH=/accounting", "-DBACKUP_DIR=/data/backups", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "app.jar" ]
+ENTRYPOINT [ "java", "-DSQLITE_FILE=/data/sql.db", "-DCONTEXTPATH=/accounting", "-DBACKUP_DIR=/data/backups", "-jar", "app.jar" ]

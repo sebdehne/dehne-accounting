@@ -1,9 +1,11 @@
 services:
   accounting:
     build:
+      network: host
       context: .
     ports:
       - 9095:9095
       - 5005:5005
     volumes:
       - ./accounting_data:/data
+    network_mode: host
