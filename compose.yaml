@@ -6,11 +6,6 @@ services:
     ports:
       - 9095:9095
       - 5005:5005
-    networks:
-      - accounting_net
+    network_mode: host
     volumes:
       - ./accounting_data:/data
-
-networks:
-  accounting_net:
-    driver: host
