@@ -32,6 +32,9 @@ enum class RequestType {
     deleteBankAccount,
     createOrUpdateBankAccount,
 
+    closeNextMonth,
+    reopenPreviousMonth,
+
     // admin commands
     addOrReplaceUser,
     deleteUser,

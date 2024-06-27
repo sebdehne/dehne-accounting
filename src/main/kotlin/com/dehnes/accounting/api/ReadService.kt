@@ -2,6 +2,7 @@ package com.dehnes.accounting.api
 
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.ReadRequestType.*
+import com.dehnes.accounting.api.dtos.RealmInfo.Companion.map
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
@@ -17,7 +18,7 @@ import kotlin.concurrent.withLock
 class ReadService(
     private val executorService: ExecutorService,
     private val userStateService: UserStateService,
-    private val realmRepository: RealmRepository,
+    private val realmService: RealmService,
     private val userService: UserService,
     private val dataSource: DataSource,
     private val overviewRapportService: OverviewRapportService,
@@ -27,6 +28,7 @@ class ReadService(
     private val bookingService: BookingService,
     private val changelog: Changelog,
     private val databaseBackupService: DatabaseBackupService,
+    private val userRepository: UserRepository,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -154,25 +156,34 @@ class ReadService(
         userStateV2: UserStateV2,
     ): ReadResponse =
         when (readRequest.type) {
+            getGlobalState -> dataSource.connection.use { connection ->
+                ReadResponse(
+                    globalState = GlobalState(
+                        userRepository.getUser(connection, userId),
+                        userStateV2,
+                        userStateV2.selectedRealm?.let { selectedRealmId ->
+                            val realm = realmService.getAll().first { it.id == selectedRealmId }
+                            GlobalStateForRealm(
+                                realm.map(),
+                                accountsRepository.getAll(
+                                    connection,
+                                    realm.id
+                                )
+                            )
+                        }
+                    )
+                )
+            }
+
             listBackups -> ReadResponse(
                 backups = databaseBackupService.listBackups()
             )
 
             getAllUsers -> ReadResponse(
-                realms = dataSource.readTx { conn ->
-                    realmRepository.getAll(conn).map {
-                        RealmInfo(
-                            it.id,
-                            it.name,
-                            it.description
-                        )
-                    }
-                },
-                allUsers = userService.getAllUsers(userId)
-            )
-
-            getUserInfo -> ReadResponse(
-                userInfo = userService.getUserInfo(userId)
+                allUsers = AllUsersInfo(
+                    userService.getAllUsers(userId),
+                    realmService.getAll().map { it.map() }
+                )
             )
 
             getBankAccount -> ReadResponse(
@@ -220,13 +231,6 @@ class ReadService(
                 )
             )
 
-            getAllAccounts -> ReadResponse(allAccounts = dataSource.readTx {
-                accountsRepository.getAll(
-                    it,
-                    userStateV2.selectedRealm!!
-                )
-            })
-
             getBanksAndAccountsOverview -> ReadResponse(
                 banksAndAccountsOverview = bankAccountService.getOverview(
                     userId,
@@ -242,8 +246,6 @@ class ReadService(
                     userStateV2.rangeFilter!!
                 )
             )
-
-            getUserState -> ReadResponse(userStateV2 = userStateV2)
 
             getOverviewRapport -> {
                 val readResponse = ReadResponse(
@@ -286,6 +288,7 @@ data class UserStateUpdated(
 object UserUpdated : ChangeLogEventTypeV2()
 
 object AccountsChanged : ChangeLogEventTypeV2()
+object BudgetChanged : ChangeLogEventTypeV2()
 
 data class BookingsChanged(val realmId: String) : ChangeLogEventTypeV2()
 
@@ -297,3 +300,4 @@ object BankAccountChanged : ChangeLogEventTypeV2()
 
 object DatabaseBackupChanged : ChangeLogEventTypeV2()
 object DatabaseRestored : ChangeLogEventTypeV2()
+object RealmChanged : ChangeLogEventTypeV2()

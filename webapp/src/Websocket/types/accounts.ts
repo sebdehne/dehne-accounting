@@ -40,6 +40,7 @@ export type AllAccounts = {
     allAccounts: AccountDto[];
     standardAccounts: StandardAccountView[];
 }
+export const emptyAllAllAccounts: AllAccounts = {allAccounts: [], standardAccounts: []}
 
 export type StandardAccountView = {
     id: string;

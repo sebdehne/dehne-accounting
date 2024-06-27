@@ -37,7 +37,7 @@ class Configuration {
         val changelog = Changelog(datasource, executorService)
         val accountsRepository = AccountsRepository(changelog)
         val realmRepository = RealmRepository(accountsRepository, changelog)
-        val userRepository = UserRepository(objectMapper, changelog)
+        val userRepository = UserRepository(changelog, realmRepository)
         val authorizationService = AuthorizationService(userRepository, realmRepository)
         val userService = UserService(datasource, userRepository, authorizationService, changelog)
         val userStateRepository = UserStateRepository(objectMapper, changelog)
@@ -54,7 +54,6 @@ class Configuration {
             unbookedTransactionRepository,
             changelog
         )
-
 
         val bankTransactionImportService = BankTransactionImportService(
             authorizationService,
@@ -74,21 +73,30 @@ class Configuration {
             bookingRepository
         )
         val bookingService = BookingService(datasource, bookingRepository, authorizationService, changelog)
+
+        val budgetRepository = BudgetRepository(
+            changelog,
+            datasource
+        )
+
         val accountService = AccountService(
             authorizationService,
             accountsRepository,
             bookingRepository,
             unbookedBankTransactionMatcherRepository,
             changelog,
+            budgetRepository,
+            BudgetHistoryRepository(datasource, changelog)
         )
 
         val userStateService = UserStateService(datasource, userStateRepository, userService, changelog)
         val databaseBackupService = DatabaseBackupService(datasource, changelog)
+        val realmService = RealmService(realmRepository, datasource, authorizationService, changelog)
 
         val readService = ReadService(
             executorService,
             userStateService,
-            realmRepository,
+            realmService,
             userService,
             datasource,
             OverviewRapportService(datasource, bookingRepository, accountsRepository),
@@ -97,7 +105,8 @@ class Configuration {
             unbookedBankTransactionMatcherService,
             bookingService,
             changelog,
-            databaseBackupService
+            databaseBackupService,
+            userRepository
         )
 
 
@@ -111,6 +120,7 @@ class Configuration {
         beans[BookingService::class] = bookingService
         beans[AccountService::class] = accountService
         beans[DatabaseBackupService::class] = databaseBackupService
+        beans[RealmService::class] = realmService
     }
 
     inline fun <reified T> getBeanNull(): T? {

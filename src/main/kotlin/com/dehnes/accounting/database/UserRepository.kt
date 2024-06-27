@@ -4,27 +4,16 @@ import com.dehnes.accounting.api.UserUpdated
 import com.dehnes.accounting.api.dtos.RealmAccessLevel
 import com.dehnes.accounting.api.dtos.User
 import com.dehnes.accounting.api.dtos.UserStateV2
-import com.dehnes.accounting.services.AccessLevel
 import com.dehnes.accounting.utils.toInt
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 
 class UserRepository(
-    private val objectMapper: ObjectMapper,
     private val changelog: Changelog,
+    private val realmRepository: RealmRepository,
 ) {
 
-
-    fun getUserState(conn: Connection, userId: String) =
-        conn.prepareStatement("SELECT * FROM user_state WHERE user_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, userId)
-            preparedStatement.executeQuery().use { rs ->
-                if (rs.next()) {
-                    objectMapper.readValue<UserStateV2>(rs.getString("frontend_state"))
-                } else null
-            }
-        }
 
     fun getUser(conn: Connection, id: String): User {
         val user = conn.prepareStatement("SELECT * FROM user WHERE id = ?").use { preparedStatement ->
@@ -43,23 +32,32 @@ class UserRepository(
             }
         }
 
-        val userRealms = conn.prepareStatement("SELECT * FROM user_realm where user_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, user.id)
 
-            preparedStatement.executeQuery().use { rs ->
-                val l = mutableListOf<Pair<String, RealmAccessLevel>>()
-                while (rs.next()) {
-                    l.add(
-                        rs.getString("realm_id") to RealmAccessLevel.valueOf(rs.getString("access_level"))
-                    )
+
+        return if (user.admin) {
+            val realmList = realmRepository.getAll(conn)
+            user.copy(realmIdToAccessLevel = realmList.associate {
+                it.id to RealmAccessLevel.owner
+            })
+        } else {
+            val userRealms =
+                conn.prepareStatement("SELECT * FROM user_realm where user_id = ?").use { preparedStatement ->
+                    preparedStatement.setString(1, user.id)
+
+                    preparedStatement.executeQuery().use { rs ->
+                        val l = mutableListOf<Pair<String, RealmAccessLevel>>()
+                        while (rs.next()) {
+                            l.add(
+                                rs.getString("realm_id") to RealmAccessLevel.valueOf(rs.getString("access_level"))
+                            )
+                        }
+                        l
+                    }
                 }
-                l
-            }
+            user.copy(realmIdToAccessLevel = userRealms.associate {
+                it.first to it.second
+            })
         }
-
-        return user.copy(realmIdToAccessLevel = userRealms.associate {
-            it.first to it.second
-        })
     }
 
     fun addOrReplace(conn: Connection, user: User) {

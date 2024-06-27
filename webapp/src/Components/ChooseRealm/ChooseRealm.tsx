@@ -6,12 +6,11 @@ import {useNavigate} from "react-router-dom";
 
 export const ChooseRealm = () => {
     const {userInfo} = useGlobalState();
-    const {setUserStateV2, clearAccounts} = useGlobalState();
+    const {setUserStateV2} = useGlobalState();
 
     const navigate = useNavigate()
 
     const onRealmSelected = (realmId: string) => {
-        clearAccounts();
         setUserStateV2(prev => ({
             ...prev,
             selectedRealm: realmId
@@ -20,6 +19,8 @@ export const ChooseRealm = () => {
         });
     }
 
+    if (!userInfo) return null;
+
     return (<Container maxWidth="xs" className="App">
         <div
             style={{
@@ -27,9 +28,9 @@ export const ChooseRealm = () => {
                 flexDirection: "column"
             }}
         >
-            {userInfo.accessibleRealms.map(lv => (<div key={lv.id} style={{width: "80%"}}>
+            {Object.entries(userInfo.realmIdToAccessLevel).map(([realmId, ral]) => (<div key={realmId} style={{width: "80%"}}>
                 <Button variant="contained" color="primary"
-                        onClick={() => onRealmSelected(lv.id)}>{lv.name}</Button>
+                        onClick={() => onRealmSelected(realmId)}>{ral}</Button>
             </div>))}
 
         </div>

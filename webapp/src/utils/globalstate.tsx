@@ -3,15 +3,17 @@ import WebsocketClient from "../Websocket/websocketClient";
 import {UserStateV2} from "../Websocket/types/UserStateV2";
 import {Accounts} from "./accounts";
 import {AccountTree, LocalState} from "../Websocket/types/localstate";
-import {RealmInfoWithAccessLevel, UserInfo} from "../Websocket/types/User";
+import {User} from "../Websocket/types/User";
+import {RealmInfo} from "../Websocket/types/Subscription";
+import {GlobalState} from "../Websocket/types/globalstate";
+import {emptyAllAllAccounts} from "../Websocket/types/accounts";
 
 type ContextType = {
-    userInfo: UserInfo;
-    realm: RealmInfoWithAccessLevel | undefined;
+    userInfo: User | undefined;
+    realm: RealmInfo | undefined;
     userStateV2: UserStateV2 | undefined;
     setUserStateV2: (fn: (prev: UserStateV2) => UserStateV2) => Promise<void>;
     accounts: Accounts;
-    clearAccounts: () => void;
     localState: LocalState;
     setLocalState: (fn: (prev: LocalState) => LocalState) => void;
 }
@@ -22,42 +24,24 @@ export type UserStateProviderProps = {
     children?: React.ReactNode;
 }
 export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
-    const [userStateV2, setUserStateV2] = useState<UserStateV2 | undefined>();
-    const [accounts, setAccounts] = useState<Accounts>(new Accounts({standardAccounts: [], allAccounts: []}));
+    const [globalState, setGlobalState] = useState<GlobalState>();
     const [localState, setLocalState] = useState<LocalState>({accountTree: new AccountTree()})
-    const [userInfo, setUserInfo] = useState<UserInfo>({isAdmin: false, accessibleRealms: []});
 
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
-            {type: "getUserInfo"},
-            readResponse => setUserInfo(readResponse.userInfo!)
+            {type: "getGlobalState"},
+            readResponse => setGlobalState(readResponse.globalState!)
         );
         return () => WebsocketClient.unsubscribe(subId);
-    }, [setUserInfo]);
+    }, [setGlobalState]);
 
-    useEffect(() => {
-        const subId = WebsocketClient.subscribe(
-            {type: 'getUserState'},
-            readResponse => setUserStateV2(readResponse.userStateV2)
-        )
-        return () => WebsocketClient.unsubscribe(subId);
-    }, [setUserStateV2]);
-
-    useEffect(() => {
-        const subId = WebsocketClient.subscribe(
-            {type: 'getAllAccounts'},
-            readResponse => {
-                console.log("UPDATED accounts received")
-                setAccounts(new Accounts(readResponse.allAccounts!));
-            }
-        )
-        return () => WebsocketClient.unsubscribe(subId);
-    }, [setAccounts]);
-
-    const updateStateV2 = (fn: (prev: UserStateV2) => UserStateV2) => {
-        if (userStateV2) {
-            const updated = fn(userStateV2);
-            setUserStateV2(updated);
+    const setUserStateV2 = (fn: (prev: UserStateV2) => UserStateV2) => {
+        if (globalState) {
+            const updated = fn(globalState.userStateV2);
+            setGlobalState(({
+                ...globalState,
+                userStateV2: updated
+            }));
             return new Promise<void>(resolve => {
                 WebsocketClient.rpc({
                     type: "setUserStateV2",
@@ -68,21 +52,15 @@ export const GlobalStateProvider = ({children,}: UserStateProviderProps) => {
         return new Promise<void>(resolve => resolve())
     }
 
-    const clearAccounts = () => {
-        setAccounts(new Accounts({standardAccounts: [], allAccounts: []}))
-    }
-
-
     return (
         <GlobalStateProviderContext.Provider value={{
-            userInfo,
-            setUserStateV2: updateStateV2,
-            userStateV2,
-            realm: userInfo.accessibleRealms.find(ri => ri.id === userStateV2?.selectedRealm),
-            accounts,
+            userInfo: globalState?.user,
+            realm: globalState?.globalStateForRealm?.selectedRealmInfo,
+            userStateV2: globalState?.userStateV2,
+            setUserStateV2,
+            accounts: new Accounts(globalState?.globalStateForRealm?.allAccounts ?? emptyAllAllAccounts),
             localState,
             setLocalState,
-            clearAccounts,
         }}>
             {children}
         </GlobalStateProviderContext.Provider>
@@ -97,10 +75,3 @@ export const useGlobalState = () => {
     return context;
 };
 
-
-export type PeriodWindowType = 'month' | 'betweenDates'
-export type PeriodWindow = {
-    type: PeriodWindowType;
-    startDateTime: string;
-    endDateTime: string;
-}

@@ -22,6 +22,8 @@ export type RequestType = "subscribe"
     | 'createOrUpdateAccount'
     | 'deleteBankAccount'
     | 'createOrUpdateBankAccount'
+    | 'closeNextMonth'
+    | 'reopenPreviousMonth'
     // admin commands:
     | 'addOrReplaceUser'
     | 'deleteUser'

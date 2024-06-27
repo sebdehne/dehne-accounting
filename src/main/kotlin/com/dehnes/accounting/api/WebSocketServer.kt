@@ -5,6 +5,7 @@ import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
 import com.dehnes.accounting.configuration
 import com.dehnes.accounting.database.DatabaseBackupService
+import com.dehnes.accounting.database.RealmRepository
 import com.dehnes.accounting.services.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -33,6 +34,7 @@ class WebSocketServer : Endpoint() {
     private val batabaseBackupService = configuration.getBean<DatabaseBackupService>()
     private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
     private val unbookedBankTransactionMatcherService = configuration.getBean<UnbookedBankTransactionMatcherService>()
+    private val realmService = configuration.getBean<RealmService>()
     private val logger = KotlinLogging.logger { }
     private val subscriptions = mutableMapOf<String, Subscription>()
 
@@ -87,6 +89,24 @@ class WebSocketServer : Endpoint() {
                     subscriptions.remove(subscriptionId)?.close()
                     logger.info { "$instanceId Removed subscription id=$subscriptionId" }
                     RpcResponse(subscriptionRemoved = true)
+                }
+
+                closeNextMonth -> {
+                    realmService.updateClosure(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        RealmRepository.CloseDirection.forward
+                    )
+                    RpcResponse()
+                }
+
+                reopenPreviousMonth -> {
+                    realmService.updateClosure(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        RealmRepository.CloseDirection.backwards
+                    )
+                    RpcResponse()
                 }
 
                 createNewBackup -> {

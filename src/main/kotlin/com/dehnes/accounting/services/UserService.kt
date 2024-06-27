@@ -1,9 +1,7 @@
 package com.dehnes.accounting.services
 
 import com.dehnes.accounting.api.dtos.User
-import com.dehnes.accounting.api.dtos.UserInfo
 import com.dehnes.accounting.database.Changelog
-import com.dehnes.accounting.database.RealmRepository
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.UserRepository
 import java.sql.Connection
@@ -16,17 +14,6 @@ class UserService(
     private val authorizationService: AuthorizationService,
     private val changelog: Changelog,
 ) {
-
-    fun getUserInfo(userId: String) = dataSource.readTx { conn ->
-
-        val realmInfo = authorizationService.getRealmInfo(conn, userId)
-        val user = userRepository.getUser(conn, userId)
-
-        UserInfo(
-            user.admin,
-            realmInfo
-        )
-    }
 
     fun getAllUsers(userId: String): List<User> = dataSource.readTx {
         authorizationService.assertIsAdmin(it, userId)

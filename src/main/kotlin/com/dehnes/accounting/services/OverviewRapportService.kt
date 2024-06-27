@@ -43,18 +43,11 @@ class OverviewRapportService(
 
                 val entries = thisPeriodBookings.flatMap { booking ->
                     booking.entries.filter { it.accountId == a.id }.map { entry ->
-                        OverviewRapportEntry(
-                            booking.id,
-                            entry.id,
-                            booking.description,
-                            entry.description,
-                            booking.datetime,
-                            entry.amountInCents
-                        )
+                        entry.amountInCents
                     }
                 }
 
-                val thisPeriod = entries.sumOf { it.amountInCents } + children.sumOf { it.thisPeriod }
+                val thisPeriod = entries.sum() + children.sumOf { it.thisPeriod }
 
                 return OverviewRapportAccount(
                     a.id,
@@ -84,13 +77,4 @@ data class OverviewRapportAccount(
     val closeBalance: Long,
     val children: List<OverviewRapportAccount>,
     val deepEntrySize: Int,
-)
-
-data class OverviewRapportEntry(
-    val bookingId: Long,
-    val bookingEntryId: Long,
-    val bookingDescription: String?,
-    val bookingEntryDescription: String?,
-    val datetime: Instant,
-    val amountInCents: Long,
 )

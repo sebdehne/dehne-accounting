@@ -118,7 +118,7 @@ export const BanksAndAccounts = () => {
 
         <h2 className="BanksHeader">Banks</h2>
         <ul className="BankAccounts">
-            {banksAndAccounts.map(b => (<li className="BankAccountNoPointer">
+            {banksAndAccounts.map(b => (<li key={b.id} className="BankAccountNoPointer">
                 <div>{b.name}</div>
                 {editMode && <div className="BankAccountRight">
                     <div className="BankAccountRight02">

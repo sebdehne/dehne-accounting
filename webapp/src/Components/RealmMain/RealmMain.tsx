@@ -50,12 +50,14 @@ export const RealmMain = () => {
         )
     }, [setTotalUnbookedTransactions]);
 
+    if (!userInfo) return null;
+
     return (
         <Container maxWidth="xs" className="App">
             <Header
                 title={realm?.name ?? ""}
                 clickable={onHeaderClick}
-                userIsAdmin={userInfo.isAdmin}
+                userIsAdmin={userInfo.admin}
             />
 
             {totalUnbookedTransactions > 0 &&

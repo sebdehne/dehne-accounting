@@ -1,7 +1,10 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.api.*
-import com.dehnes.accounting.database.*
+import com.dehnes.accounting.database.AllAccounts
+import com.dehnes.accounting.database.BankAccount
+import com.dehnes.accounting.database.Booking
+import com.dehnes.accounting.database.UnbookedTransaction
 import com.dehnes.accounting.services.*
 import kotlin.reflect.KClass
 
@@ -25,16 +28,9 @@ enum class ReadRequestType(
     val listensOnV2: List<KClass<out ChangeLogEventTypeV2>> = emptyList(),
 ) {
 
-    // admin commands
+    getGlobalState(listOf(UserUpdated::class, UserStateUpdated::class, RealmChanged::class, AccountsChanged::class)),
     getAllUsers(listOf(UserUpdated::class)),
-
-    //
-    getUserInfo(listOf(UserUpdated::class)),
-
-    getUserState(listOf(UserStateUpdated::class)),
-
     getOverviewRapport(listOf(AccountsChanged::class, BookingsChanged::class, UserStateUpdated::class)),
-
     getBanksAndAccountsOverview(
         listOf(
             AccountsChanged::class,
@@ -52,13 +48,12 @@ enum class ReadRequestType(
             UserStateUpdated::class,
         )
     ),
-    getAllAccounts(listOf(AccountsChanged::class, UserStateUpdated::class)),
-    getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class, UserStateUpdated::class,)),
-    getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class,)),
-    getTotalUnbookedTransactions(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class,)),
+    getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class, UserStateUpdated::class)),
+    getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class)),
+    getTotalUnbookedTransactions(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class)),
     getBookings(listOf(BookingsChanged::class, UserStateUpdated::class)),
     getBooking(listOf(BookingsChanged::class, UserStateUpdated::class)),
-    getBankAccount(listOf(BankAccountChanged::class, UserStateUpdated::class,)),
+    getBankAccount(listOf(BankAccountChanged::class, UserStateUpdated::class)),
 
     listBackups(listOf(DatabaseBackupChanged::class)),
 
@@ -74,21 +69,32 @@ data class ReadRequest(
 )
 
 data class ReadResponse(
-    val realms: List<RealmInfo>? = null,
-    val userInfo: UserInfo? = null,
-    val userState: UserState? = null,
-    val userStateV2: UserStateV2? = null,
+    val globalState: GlobalState? = null,
     val overViewRapport: List<OverviewRapportAccount>? = null,
     val banksAndAccountsOverview: List<BankWithAccounts>? = null,
     val getBankAccountTransactions: List<BankAccountTransaction>? = null,
-    val allAccounts: AllAccounts? = null,
     val unbookedBankTransactionMatchers: List<MatchedUnbookedBankTransactionMatcher>? = null,
     val unbookedTransaction: UnbookedTransaction? = null,
     val totalUnbookedTransactions: Long? = null,
     val bookings: List<Booking>? = null,
     val booking: Booking? = null,
     val bankAccount: BankAccount? = null,
-    val allUsers: List<User>? = null,
+    val allUsers: AllUsersInfo? = null,
     val backups: List<String>? = null,
 )
 
+data class GlobalState(
+    val user: User,
+    val userStateV2: UserStateV2,
+    val globalStateForRealm: GlobalStateForRealm?,
+)
+
+data class GlobalStateForRealm(
+    val selectedRealmInfo: RealmInfo,
+    val allAccounts: AllAccounts,
+)
+
+data class AllUsersInfo(
+    val allUsers: List<User>,
+    val allRealms: List<RealmInfo>,
+)

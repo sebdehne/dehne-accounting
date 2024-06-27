@@ -1,9 +1,10 @@
 package com.dehnes.accounting.database
 
+import com.dehnes.accounting.api.RealmChanged
 import com.dehnes.accounting.domain.InformationElement
 import com.dehnes.accounting.domain.StandardAccount
-import com.dehnes.accounting.services.AccessLevel
 import java.sql.Connection
+import java.time.LocalDate
 
 class RealmRepository(
     private val accountsRepository: AccountsRepository,
@@ -19,8 +20,10 @@ class RealmRepository(
                     name,
                     description,
                     currency,
-                    last_booking_id
-                ) VALUES (?,?,?,?,?)
+                    last_booking_id,
+                    closed_year,
+                    closed_month
+                ) VALUES (?,?,?,?,?,?,?)
             """.trimIndent()
             ).use { preparedStatement ->
                 preparedStatement.setString(1, realm.id)
@@ -28,6 +31,8 @@ class RealmRepository(
                 preparedStatement.setString(3, realm.description)
                 preparedStatement.setString(4, realm.currency)
                 preparedStatement.setLong(5, 0)
+                preparedStatement.setInt(6, realm.closedYear)
+                preparedStatement.setInt(7, realm.closedMonth)
                 preparedStatement.executeUpdate()
             }
 
@@ -78,12 +83,44 @@ class RealmRepository(
                             description = rs.getString("description"),
                             currency = rs.getString("currency"),
                             lastBookingId = rs.getLong("last_booking_id"),
+                            closedYear = rs.getInt("closed_year"),
+                            closedMonth = rs.getInt("closed_month")
                         )
                     )
                 }
                 l
             }
         }
+
+    fun updateClosure(connection: Connection, realmId: String, direction: CloseDirection) {
+
+        val realm = getAll(connection).firstOrNull { it.id == realmId } ?: error("Fant ikke realmId=$realmId")
+
+        val closeDate = LocalDate.of(
+            realm.closedYear,
+            realm.closedMonth,
+            1
+        )
+        val updatedDate = when (direction) {
+            CloseDirection.forward -> closeDate.plusMonths(1)
+            CloseDirection.backwards -> closeDate.plusMonths(-1)
+        }
+
+        connection.prepareStatement("UPDATE realm set closed_year = ? AND closed_month = ? WHERE id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setInt(1, updatedDate.year)
+                preparedStatement.setInt(2, updatedDate.monthValue)
+                preparedStatement.setString(3, realmId)
+                preparedStatement.executeUpdate()
+            }
+
+        changelog.add(RealmChanged)
+    }
+
+    enum class CloseDirection {
+        forward,
+        backwards
+    }
 
 }
 
@@ -93,5 +130,7 @@ data class Realm(
     override val description: String?,
     val currency: String,
     val lastBookingId: Long,
+    val closedYear: Int,
+    val closedMonth: Int,
 ) : InformationElement()
 

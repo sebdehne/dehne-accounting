@@ -76,13 +76,7 @@ class UnbookedBankTransactionMatcherRepository(
             } else {
                 false
             }
-        }.forEach { m ->
-            remove(
-                conn,
-                m.id,
-                realmId
-            )
-        }
+        }.forEach { remove(conn, it.id, realmId) }
     }
 }
 

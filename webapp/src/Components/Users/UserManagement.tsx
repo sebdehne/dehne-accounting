@@ -17,21 +17,22 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {InformationElement} from "../../Websocket/types/InformationElement";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
+import {RealmInfo} from "../../Websocket/types/Subscription";
 
 const clone = (u: User) => JSON.parse(JSON.stringify(u)) as User;
 
 export const UserManagement = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [usersOriginal, setUsersOriginal] = useState<User[]>([]);
-    const [allRealms, setAllRealms] = useState<InformationElement[]>([]);
+    const [allRealms, setAllRealms] = useState<RealmInfo[]>([]);
 
     useEffect(() => {
         const subId = WebsocketClient.subscribe(
             {type: "getAllUsers"},
             readResponse => {
-                setUsersOriginal(readResponse.allUsers!.map(c => clone(c)));
-                setUsers(readResponse.allUsers!);
-                setAllRealms(readResponse.realms!);
+                setUsersOriginal(readResponse.allUsers!.allUsers.map(c => clone(c)));
+                setUsers(readResponse.allUsers!.allUsers);
+                setAllRealms(readResponse.allUsers!.allRealms!);
             }
         )
         return () => WebsocketClient.unsubscribe(subId);

@@ -10,6 +10,8 @@ class AccountService(
     private val bookingRepository: BookingRepository,
     private val unbookedBankTransactionMatcherRepository: UnbookedBankTransactionMatcherRepository,
     private val changelog: Changelog,
+    private val budgetRepository: BudgetRepository,
+    private val budgetHistoryRepository: BudgetHistoryRepository,
 ) {
 
     fun merge(
@@ -25,6 +27,19 @@ class AccountService(
                 userId,
                 realmId,
                 AccessRequest.owner
+            )
+
+            budgetHistoryRepository.merge(
+                conn,
+                realmId,
+                sourceAccountId,
+                targetAccountId,
+            )
+            budgetRepository.mergeAccount(
+                conn,
+                realmId,
+                sourceAccountId,
+                targetAccountId
             )
 
             unbookedBankTransactionMatcherRepository.removeForAccountId(
