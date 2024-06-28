@@ -22,7 +22,7 @@ export const RealmMain = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (userStateV2 && !userStateV2.selectedRealm) {
+        if (userStateV2 && !realm) {
             navigate('/realm', {replace: true});
         }
     }, [userStateV2, navigate]);
@@ -50,12 +50,12 @@ export const RealmMain = () => {
         )
     }, [setTotalUnbookedTransactions]);
 
-    if (!userInfo) return null;
+    if (!userInfo || !realm) return null;
 
     return (
         <Container maxWidth="xs" className="App">
             <Header
-                title={realm?.name ?? ""}
+                title={realm.name}
                 clickable={onHeaderClick}
                 userIsAdmin={userInfo.admin}
             />

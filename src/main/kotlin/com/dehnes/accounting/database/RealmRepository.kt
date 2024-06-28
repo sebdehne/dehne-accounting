@@ -106,7 +106,7 @@ class RealmRepository(
             CloseDirection.backwards -> closeDate.plusMonths(-1)
         }
 
-        connection.prepareStatement("UPDATE realm set closed_year = ? AND closed_month = ? WHERE id = ?")
+        connection.prepareStatement("UPDATE realm set closed_year = ?, closed_month = ? WHERE id = ?")
             .use { preparedStatement ->
                 preparedStatement.setInt(1, updatedDate.year)
                 preparedStatement.setInt(2, updatedDate.monthValue)
