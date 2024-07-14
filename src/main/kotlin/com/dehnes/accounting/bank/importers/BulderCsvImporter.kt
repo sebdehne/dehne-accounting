@@ -101,6 +101,14 @@ class BulderCsvImporter :Importer {
 
         val parts = str.split(",")
         check(parts.size == 2)
-        return ((parts[0].toLong() * 100) + parts[1].toLong()) * negativ
+
+        val main = parts[0]
+        var decimals = parts[1]
+        if (decimals.length == 1) {
+            decimals = "${decimals}0"
+        }
+        check(decimals.length == 2)
+
+        return ((main.toLong() * 100) + decimals.toLong()) * negativ
     }
 }
