@@ -1,3 +1,7 @@
+Bugs:
+- "+ Add booking" only works once, not a second time straight away
+
+
 - Docker
   - java jvm options memory
   - health checks / restart
