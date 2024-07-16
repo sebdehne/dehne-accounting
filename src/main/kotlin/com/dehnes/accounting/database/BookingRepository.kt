@@ -210,7 +210,7 @@ class BookingRepository(
                 description, 
                 account_id, 
                 amount_in_cents,
-                checcked
+                checked
             ) VALUES (?,?,?,?,?,?,?)
         """.trimIndent()
         ).use { preparedStatement ->
