@@ -1,0 +1,1 @@
+alter table booking_entry add column checked integer default 0;

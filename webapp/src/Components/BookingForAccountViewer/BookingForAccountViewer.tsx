@@ -1,6 +1,6 @@
-import {Container} from "@mui/material";
+import {Checkbox, Container} from "@mui/material";
 import Header from "../Header";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import "./BookingForAccountViewer.css";
 import {PeriodSelectorV2} from "../PeriodSelectors/PeriodSelector";
 import {Booking, BookingEntry} from "../../Websocket/types/bookings";
@@ -19,6 +19,7 @@ export const BookingForAccountViewer = () => {
     const {accountId} = useParams();
     const {accounts} = useGlobalState();
     const [onlyShowUnbooked, setOnlyShowUnbooked] = useState(false);
+    const [editMode, setEditMode] = useState(false);
 
     useEffect(() => {
         if (accountId) {
@@ -75,7 +76,8 @@ export const BookingForAccountViewer = () => {
             extraMenuOptions={[
                 ['Import transactions', onImport],
                 ['Delete all unbooked', onDeleteAll],
-                [onlyShowUnbooked ? 'Show all' : 'Only show unbooked', () => setOnlyShowUnbooked(!onlyShowUnbooked)]
+                [onlyShowUnbooked ? 'Show all' : 'Only show unbooked', () => setOnlyShowUnbooked(!onlyShowUnbooked)],
+                [editMode ? 'Exit edit' : 'Edit mode', () => setEditMode(!editMode)]
             ]}
         />
 
@@ -104,12 +106,15 @@ export const BookingForAccountViewer = () => {
                     if (b.entries.length > 0) {
                         const entries = b.entries.filter(e => e.accountId === accountId);
                         return entries.map(e =>
-                            <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry}/>
+                            <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry} showChecked={editMode}/>
                         );
                     } else {
                         return [
-                            <UnbookedTxViewer key={b.id} accountId={accountId} unbookedAmountInCents={b.unbookedAmountInCents!}
-                                              id={b.id} datetime={b.datetime} description={b.description}/>
+                            <UnbookedTxViewer key={b.id} accountId={accountId}
+                                              unbookedAmountInCents={b.unbookedAmountInCents!}
+                                              id={b.id} datetime={b.datetime} description={b.description}
+                                              editMode={editMode}
+                            />
                         ]
                     }
                 })
@@ -119,42 +124,58 @@ export const BookingForAccountViewer = () => {
 }
 
 
-type BookingViewerProps = {
+const BookingViewer = ({booking, entry, showChecked}: {
     booking: Booking;
-    entry: BookingEntry
-}
-const BookingViewer = ({booking, entry}: BookingViewerProps) => {
+    entry: BookingEntry;
+    showChecked: boolean;
+}) => {
     const {accounts} = useGlobalState();
     const navigate = useNavigate();
 
+    const toggleChecked = useCallback(() => {
+        WebsocketClient.rpc({
+            type: "updateChecked",
+            bookingId: booking.id,
+            bookingEntryId: entry.id,
+            bookingEntryChecked: !entry.checked,
+        })
+    }, [entry]);
+
     let otherEntries = booking.entries.filter(e => e.id !== entry.id);
-    return (<li className="BookingEntry">
-        <div className="BookingEntrySummary">
-            <div style={{display: "flex", flexDirection: "row"}}>
-                <div
-                    onClick={() => navigate('/booking/' + booking.id)}
-                    style={{marginRight: '10px'}}
-                ><DateViewer date={booking.datetime}/></div>
-                <div>{booking.description ?? entry.description}</div>
+    return (<li className="BookingEntryContainer">
+        <div className="BookingEntryLeft">
+            <div className="BookingEntrySummary">
+                <div style={{display: "flex", flexDirection: "row"}}>
+                    <div
+                        onClick={() => navigate('/booking/' + booking.id)}
+                        style={{marginRight: '10px'}}
+                    ><DateViewer date={booking.datetime}/></div>
+                    <div>{booking.description ?? entry.description}</div>
+                </div>
+                <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={entry.amountInCents}/>
+                </div>
             </div>
-            <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={entry.amountInCents}/></div>
+            <ul className="OtherEntries">
+                {otherEntries.map(e => (<li key={e.id} className="OtherEntry">
+                    <div
+                        onClick={() => navigate('/bookings/' + e.accountId)}>{accounts.generateParentsString(e.accountId)} - {accounts.getById(e.accountId)!.name}</div>
+                    {otherEntries.length > 1 && <Amount amountInCents={e.amountInCents}/>}
+                </li>))}
+            </ul>
         </div>
-        <ul className="OtherEntries">
-            {otherEntries.map(e => (<li key={e.id} className="OtherEntry">
-                <div
-                    onClick={() => navigate('/bookings/' + e.accountId)}>{accounts.generateParentsString(e.accountId)} - {accounts.getById(e.accountId)!.name}</div>
-                {otherEntries.length > 1 && <Amount amountInCents={e.amountInCents}/>}
-            </li>))}
-        </ul>
+        {showChecked && <div className="BookingEntryRight">
+            <Checkbox checked={entry.checked} onClick={() => toggleChecked()}/>
+        </div>}
     </li>)
 }
 
-const UnbookedTxViewer = ({id, accountId, unbookedAmountInCents, description, datetime}: {
+const UnbookedTxViewer = ({id, accountId, unbookedAmountInCents, description, datetime, editMode}: {
     accountId: string;
     unbookedAmountInCents: number;
     id: number;
     datetime: string;
-    description?: string
+    description?: string;
+    editMode: boolean;
 }) => {
     const navigate = useNavigate();
     const {showConfirmationDialog} = useDialogs();
@@ -178,21 +199,23 @@ const UnbookedTxViewer = ({id, accountId, unbookedAmountInCents, description, da
             })
         }
     }
-    return (<li className="UnbookedEntry">
-        <div className="UnbookedSummary">
-            <div style={{display: "flex", flexDirection: "row"}}>
-                <div style={{marginRight: '10px'}}
-                ><DateViewer date={datetime}/></div>
-                <div>{description}</div>
-            </div>
-            <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={unbookedAmountInCents}/></div>
-        </div>
 
-        <div className="UnbookedButtons">
+    return (<li className="UnbookedEntryContainer">
+        <div className="UnbookedEntry">
+            <div className="UnbookedSummary">
+                <div style={{display: "flex", flexDirection: "row"}}>
+                    <div style={{marginRight: '10px'}}
+                    ><DateViewer date={datetime}/></div>
+                    <div>{description}</div>
+                </div>
+                <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={unbookedAmountInCents}/>
+                </div>
+            </div>
+        </div>
+        {editMode && <div className="UnbookedRight">
             <IconButton onClick={() => deleteUnbookedTx(id)}><DeleteIcon/></IconButton>
             <IconButton onClick={() => book(id)}><InputIcon/></IconButton>
-        </div>
-
+        </div>}
     </li>)
 }
 

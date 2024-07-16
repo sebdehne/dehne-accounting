@@ -1,11 +1,11 @@
 import React, {useState} from "react";
-import WebsocketClient from "../../Websocket/websocketClient";
-import Header from "../Header";
+import WebsocketClient from "../Websocket/websocketClient";
+import Header from "./Header";
 import {Button, Checkbox, Container, FormControlLabel, styled} from "@mui/material";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import {arrayBufferToBase64} from "../../utils/formatting";
-import {ImportBankTransactionsResult} from "../../Websocket/types/Rpc";
-import {useGlobalState} from "../../utils/globalstate";
+import {arrayBufferToBase64} from "../utils/formatting";
+import {ImportBankTransactionsResult} from "../Websocket/types/Rpc";
+import {useGlobalState} from "../utils/globalstate";
 import {useParams} from "react-router-dom";
 
 const VisuallyHiddenInput = styled('input')({

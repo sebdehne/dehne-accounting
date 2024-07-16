@@ -56,11 +56,12 @@ class BookingRepository(
                     while (rs.next()) {
                         l.add(
                             BookingEntryRaw(
-                                rs.getLong("id"),
-                                rs.getLong("booking_id"),
-                                rs.getString("description"),
-                                rs.getString("account_id"),
-                                rs.getLong("amount_in_cents"),
+                                id = rs.getLong("id"),
+                                bookingId = rs.getLong("booking_id"),
+                                description = rs.getString("description"),
+                                accountId = rs.getString("account_id"),
+                                amountInCents = rs.getLong("amount_in_cents"),
+                                checked = rs.getInt("checked") > 0
                             )
                         )
                     }
@@ -89,6 +90,7 @@ class BookingRepository(
                                         it.description,
                                         it.accountId,
                                         it.amountInCents,
+                                        it.checked,
                                     )
                                 },
                                 null
@@ -111,10 +113,12 @@ class BookingRepository(
     fun getLastKnownBookingDate(accountId: String, realmId: String): Instant? {
         val (_, allBookings) = getFilteredData(
             realmId,
-            listOf(AccountIdFilter(
-                accountId = accountId,
-                realmId = realmId
-            ))
+            listOf(
+                AccountIdFilter(
+                    accountId = accountId,
+                    realmId = realmId
+                )
+            )
         )
         return allBookings.maxByOrNull { it.datetime }?.datetime
     }
@@ -177,7 +181,8 @@ class BookingRepository(
                 id = index,
                 description = bookingEntry.description,
                 accountId = bookingEntry.accountId,
-                amountInCents = bookingEntry.amountInCents
+                amountInCents = bookingEntry.amountInCents,
+                checked = bookingEntry.checked,
             )
         }
 
@@ -194,6 +199,7 @@ class BookingRepository(
         description: String?,
         accountId: String,
         amountInCents: Long,
+        checked: Boolean,
     ) {
         connection.prepareStatement(
             """
@@ -203,8 +209,9 @@ class BookingRepository(
                 id, 
                 description, 
                 account_id, 
-                amount_in_cents
-            ) VALUES (?,?,?,?,?,?)
+                amount_in_cents,
+                checcked
+            ) VALUES (?,?,?,?,?,?,?)
         """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setString(1, realmId)
@@ -213,8 +220,29 @@ class BookingRepository(
             preparedStatement.setString(4, description?.ifBlank { null })
             preparedStatement.setString(5, accountId)
             preparedStatement.setLong(6, amountInCents)
+            preparedStatement.setInt(7, if (checked) 1 else 0)
             preparedStatement.executeUpdate()
         }
+    }
+
+    fun updateChecked(
+        connection: Connection,
+        realmId: String,
+        bookingId: Long,
+        bookingEntryId: Long,
+        checked: Boolean,
+    ) {
+        connection.prepareStatement("UPDATE booking_entry SET checked = ? WHERE realm_id = ? AND booking_id = ? AND id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setInt(1, if (checked) 1 else 0)
+                preparedStatement.setString(2, realmId)
+                preparedStatement.setLong(3, bookingId)
+                preparedStatement.setLong(4, bookingEntryId)
+                preparedStatement.executeUpdate()
+            }
+
+        changelog.add(BookingsChanged(realmId))
+
     }
 
     fun editBooking(
@@ -242,6 +270,7 @@ class BookingRepository(
                 bookingEntry.description,
                 bookingEntry.accountId,
                 bookingEntry.amountInCents,
+                bookingEntry.checked,
             )
         }
 
@@ -300,6 +329,7 @@ data class BookingEntry(
     val description: String?,
     val accountId: String,
     val amountInCents: Long,
+    val checked: Boolean,
 )
 
 data class BookingEntryRaw(
@@ -308,6 +338,7 @@ data class BookingEntryRaw(
     val description: String?,
     val accountId: String,
     val amountInCents: Long,
+    val checked: Boolean,
 )
 
 data class AddBooking(
@@ -321,5 +352,6 @@ data class AddBookingEntry(
     val description: String?,
     val accountId: String,
     val amountInCents: Long,
+    val checked: Boolean,
 )
 

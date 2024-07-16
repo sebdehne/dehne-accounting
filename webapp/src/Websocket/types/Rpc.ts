@@ -18,6 +18,7 @@ export type RequestType = "subscribe"
     | 'executeMatcherUnbookedTransactionMatcher'
     | 'createOrUpdateBooking'
     | 'deleteBooking'
+    | 'updateChecked'
     | 'mergeAccount'
     | 'createOrUpdateAccount'
     | 'deleteBankAccount'
@@ -46,7 +47,9 @@ export type RpcRequest = {
     userStateV2?: UserStateV2;
     unbookedBankTransactionMatcher?: UnbookedBankTransactionMatcher;
     removeUnbookedTransactionMatcherId?: string;
-    deleteBookingId?: number;
+    bookingId?: number;
+    bookingEntryId?: number;
+    bookingEntryChecked?: boolean;
     createOrUpdateBooking?: Booking;
     createOrUpdateAccount?: AccountDto;
     bankAccount?: BankAccount;

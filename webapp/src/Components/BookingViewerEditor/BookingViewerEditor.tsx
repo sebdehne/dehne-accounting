@@ -43,7 +43,7 @@ export const BookingViewerEditor = () => {
                 onConfirmed: () => {
                     WebsocketClient.rpc({
                         type: "deleteBooking",
-                        deleteBookingId: parseInt(bookingId)
+                        bookingId: parseInt(bookingId)
                     }).then(() => navigate(-1))
                 }
             })
@@ -91,7 +91,8 @@ export const BookingViewerEditor = () => {
                 {
                     amountInCents: sum * -1,
                     id: prevState.entries.length,
-                    accountId: ""
+                    accountId: "",
+                    checked: false
                 }
             ]
         }))

@@ -132,6 +132,7 @@ function reconnect() {
     const urlTemplate: string = import.meta.env.VITE_WEBSOCKET_ENDPOINT;
     const wsUrl = urlTemplate.replace("HOST", window.location.host);
     console.log("Connecting to: " + wsUrl);
+    setConnectionStatusChanged(ConnectionStatus.connecting);
 
     ws = new WebSocket(wsUrl);
     ws.onopen = function () {

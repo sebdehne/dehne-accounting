@@ -7,7 +7,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import {CssBaseline, ThemeProvider} from "@mui/material";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
-import {BankTransactionsImporter} from "./Components/BankTransactionsV2/BankTransactionsImporter";
+import {BankTransactionsImporter} from "./Components/BankTransactionsImporter";
 import {GlobalStateProvider} from "./utils/globalstate";
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'

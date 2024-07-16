@@ -190,7 +190,18 @@ class WebSocketServer : Endpoint() {
                     bookingService.deleteBooking(
                         user.id,
                         userStateV2.selectedRealm!!,
-                        rpcRequest.deleteBookingId!!
+                        rpcRequest.bookingId!!
+                    )
+                    RpcResponse()
+                }
+
+                updateChecked -> {
+                    bookingService.updateChecked(
+                        userStateV2.selectedRealm!!,
+                        user.id,
+                        rpcRequest.bookingId!!,
+                        rpcRequest.bookingEntryId!!,
+                        rpcRequest.bookingEntryChecked!!
                     )
                     RpcResponse()
                 }

@@ -4,29 +4,25 @@
     padding: 0;
 }
 
-.BookingEntry {
-    display: flex;
-    flex-direction: column;
-    background-color: #252525;
-    border-radius: 15px;
-    margin: 10px 0 10px 0;
-    padding: 10px;
-}
-
-.UnbookedEntry {
-    display: flex;
-    flex-direction: column;
-    background-color: #533c3c;
-    border-radius: 15px;
-    margin: 10px 0 10px 0;
-    padding: 10px;
-}
-
-.UnbookedSummary  {
+.BookingEntryContainer {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    background-color: #252525;
     align-items: center;
+    border-radius: 15px;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+.BookingEntryLeft {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.BookingEntryRight {
+    display: flex;
+    flex-direction: column;
+    width: 40px;
 }
 
 .BookingEntrySummary  {
@@ -36,9 +32,32 @@
     align-items: center;
 }
 
-.UnbookedButtons  {
+.UnbookedEntryContainer {
     display: flex;
     flex-direction: row;
+    align-items: center;
+    background-color: #533c3c;
+    border-radius: 15px;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+.UnbookedEntry {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.UnbookedSummary  {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.UnbookedRight {
+    display: flex;
+    flex-direction: column;
+    width: 40px;
     justify-content: flex-end;
 }
 

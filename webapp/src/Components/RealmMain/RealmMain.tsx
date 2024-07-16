@@ -50,7 +50,7 @@ export const RealmMain = () => {
         )
     }, [setTotalUnbookedTransactions]);
 
-    if (!userInfo || !realm) return null;
+    if (!userInfo || !realm) return <div>Loading....</div>;
 
     return (
         <Container maxWidth="xs" className="App">

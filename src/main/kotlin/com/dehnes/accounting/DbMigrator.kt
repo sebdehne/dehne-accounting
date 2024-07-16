@@ -11,7 +11,6 @@ object DbMigrator {
         val datasource = datasourceSetup(dbFile("accounting_data"))
 
         val executorService = Executors.newCachedThreadPool()
-        val objectMapper = objectMapper()
 
         val changelog = Changelog(datasource, executorService)
         val accountsRepository = AccountsRepository(changelog)
@@ -33,8 +32,6 @@ object DbMigrator {
             }
             val accountPayable = allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.AccountPayable }
             val accountReceivable = allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.AccountReceivable }
-            val accountIncome = allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.Income }
-            val accountExpense = allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.Expense }
 
             fun getPath(aId: String, path: List<AccountDto> = emptyList()): List<AccountDto> {
                 val a = allAccounts.allAccounts.single { it.id == aId }
@@ -52,7 +49,7 @@ object DbMigrator {
                 emptyList()
             ).groupBy { it.datetime }.entries.map {
                 it.key to it.value
-            }.sortedBy { it.first }.forEach { (date, bookings) ->
+            }.sortedBy { it.first }.forEach { (_, bookings) ->
 
                 bookings.mapNotNull { b ->
                     val entries = b.entries.filter { e ->
@@ -130,7 +127,8 @@ object DbMigrator {
                             AddBookingEntry(
                                 it.description,
                                 it.accountId,
-                                it.amountInCents
+                                it.amountInCents,
+                                it.checked
                             )
                         }
                     ))

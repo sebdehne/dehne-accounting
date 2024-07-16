@@ -72,12 +72,14 @@ class UnbookedBankTransactionMatcherService(
                                 AddBookingEntry(
                                     null,
                                     unbookedTransaction.accountId,
-                                    unbookedTransaction.amountInCents
+                                    unbookedTransaction.amountInCents,
+                                    false,
                                 ),
                                 AddBookingEntry(
                                     null,
                                     transactionMatcher.actionAccountId,
-                                    unbookedTransaction.amountInCents * -1
+                                    unbookedTransaction.amountInCents * -1,
+                                    false
                                 )
                             )
                         )
@@ -93,7 +95,8 @@ class UnbookedBankTransactionMatcherService(
                                 AddBookingEntry(
                                     null,
                                     entry.key,
-                                    entry.value
+                                    entry.value,
+                                    false
                                 )
                             )
                             acc - entry.value
@@ -102,7 +105,8 @@ class UnbookedBankTransactionMatcherService(
                         AddBookingEntry(
                             null,
                             transactionMatcher.action.mainAccountId,
-                            remaining
+                            remaining,
+                            false
                         )
                     )
 
@@ -117,19 +121,22 @@ class UnbookedBankTransactionMatcherService(
                                 AddBookingEntry(
                                     null,
                                     unbookedTransaction.accountId,
-                                    unbookedTransaction.amountInCents
+                                    unbookedTransaction.amountInCents,
+                                    false
                                 ),
                                 AddBookingEntry(
                                     null,
                                     transactionMatcher.actionAccountId,
-                                    unbookedTransaction.amountInCents * -1
+                                    unbookedTransaction.amountInCents * -1,
+                                    false
                                 ),
 
                                 // income/expense
                                 AddBookingEntry(
                                     null,
                                     transactionMatcher.actionAccountId,
-                                    unbookedTransaction.amountInCents
+                                    unbookedTransaction.amountInCents,
+                                    false
                                 ),
                             ) + splits
                         ),

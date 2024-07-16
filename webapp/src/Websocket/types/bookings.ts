@@ -12,4 +12,5 @@ export type  BookingEntry = {
     description?: string;
     accountId: string;
     amountInCents: number;
+    checked: boolean;
 }

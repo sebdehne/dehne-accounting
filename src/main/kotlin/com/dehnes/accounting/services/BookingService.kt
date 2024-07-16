@@ -2,7 +2,6 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
-import java.util.Comparator
 import javax.sql.DataSource
 
 class BookingService(
@@ -83,6 +82,31 @@ class BookingService(
         ).single()
     }
 
+    fun updateChecked(
+        realmId: String,
+        userId: String,
+        bookingId: Long,
+        bookingEntryId: Long,
+        checked: Boolean,
+    ) {
+        changelog.writeTx { conn ->
+            authorizationService.assertAuthorization(
+                connection = conn,
+                userId = userId,
+                realmId = realmId,
+                accessRequest = AccessRequest.write,
+            )
+
+            bookingRepository.updateChecked(
+                connection = conn,
+                realmId = realmId,
+                bookingId = bookingId,
+                bookingEntryId = bookingEntryId,
+                checked = checked
+            )
+        }
+    }
+
     fun createOrUpdateBooking(userId: String, realmId: String, booking: Booking) = changelog.writeTx { conn ->
         val existingBooking = bookingRepository.getBookings(
             realmId,
@@ -110,7 +134,8 @@ class BookingService(
                         AddBookingEntry(
                             description = it.description,
                             accountId = it.accountId,
-                            amountInCents = it.amountInCents
+                            amountInCents = it.amountInCents,
+                            checked = it.checked,
                         )
                     }
                 )

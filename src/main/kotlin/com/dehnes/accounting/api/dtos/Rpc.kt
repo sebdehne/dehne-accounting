@@ -24,6 +24,7 @@ enum class RequestType {
 
     createOrUpdateBooking,
     deleteBooking,
+    updateChecked,
 
     mergeAccount,
     createOrUpdateAccount,
@@ -55,7 +56,9 @@ data class RpcRequest(
     val userStateV2: UserStateV2?,
     val unbookedBankTransactionMatcher: UnbookedBankTransactionMatcher?,
     val removeUnbookedTransactionMatcherId: String?,
-    val deleteBookingId: Long?,
+    val bookingId: Long?,
+    val bookingEntryId: Long?,
+    val bookingEntryChecked: Boolean?,
     val createOrUpdateBooking: Booking?,
     val createOrUpdateAccount: AccountDto?,
     val bankAccount: BankAccount?,
