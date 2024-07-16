@@ -16,7 +16,12 @@ class BookingService(
         realmId: String,
         bookingsFilters: List<BookingsFilter>,
     ): List<Booking> = dataSource.readTx { conn ->
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read,
+        )
 
         bookingRepository.getBookings(
             realmId,
@@ -26,7 +31,12 @@ class BookingService(
     }
 
     fun getBooking(userId: String, realmId: String, bookingId: Long) = dataSource.readTx { conn ->
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read,
+        )
 
         bookingRepository.getBookings(
             realmId,
@@ -36,18 +46,20 @@ class BookingService(
     }
 
     fun createOrUpdateBooking(userId: String, realmId: String, booking: Booking) = changelog.writeTx { conn ->
-        authorizationService.assertAuthorization(
-            conn,
-            userId,
-            realmId,
-            AccessRequest.write
-        )
-
         val existingBooking = bookingRepository.getBookings(
             realmId,
             Int.MAX_VALUE,
             listOf(SingleBookingFilter(booking.id))
         ).singleOrNull()
+
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.write,
+            existingBooking?.datetime,
+            booking.datetime
+        )
 
         if (existingBooking == null) {
             bookingRepository.insert(
@@ -77,18 +89,28 @@ class BookingService(
 
     fun deleteBooking(userId: String, realmId: String, bookingId: Long) {
         changelog.writeTx { conn ->
-            authorizationService.assertAuthorization(
-                conn,
-                userId,
+
+            val bookings = bookingRepository.getBookings(
                 realmId,
-                AccessRequest.write
+                1,
+                listOf(SingleBookingFilter(bookingId))
             )
 
-            bookingRepository.deleteBooking(
-                conn,
-                realmId,
-                bookingId
-            )
+            if (bookings.isNotEmpty()) {
+                authorizationService.assertAuthorization(
+                    conn,
+                    userId,
+                    realmId,
+                    AccessRequest.write,
+                    bookings.single().datetime
+                )
+
+                bookingRepository.deleteBooking(
+                    conn,
+                    realmId,
+                    bookingId
+                )
+            }
         }
     }
 }

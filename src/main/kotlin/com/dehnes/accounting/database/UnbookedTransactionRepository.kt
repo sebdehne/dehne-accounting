@@ -125,6 +125,24 @@ class UnbookedTransactionRepository(
         }
     }
 
+    fun hasUnbookedTransaction(
+        conn: Connection,
+        realmId: String,
+        from: Instant,
+        toExcluding: Instant,
+    ): Boolean =
+        conn.prepareStatement("SELECT count(*) from unbooked_bank_transaction where realm_id = ? AND datetime >= ? AND datetime < ?")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, realmId)
+                preparedStatement.setTimestamp(2, Timestamp.from(from))
+                preparedStatement.setTimestamp(3, Timestamp.from(toExcluding))
+                preparedStatement.executeQuery().use { rs ->
+                    check(rs.next())
+                    val long = rs.getLong(1)
+                    long > 0
+                }
+            }
+
     fun getUnbookedTransactions(
         conn: Connection,
         realmId: String,
@@ -249,7 +267,10 @@ class AccountIdFilter(
     private val realmId: String,
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> =
-        "b.id in (SELECT distinct booking_id from booking_entry WHERE realm_id = ? AND account_id = ?)" to listOf(realmId, accountId)
+        "b.id in (SELECT distinct booking_id from booking_entry WHERE realm_id = ? AND account_id = ?)" to listOf(
+            realmId,
+            accountId
+        )
 }
 
 class SingleBookingFilter(

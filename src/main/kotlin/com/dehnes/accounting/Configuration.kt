@@ -12,6 +12,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.sqlite.SQLiteConfig
 import java.util.concurrent.Executors
 import javax.sql.DataSource
@@ -24,8 +25,9 @@ fun objectMapper() = jacksonObjectMapper()
     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-class Configuration {
+object Configuration {
     var beans = mutableMapOf<KClass<*>, Any>()
+    val logger = KotlinLogging.logger {}
 
     fun init() {
 
@@ -91,7 +93,7 @@ class Configuration {
 
         val userStateService = UserStateService(datasource, userStateRepository, userService, changelog)
         val databaseBackupService = DatabaseBackupService(datasource, changelog)
-        val realmService = RealmService(realmRepository, datasource, authorizationService, changelog)
+        val realmService = RealmService(realmRepository, datasource, authorizationService, changelog, unbookedTransactionRepository)
 
         val readService = ReadService(
             executorService,
@@ -137,6 +139,8 @@ class Configuration {
 fun dbFile(path: String = ".") = System.getProperty("SQLITE_FILE", "$path/sql.db")
 
 fun datasourceSetup(sqliteFile: String): DataSource {
+
+    Configuration.logger.info { "Using sql file: $sqliteFile" }
 
     val sqLiteConfig = SQLiteConfig()
     sqLiteConfig.enforceForeignKeys(true)

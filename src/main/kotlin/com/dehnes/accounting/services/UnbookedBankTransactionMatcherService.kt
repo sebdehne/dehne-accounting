@@ -22,7 +22,12 @@ class UnbookedBankTransactionMatcherService(
         userId: String,
         realmId: String,
     ) = dataSource.readTx { conn ->
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read,
+        )
 
         unbookedTransactionRepository.getCount(conn, realmId, null)
     }
@@ -33,7 +38,6 @@ class UnbookedBankTransactionMatcherService(
         executeMatcherRequest: ExecuteMatcherRequest,
     ) {
         changelog.writeTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 
             val unbookedTransaction = unbookedTransactionRepository.getUnbookedTransaction(
                 conn,
@@ -41,6 +45,14 @@ class UnbookedBankTransactionMatcherService(
                 executeMatcherRequest.accountId,
                 executeMatcherRequest.transactionId
             ) ?: return@writeTx
+
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.write,
+                unbookedTransaction.datetime
+            )
 
             val transactionMatcher =
                 unbookedBankTransactionMatcherRepository.getAll(conn, realmId)
@@ -146,7 +158,12 @@ class UnbookedBankTransactionMatcherService(
         matcherId: String
     ) {
         changelog.writeTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.write,
+            )
 
             unbookedBankTransactionMatcherRepository.remove(
                 conn,
@@ -165,7 +182,12 @@ class UnbookedBankTransactionMatcherService(
         matcher: UnbookedBankTransactionMatcher
     ) {
         changelog.writeTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.write,
+            )
 
             check(matcher.realmId == realmId)
 
@@ -195,7 +217,12 @@ class UnbookedBankTransactionMatcherService(
         realmId: String,
         unbookedBankTransactionReference: UnbookedBankTransactionReference?,
     ): List<MatchedUnbookedBankTransactionMatcher> = dataSource.readTx { conn ->
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read,
+        )
 
         val unbookedTransaction = unbookedBankTransactionReference?.let {
             unbookedTransactionRepository.getUnbookedTransaction(
@@ -220,7 +247,12 @@ class UnbookedBankTransactionMatcherService(
         realmId: String,
         unbookedBankTransactionReference: UnbookedBankTransactionReference
     ) = dataSource.readTx { conn ->
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read,
+        )
         unbookedTransactionRepository.getUnbookedTransaction(
             conn,
             realmId,

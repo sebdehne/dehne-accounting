@@ -25,7 +25,6 @@ class BankTransactionImportService(
         duplicationHandler: DuplicationHandler,
     ) = changelog.writeTx { conn ->
 
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
 
         val bankAccount =
             bankAccountRepository.getAllBankAccounts(conn, realmId).firstOrNull { it.accountId == accountId }
@@ -67,6 +66,14 @@ class BankTransactionImportService(
                     overlapping = false
                 }
             }
+
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.write,
+                record.datetime
+            )
 
             unbookedTransactionRepository.insert(
                 conn,

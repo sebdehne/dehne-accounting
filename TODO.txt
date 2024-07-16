@@ -1,6 +1,6 @@
 Bugs:
 - "+ Add booking" only works once, not a second time straight away
-
+- check boxes for avstemming
 
 - Docker
   - java jvm options memory

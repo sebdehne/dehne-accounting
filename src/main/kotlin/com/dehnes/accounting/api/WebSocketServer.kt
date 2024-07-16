@@ -1,9 +1,9 @@
 package com.dehnes.accounting.api
 
+import com.dehnes.accounting.Configuration
 import com.dehnes.accounting.api.dtos.*
 import com.dehnes.accounting.api.dtos.RequestType.*
 import com.dehnes.accounting.bank.importers.BankTransactionImportService
-import com.dehnes.accounting.configuration
 import com.dehnes.accounting.database.DatabaseBackupService
 import com.dehnes.accounting.database.RealmRepository
 import com.dehnes.accounting.services.*
@@ -24,17 +24,17 @@ class WebSocketServer : Endpoint() {
 
     private val instanceId = UUID.randomUUID().toString()
 
-    private val objectMapper = configuration.getBean<ObjectMapper>()
-    private val userService = configuration.getBean<UserService>()
-    private val readService = configuration.getBean<ReadService>()
-    private val bankAccountService = configuration.getBean<BankAccountService>()
-    private val userStateService = configuration.getBean<UserStateService>()
-    private val bookingService = configuration.getBean<BookingService>()
-    private val accountService = configuration.getBean<AccountService>()
-    private val batabaseBackupService = configuration.getBean<DatabaseBackupService>()
-    private val bankTransactionImportService = configuration.getBean<BankTransactionImportService>()
-    private val unbookedBankTransactionMatcherService = configuration.getBean<UnbookedBankTransactionMatcherService>()
-    private val realmService = configuration.getBean<RealmService>()
+    private val objectMapper = Configuration.getBean<ObjectMapper>()
+    private val userService = Configuration.getBean<UserService>()
+    private val readService = Configuration.getBean<ReadService>()
+    private val bankAccountService = Configuration.getBean<BankAccountService>()
+    private val userStateService = Configuration.getBean<UserStateService>()
+    private val bookingService = Configuration.getBean<BookingService>()
+    private val accountService = Configuration.getBean<AccountService>()
+    private val batabaseBackupService = Configuration.getBean<DatabaseBackupService>()
+    private val bankTransactionImportService = Configuration.getBean<BankTransactionImportService>()
+    private val unbookedBankTransactionMatcherService = Configuration.getBean<UnbookedBankTransactionMatcherService>()
+    private val realmService = Configuration.getBean<RealmService>()
     private val logger = KotlinLogging.logger { }
     private val subscriptions = mutableMapOf<String, Subscription>()
 

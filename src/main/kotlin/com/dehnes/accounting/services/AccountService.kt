@@ -26,7 +26,7 @@ class AccountService(
                 conn,
                 userId,
                 realmId,
-                AccessRequest.owner
+                AccessRequest.owner,
             )
 
             budgetHistoryRepository.merge(
@@ -70,7 +70,7 @@ class AccountService(
                 conn,
                 userId,
                 realmId,
-                AccessRequest.owner
+                AccessRequest.owner,
             )
 
             val standardAccount = StandardAccount.entries.firstOrNull { a -> a.toAccountId(realmId) == account.id }

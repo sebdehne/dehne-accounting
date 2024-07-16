@@ -135,6 +135,7 @@ function reconnect() {
 
     ws = new WebSocket(wsUrl);
     ws.onopen = function () {
+        console.log("Connection open now");
         setConnectionStatusChanged(ConnectionStatus.connected);
         // re-send ongoing RPCs
         Object.values(OngoingRPCsById).forEach((ongoingRPC) => {

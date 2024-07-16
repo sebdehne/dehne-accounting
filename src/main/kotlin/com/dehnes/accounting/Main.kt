@@ -14,12 +14,10 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import java.time.Duration
 
-val configuration = Configuration()
-
 fun main() {
     val logger = KotlinLogging.logger { }
 
-    configuration.init()
+    Configuration.init()
 
     val server = Server()
     val connector = ServerConnector(server)
@@ -41,7 +39,7 @@ fun main() {
                 .create(WebSocketServer::class.java, "/api")
                 .configurator(object : ServerEndpointConfig.Configurator() {
 
-                    val userStateService = configuration.getBean<UserStateService>()
+                    val userStateService = Configuration.getBean<UserStateService>()
 
                     override fun modifyHandshake(
                         sec: ServerEndpointConfig,
@@ -82,7 +80,7 @@ fun main() {
         server.start()
         server.join()
     } catch (t: Throwable) {
-        logger.error("", t)
+        logger.error(t) { "" }
     }
 }
 

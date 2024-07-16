@@ -19,7 +19,13 @@ class BankAccountService(
 
     fun getBankAccount(userId: String, realmId: String, accountId: String) =
         dataSource.readTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.admin)
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.admin,
+            )
+
             val bankAccountDto =
                 bankAccountRepository.getAllBankAccounts(conn, realmId).first { it.accountId == accountId }
             BankAccount(
@@ -33,14 +39,24 @@ class BankAccountService(
 
     fun deleteBankAccount(userId: String, realmId: String, accountId: String) {
         changelog.writeTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.admin)
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.admin,
+            )
             bankAccountRepository.deleteBankAccount(conn, accountId)
         }
     }
 
     fun createOrUpdateBankAccount(userId: String, realmId: String, bankAccount: BankAccount) {
         changelog.writeTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.admin)
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.admin,
+            )
 
             val existing = bankAccountRepository.getAllBankAccounts(conn, realmId)
                 .firstOrNull { it.accountId == bankAccount.accountId }
@@ -55,14 +71,24 @@ class BankAccountService(
 
     fun deleteAllUnbookedTransactions(userId: String, realmId: String, accountId: String) {
         changelog.writeTx { conn ->
-            authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.write)
+            authorizationService.assertAuthorization(
+                conn,
+                userId,
+                realmId,
+                AccessRequest.write,
+            )
 
             unbookedTransactionRepository.deleteAll(conn, accountId)
         }
     }
 
     fun getOverview(userId: String, realmId: String) = dataSource.readTx { conn ->
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read,
+        )
         getOverview(conn, realmId)
     }
 
@@ -123,7 +149,12 @@ class BankAccountService(
         dateRangeFilter: DateRangeFilter
     ) = dataSource.readTx { conn ->
 
-        authorizationService.assertAuthorization(conn, userId, realmId, AccessRequest.read)
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read,
+        )
 
         getBankAccountTransactions(
             conn,
@@ -225,7 +256,7 @@ class BankAccountService(
                 conn,
                 userId,
                 realmId,
-                AccessRequest.write
+                AccessRequest.write,
             )
 
             unbookedTransactionRepository.delete(

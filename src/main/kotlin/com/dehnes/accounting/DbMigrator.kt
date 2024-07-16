@@ -8,7 +8,7 @@ object DbMigrator {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val datasource = datasourceSetup(dbFile())
+        val datasource = datasourceSetup(dbFile("accounting_data"))
 
         val executorService = Executors.newCachedThreadPool()
         val objectMapper = objectMapper()
@@ -114,8 +114,8 @@ object DbMigrator {
                     c.autoCommit = false
 
                     val desc = toBeMerged.mapNotNull { it.description }.distinct()
-                    if (!(desc.size == 0 || desc.size == 1)) {
-                        println()
+                    if (!(desc.isEmpty() || desc.size == 1)) {
+                        error("description not the same")
                     }
 
                     toBeMerged.forEach { b ->
