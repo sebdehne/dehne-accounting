@@ -2,7 +2,7 @@ Bugs:
 - "+ Add booking" only works once, not a second time straight away
 - hangs after adding a new matcher
 - deep links not working
-
+- remember edit mode in userState or in global context
 
 - Docker
   - java jvm options memory

@@ -30,7 +30,15 @@ class DanskeBankCsvExportImporter : Importer {
             "Saldo",
             "Status",
             "Avstemt",
-        )
+        ),
+        listOf(
+            "Date",
+            "Text",
+            "Amount",
+            "Balance",
+            "Status",
+            "Reconciled",
+        ),
     )
 
 
@@ -50,23 +58,24 @@ class DanskeBankCsvExportImporter : Importer {
             val supportedFormat = supportedFormats
                 .firstOrNull { it == headerLine } ?: error("Unsupported headers detected: $headerLine")
 
-            val getValue = { line: List<String>, field: String ->
-                line[supportedFormat.indexOf(field)]
-            }
+            fun getValue(line: List<String>, vararg field: String) = line[supportedFormat.indexOfFirst {
+                it in field
+            }]
 
             while (true) {
                 val line = reader.readLine() ?: break
                 val parts = line.parseLine()
 
-                val date = LocalDate.parse(getValue(parts, "Dato"), datoFormat)
-                val text = getValue(parts, "Tekst")
+                val date = LocalDate.parse(getValue(parts, "Dato", "Date"), datoFormat)
+                val text = getValue(parts, "Tekst", "Text")
                 val status = getValue(parts, "Status")
 
-                if (status != "Utført") continue
+                if (status !in listOf("Utført", "Executed")) continue
 
-                val amount = getValue(parts, "Beløp").parseAmount()
-                //val saldo = getValue(parts, "Saldo").parseAmount()
-                val avstemt = getValue(parts, "Avstemt") == "Ja"
+                val amount = getValue(parts, "Beløp", "Amount").parseAmount()
+                val avstemt = getValue(parts, "Avstemt", "Reconciled").let {
+                    it == "Ja" || it == "Yes"
+                }
 
                 if (avstemt) continue
 
