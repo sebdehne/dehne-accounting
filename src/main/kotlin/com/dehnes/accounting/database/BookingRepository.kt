@@ -88,9 +88,10 @@ class BookingRepository(
                                         it.id,
                                         it.description,
                                         it.accountId,
-                                        it.amountInCents
+                                        it.amountInCents,
                                     )
-                                }
+                                },
+                                null
                             )
                         )
                     }
@@ -133,7 +134,8 @@ class BookingRepository(
                 b.id,
                 b.description,
                 b.datetime,
-                b.entries.sortedByDescending { it.id }
+                b.entries.sortedByDescending { it.id },
+                null
             )
         }
 
@@ -290,6 +292,7 @@ data class Booking(
     val description: String?,
     val datetime: Instant,
     val entries: List<BookingEntry>,
+    val unbookedAmountInCents: Long?,
 )
 
 data class BookingEntry(

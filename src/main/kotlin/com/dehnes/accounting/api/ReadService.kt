@@ -238,15 +238,6 @@ class ReadService(
                 )
             )
 
-            getBankAccountTransactions -> ReadResponse(
-                getBankAccountTransactions = bankAccountService.getBankAccountTransactions(
-                    userId,
-                    userStateV2.selectedRealm!!,
-                    readRequest.accountId!!,
-                    userStateV2.rangeFilter!!
-                )
-            )
-
             getOverviewRapport -> {
                 val readResponse = ReadResponse(
                     overViewRapport = if (userStateV2.rangeFilter != null && userStateV2.selectedRealm != null) {

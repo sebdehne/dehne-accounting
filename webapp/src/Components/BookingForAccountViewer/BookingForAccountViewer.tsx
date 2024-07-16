@@ -9,11 +9,16 @@ import {useGlobalState} from "../../utils/globalstate";
 import {Amount} from "../Amount";
 import {useNavigate, useParams} from "react-router-dom";
 import {DateViewer} from "../PeriodSelectors/DateViewer";
+import {useDialogs} from "../../utils/dialogs";
+import InputIcon from "@mui/icons-material/Input";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export const BookingForAccountViewer = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const {accountId} = useParams();
     const {accounts} = useGlobalState();
+    const [onlyShowUnbooked, setOnlyShowUnbooked] = useState(false);
 
     useEffect(() => {
         if (accountId) {
@@ -27,7 +32,7 @@ export const BookingForAccountViewer = () => {
     }, [setBookings, accountId]);
 
     const [sumPositive, sumNegative, sum] = useMemo(() => {
-        if (!accountId) return [0,0,0];
+        if (!accountId) return [0, 0, 0];
         let sumPositive = 0;
         let sumNegative = 0;
 
@@ -44,6 +49,22 @@ export const BookingForAccountViewer = () => {
         return [sumPositive, sumNegative, sumPositive + sumNegative]
     }, [bookings, accountId]);
 
+    const navigate = useNavigate();
+
+    const onImport = () => {
+        navigate('/bankaccount_tx/' + accountId + '/import');
+    }
+
+    const {showConfirmationDialog} = useDialogs();
+
+    const onDeleteAll = () => {
+        showConfirmationDialog({
+            onConfirmed: () => WebsocketClient.rpc({type: "deleteAllUnbookedTransactions", "accountId": accountId}),
+            content: <p>Are you sure you want to delete all unbooked transactions? This cannot be undone.</p>,
+            header: "Delete all unbooked transactions?",
+        })
+    }
+
     const thisAccount = accountId ? accounts.getById(accountId) : undefined;
     if (!thisAccount) return null;
 
@@ -51,6 +72,11 @@ export const BookingForAccountViewer = () => {
         <Header
             title={accountId ? accounts.getById(accountId)!.name : ''}
             subTitle={accountId ? accounts.generateParentsString(accountId) : ''}
+            extraMenuOptions={[
+                ['Import transactions', onImport],
+                ['Delete all unbooked', onDeleteAll],
+                [onlyShowUnbooked ? 'Show all' : 'Only show unbooked', () => setOnlyShowUnbooked(!onlyShowUnbooked)]
+            ]}
         />
 
         <PeriodSelectorV2/>
@@ -72,12 +98,23 @@ export const BookingForAccountViewer = () => {
 
         {accountId && <ul className="Bookings">
             {bookings
-                .flatMap(b => b.entries.filter(e => e.accountId === accountId).map(e => [b, e]))
-                .map(([b, e]) => (
-                    <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry}/>
-                ))}
-        </ul>}
+                .filter(value => !onlyShowUnbooked || value.entries.length == 0)
+                .flatMap(b => {
 
+                    if (b.entries.length > 0) {
+                        const entries = b.entries.filter(e => e.accountId === accountId);
+                        return entries.map(e =>
+                            <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry}/>
+                        );
+                    } else {
+                        return [
+                            <UnbookedTxViewer key={b.id} accountId={accountId} unbookedAmountInCents={b.unbookedAmountInCents!}
+                                              id={b.id} datetime={b.datetime} description={b.description}/>
+                        ]
+                    }
+                })
+            }
+        </ul>}
     </Container>)
 }
 
@@ -112,4 +149,50 @@ const BookingViewer = ({booking, entry}: BookingViewerProps) => {
     </li>)
 }
 
+const UnbookedTxViewer = ({id, accountId, unbookedAmountInCents, description, datetime}: {
+    accountId: string;
+    unbookedAmountInCents: number;
+    id: number;
+    datetime: string;
+    description?: string
+}) => {
+    const navigate = useNavigate();
+    const {showConfirmationDialog} = useDialogs();
+
+    const book = (txId: number) => {
+        navigate('/matchers/' + accountId + '/' + txId);
+    }
+
+    const deleteUnbookedTx = (txId: number) => {
+        if (accountId) {
+            showConfirmationDialog({
+                header: "Delete unbooked transaction?",
+                content: "Are you sure? This cannot be undone",
+                onConfirmed: () => {
+                    WebsocketClient.rpc({
+                        type: "deleteUnbookedTransaction",
+                        accountId,
+                        deleteUnbookedBankTransactionId: txId
+                    })
+                }
+            })
+        }
+    }
+    return (<li className="UnbookedEntry">
+        <div className="UnbookedSummary">
+            <div style={{display: "flex", flexDirection: "row"}}>
+                <div style={{marginRight: '10px'}}
+                ><DateViewer date={datetime}/></div>
+                <div>{description}</div>
+            </div>
+            <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={unbookedAmountInCents}/></div>
+        </div>
+
+        <div className="UnbookedButtons">
+            <IconButton onClick={() => deleteUnbookedTx(id)}><DeleteIcon/></IconButton>
+            <IconButton onClick={() => book(id)}><InputIcon/></IconButton>
+        </div>
+
+    </li>)
+}
 

@@ -60,7 +60,6 @@ object Configuration {
         val bankTransactionImportService = BankTransactionImportService(
             authorizationService,
             bankAccountRepository,
-            bankAccountService,
             unbookedTransactionRepository,
             bankRepository,
             changelog
@@ -74,7 +73,7 @@ object Configuration {
             changelog,
             bookingRepository
         )
-        val bookingService = BookingService(datasource, bookingRepository, authorizationService, changelog)
+        val bookingService = BookingService(datasource, bookingRepository, authorizationService, unbookedTransactionRepository, changelog)
 
         val budgetRepository = BudgetRepository(
             changelog,

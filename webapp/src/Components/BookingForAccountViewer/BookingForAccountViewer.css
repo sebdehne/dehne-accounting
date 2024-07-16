@@ -13,11 +13,33 @@
     padding: 10px;
 }
 
+.UnbookedEntry {
+    display: flex;
+    flex-direction: column;
+    background-color: #533c3c;
+    border-radius: 15px;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+}
+
+.UnbookedSummary  {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .BookingEntrySummary  {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+}
+
+.UnbookedButtons  {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
 }
 
 .OtherEntries {

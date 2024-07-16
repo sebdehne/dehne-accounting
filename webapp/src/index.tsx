@@ -15,7 +15,6 @@ import 'dayjs/locale/nb';
 import {ChooseRealm} from "./Components/ChooseRealm/ChooseRealm";
 import {RealmMain} from "./Components/RealmMain/RealmMain";
 import {BanksAndAccounts} from "./Components/BanksAndAccounts/BanksAndAccounts";
-import {BankTransactionsV2} from "./Components/BankTransactionsV2/BankTransactionsV2";
 import {DialogsProvider} from "./utils/dialogs";
 import {TransactionMatchingV2} from "./Components/TransactionMatchingV2/TransactionMatchingV2";
 import {AddOrEditMatcherV2} from "./Components/TransactionMatchingV2/AddOrEditMatcherV2";
@@ -46,7 +45,6 @@ root.render(
                                 <Route path="/realm" element={<ChooseRealm/>}/>
 
                                 <Route path="/bankaccounts" element={<BanksAndAccounts/>}/>
-                                <Route path="/bankaccount_tx/:accountId" element={<BankTransactionsV2/>}/>
                                 <Route path="/bankaccount_tx/:accountId/import" element={<BankTransactionsImporter/>}/>
 
                                 <Route path="/bankaccount" element={<AddOrReplaceBankAccount/>}/>

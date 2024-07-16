@@ -3,15 +3,11 @@ package com.dehnes.accounting.bank.importers
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.services.AccessRequest
 import com.dehnes.accounting.services.AuthorizationService
-import com.dehnes.accounting.services.BankAccountService
-import com.dehnes.accounting.services.BankAccountTransaction
-import com.dehnes.accounting.utils.DateTimeUtils.plusDays
 import java.io.InputStream
 
 class BankTransactionImportService(
     private val authorizationService: AuthorizationService,
     private val bankAccountRepository: BankAccountRepository,
-    private val bankAccountService: BankAccountService,
     private val unbookedTransactionRepository: UnbookedTransactionRepository,
     private val bankRepository: BankRepository,
     private val changelog: Changelog,
@@ -22,7 +18,6 @@ class BankTransactionImportService(
         accountId: String,
         data: InputStream,
         filename: String,
-        duplicationHandler: DuplicationHandler,
     ) = changelog.writeTx { conn ->
 
 
@@ -39,33 +34,12 @@ class BankTransactionImportService(
 
         val importInstance = importer.java.constructors.first().newInstance() as Importer
 
-        var overlapping = true
-        var skipped = 0L
         var imported = 0L
 
         importInstance.import(
             data,
             filename
         ) { record ->
-
-            if (overlapping) {
-                val existingRecords = bankAccountService.getBankAccountTransactions(
-                    conn,
-                    realmId,
-                    accountId,
-                    DateRangeFilter(
-                        record.datetime,
-                        record.datetime.plusDays(1)
-                    )
-                ).filter { duplicationHandler(it, record) }
-
-                if (existingRecords.isNotEmpty()) {
-                    skipped++
-                    return@import
-                } else {
-                    overlapping = false
-                }
-            }
 
             authorizationService.assertAuthorization(
                 conn,
@@ -92,7 +66,7 @@ class BankTransactionImportService(
 
         ImportResult(
             imported,
-            skipped,
+            0,
         )
     }
 }
@@ -103,5 +77,4 @@ data class ImportResult(
     val skipped: Long,
 )
 
-typealias DuplicationHandler = (existing: BankAccountTransaction, record: BankTransactionImportRecord) -> Boolean
 

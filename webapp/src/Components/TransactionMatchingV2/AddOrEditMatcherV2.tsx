@@ -31,8 +31,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {v4 as uuidv4} from "uuid";
 import {formatIso} from "../../utils/formatting";
 import {removeItemWithSlice} from "../../utils/utils";
-import {TransactionView} from "../BankTransactionsV2/BankTransactionsV2";
 import dayjs from "dayjs";
+import {TransactionView} from "./TransactionView";
 
 export const AddOrEditMatcherV2 = () => {
     const {userStateV2, accounts} = useGlobalState();

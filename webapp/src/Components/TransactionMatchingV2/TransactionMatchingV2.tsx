@@ -8,7 +8,6 @@ import {
 } from "../../Websocket/types/unbookedTransactions";
 import WebsocketClient from "../../Websocket/websocketClient";
 import Header from "../Header";
-import {TransactionView} from "../BankTransactionsV2/BankTransactionsV2";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import IconButton from "@mui/material/IconButton";
@@ -18,6 +17,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import AddIcon from "@mui/icons-material/Add";
 import {MatcherView} from "./MatcherView";
 import dayjs from "dayjs";
+import {TransactionView} from "./TransactionView";
 
 export const TransactionMatchingV2 = () => {
     const {accountId, txId} = useParams();
@@ -103,7 +103,7 @@ export const TransactionMatchingV2 = () => {
                                 matcherId: matcher.id,
                                 overrideMemo: memo
                             }
-                        }).then(() => navigate('/bankaccount_tx/' + accountId))
+                        }).then(() => navigate('/bookings/' + accountId))
                     }
                 }
             )

@@ -2,12 +2,14 @@ package com.dehnes.accounting.services
 
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
+import java.util.Comparator
 import javax.sql.DataSource
 
 class BookingService(
     private val dataSource: DataSource,
     private val bookingRepository: BookingRepository,
     private val authorizationService: AuthorizationService,
+    private val unbookedTransactionRepository: UnbookedTransactionRepository,
     private val changelog: Changelog,
 ) {
 
@@ -23,10 +25,46 @@ class BookingService(
             AccessRequest.read,
         )
 
-        bookingRepository.getBookings(
+        val bookings = bookingRepository.getBookings(
             realmId,
             Int.MAX_VALUE,
             bookingsFilters
+        ).toMutableList()
+
+        if (bookingsFilters.any { it is AccountIdFilter } && bookingsFilters.any { it is DateRangeFilter }) {
+            val accountId = bookingsFilters.filterIsInstance<AccountIdFilter>().single().accountId
+            val rangeFilter = bookingsFilters.filterIsInstance<DateRangeFilter>().single()
+
+            val unbookedTransactions = unbookedTransactionRepository.getUnbookedTransactions(
+                conn,
+                realmId,
+                accountId,
+                rangeFilter
+            )
+
+            unbookedTransactions.forEach {
+                bookings.add(
+                    Booking(
+                        realmId,
+                        it.id,
+                        it.memo,
+                        it.datetime,
+                        emptyList(),
+                        it.amountInCents
+                    )
+                )
+            }
+        }
+
+        bookings.sortedWith(
+            object : Comparator<Booking> {
+                override fun compare(o1: Booking, o2: Booking): Int {
+                    if (o1.datetime != o2.datetime) {
+                        return o2.datetime.compareTo(o1.datetime)
+                    }
+                    return o2.id.compareTo(o1.id)
+                }
+            }
         )
     }
 

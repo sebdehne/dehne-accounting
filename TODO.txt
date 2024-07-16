@@ -1,6 +1,9 @@
 Bugs:
 - "+ Add booking" only works once, not a second time straight away
 - check boxes for avstemming
+- hangs after adding a new matcher
+- deep links not working
+
 
 - Docker
   - java jvm options memory
@@ -8,7 +11,6 @@ Bugs:
   - auto-boot on restart
 
 - Budget support
-- closure of periods
 - visual graphs and reporting
 - fix hardcoded standardAccount names
 

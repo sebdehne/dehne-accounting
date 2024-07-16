@@ -31,7 +31,6 @@ export type ReadRequestType =
     | 'getAllUsers'
     | 'getOverviewRapport'
     | 'getBanksAndAccountsOverview'
-    | 'getBankAccountTransactions'
     | 'getUnbookedBankTransactionMatchers'
     | 'getUnbookedBankTransaction'
     | 'getTotalUnbookedTransactions'

@@ -84,7 +84,7 @@ export const BanksAndAccounts = () => {
                 .map(([bank, bAccount]) => (<li
                 key={bAccount.accountId}
                 className={editMode ? 'BankAccountNoPointer' : 'BankAccount'}
-                onClick={() => !editMode && navigate('/bankaccount_tx/' + bAccount.accountId)}
+                onClick={() => !editMode && navigate('/bookings/' + bAccount.accountId)}
             >
                 <div className="BankAccountLeft">
                     <div

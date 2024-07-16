@@ -256,7 +256,6 @@ class WebSocketServer : Endpoint() {
                             request.accountId,
                             ByteArrayInputStream(Base64.getDecoder().decode(request.dataBase64)),
                             request.filename,
-                            request.duplicationHandlerType.duplicationHandler
                         )
                     )
                 }

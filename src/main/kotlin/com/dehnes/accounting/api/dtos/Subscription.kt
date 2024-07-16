@@ -40,18 +40,10 @@ enum class ReadRequestType(
             UserStateUpdated::class,
         )
     ),
-    getBankAccountTransactions(
-        listOf(
-            BookingsChanged::class,
-            BankAccountChanged::class,
-            UnbookedTransactionsChanged::class,
-            UserStateUpdated::class,
-        )
-    ),
     getUnbookedBankTransactionMatchers(listOf(UnbookedTransactionMatchersChanged::class, UserStateUpdated::class)),
     getUnbookedBankTransaction(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class)),
     getTotalUnbookedTransactions(listOf(UnbookedTransactionsChanged::class, UserStateUpdated::class)),
-    getBookings(listOf(BookingsChanged::class, UserStateUpdated::class)),
+    getBookings(listOf(BookingsChanged::class, UserStateUpdated::class, UnbookedTransactionsChanged::class)),
     getBooking(listOf(BookingsChanged::class, UserStateUpdated::class)),
     getBankAccount(listOf(BankAccountChanged::class, UserStateUpdated::class)),
 
@@ -72,7 +64,6 @@ data class ReadResponse(
     val globalState: GlobalState? = null,
     val overViewRapport: List<OverviewRapportAccount>? = null,
     val banksAndAccountsOverview: List<BankWithAccounts>? = null,
-    val getBankAccountTransactions: List<BankAccountTransaction>? = null,
     val unbookedBankTransactionMatchers: List<MatchedUnbookedBankTransactionMatcher>? = null,
     val unbookedTransaction: UnbookedTransaction? = null,
     val totalUnbookedTransactions: Long? = null,
