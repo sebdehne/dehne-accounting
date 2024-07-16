@@ -33,10 +33,12 @@ export const BookingForAccountViewer = () => {
 
     }, [setBookings, accountId]);
 
-    const [sumPositive, sumNegative, sum] = useMemo(() => {
-        if (!accountId) return [0, 0, 0];
+    const [sumPositive, sumNegative, sum, sumChecked, sumUnchecked] = useMemo(() => {
+        if (!accountId) return [0, 0, 0, 0, 0];
         let sumPositive = 0;
         let sumNegative = 0;
+        let sumChecked = 0;
+        let sumUnchecked = 0;
 
         bookings.forEach(b => {
             b.entries.filter(e => e.accountId === accountId).forEach(e => {
@@ -45,10 +47,15 @@ export const BookingForAccountViewer = () => {
                 } else {
                     sumNegative += e.amountInCents;
                 }
+                if (e.checked) {
+                    sumChecked += e.amountInCents;
+                } else {
+                    sumUnchecked += e.amountInCents;
+                }
             });
         });
 
-        return [sumPositive, sumNegative, sumPositive + sumNegative]
+        return [sumPositive, sumNegative, sumPositive + sumNegative, sumChecked, sumUnchecked];
     }, [bookings, accountId]);
 
     const navigate = useNavigate();
@@ -97,6 +104,15 @@ export const BookingForAccountViewer = () => {
                 <div>Sum</div>
                 <div><Amount amountInCents={sum}/></div>
             </div>
+            {editMode && <div className="Sum">
+                <div>Sum checked</div>
+                <div><Amount amountInCents={sumChecked}/></div>
+            </div>}
+            {editMode && <div className="Sum">
+                <div>Sum unchecked</div>
+                <div><Amount amountInCents={sumUnchecked}/></div>
+            </div>}
+
         </div>
 
         {accountId && <ul className="Bookings">
@@ -107,7 +123,8 @@ export const BookingForAccountViewer = () => {
                     if (b.entries.length > 0) {
                         const entries = b.entries.filter(e => e.accountId === accountId);
                         return entries.map(e =>
-                            <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry} showChecked={editMode}/>
+                            <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry}
+                                           showChecked={editMode}/>
                         );
                     } else {
                         return [
