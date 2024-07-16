@@ -13,6 +13,7 @@ import {ArrowDropDownIcon} from "@mui/x-date-pickers";
 import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {Check} from "@mui/icons-material";
+import {Loading} from "../loading";
 
 export const RealmMain = () => {
     const {userStateV2, setUserStateV2, realm, userInfo} = useGlobalState();
@@ -50,7 +51,7 @@ export const RealmMain = () => {
         )
     }, [setTotalUnbookedTransactions]);
 
-    if (!userInfo || !realm) return <div>Loading....</div>;
+    if (!userInfo || !realm) return <Loading/>;
 
     return (
         <Container maxWidth="xs" className="App">

@@ -2,6 +2,7 @@ import {Button, Container} from "@mui/material";
 import React from "react";
 import {useGlobalState} from "../../utils/globalstate";
 import {useNavigate} from "react-router-dom";
+import {Loading} from "../loading";
 
 
 export const ChooseRealm = () => {
@@ -19,7 +20,7 @@ export const ChooseRealm = () => {
         });
     }
 
-    if (!userInfo) return null;
+    if (!userInfo) return <Loading/>;
 
     return (<Container maxWidth="xs" className="App">
         <div

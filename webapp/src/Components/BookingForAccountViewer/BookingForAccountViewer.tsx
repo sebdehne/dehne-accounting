@@ -13,6 +13,7 @@ import {useDialogs} from "../../utils/dialogs";
 import InputIcon from "@mui/icons-material/Input";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
+import {Loading} from "../loading";
 
 export const BookingForAccountViewer = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -67,7 +68,7 @@ export const BookingForAccountViewer = () => {
     }
 
     const thisAccount = accountId ? accounts.getById(accountId) : undefined;
-    if (!thisAccount) return null;
+    if (!thisAccount) return <Loading/>;
 
     return (<Container maxWidth="xs" className="App">
         <Header

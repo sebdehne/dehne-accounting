@@ -15,6 +15,7 @@ import {useDialogs} from "../../utils/dialogs";
 import {AccountDto} from "../../Websocket/types/accounts";
 import {useGlobalState} from "../../utils/globalstate";
 import dayjs from "dayjs";
+import {Loading} from "../loading";
 
 export const BanksAndAccounts = () => {
     const [hideClosed, setHideClosed] = useState(true);
@@ -60,7 +61,7 @@ export const BanksAndAccounts = () => {
     const isClosed = (bankAccount: BankAccountView): boolean =>
         bankAccount.closeDate ? dayjs(bankAccount.closeDate).isBefore(dayjs()) : false;
 
-    if (!accounts.hasData()) return null;
+    if (!accounts.hasData()) return <Loading/>;
 
     return (<Container maxWidth="xs">
         <Header title={'Bank accounts'}/>

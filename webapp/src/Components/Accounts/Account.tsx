@@ -8,6 +8,7 @@ import {AccountDto} from "../../Websocket/types/accounts";
 import {v4 as uuidv4} from "uuid";
 import {AccountSearchBox} from "../AccountSearchBox/AccountSearchBox";
 import WebsocketClient from "../../Websocket/websocketClient";
+import {Loading} from "../loading";
 
 export const Account = () => {
     const {accountId} = useParams();
@@ -32,7 +33,7 @@ export const Account = () => {
 
     const navigate = useNavigate();
 
-    if (!accountsHasData) return null;
+    if (!accountsHasData) return <Loading/>;
 
     const isValid = !!account.name && !!account.parentAccountId
 

@@ -33,6 +33,7 @@ import {formatIso} from "../../utils/formatting";
 import {removeItemWithSlice} from "../../utils/utils";
 import dayjs from "dayjs";
 import {TransactionView} from "./TransactionView";
+import {Loading} from "../loading";
 
 export const AddOrEditMatcherV2 = () => {
     const {userStateV2, accounts} = useGlobalState();
@@ -183,7 +184,7 @@ export const AddOrEditMatcherV2 = () => {
         navigate
     ]);
 
-    if (!accounts.hasData()) return null;
+    if (!accounts.hasData()) return <Loading/>;
 
     const includeList = [
         [accounts.getStandardAccountName('Asset'), accounts.getStandardAccountName('AccountReceivable')],

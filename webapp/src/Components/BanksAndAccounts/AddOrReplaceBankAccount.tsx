@@ -9,6 +9,7 @@ import {useGlobalState} from "../../utils/globalstate";
 import {AccountSearchBox} from "../AccountSearchBox/AccountSearchBox";
 import {DatePicker} from "@mui/x-date-pickers";
 import {formatIso} from "../../utils/formatting";
+import {Loading} from "../loading";
 
 
 export const AddOrReplaceBankAccount = () => {
@@ -53,7 +54,7 @@ export const AddOrReplaceBankAccount = () => {
         }).then(() => navigate(-1))
     }
 
-    if (!accounts.hasData()) return null;
+    if (!accounts.hasData()) return <Loading/>;
 
     return (<Container maxWidth="xs">
         <Header title={'Bank account'}/>
