@@ -79,6 +79,51 @@ export const BookingForAccountViewer = () => {
 
     const editMode = !!userStateV2?.frontendState?.bookingsEditMode;
 
+    const bookingsWithBalance: EntryData[] = useMemo(() => {
+
+        let currentBalance = balance;
+
+        return bookings
+            .toReversed()
+            .flatMap(b => {
+                if (b.entries.length === 0) {
+                    currentBalance += b.unbookedAmountInCents ?? 0;
+                    return [
+                        {
+                            bookingId: b.id,
+                            bookingEntryId: b.id,
+                            amountInCents: b.unbookedAmountInCents ?? 0,
+                            balance: currentBalance,
+                            datetime: b.datetime,
+                            otherEntries: [],
+                            accountId: accountId,
+                            description: b.description,
+                            checked: false,
+                        } as EntryData
+                    ]
+                } else {
+                    let entries = b.entries.filter(e => e.accountId === accountId);
+                    return entries.map(e => {
+                        currentBalance += e.amountInCents;
+                        return {
+                            bookingId: b.id,
+                            bookingEntryId: e.id,
+                            amountInCents: e.amountInCents,
+                            balance: currentBalance,
+                            datetime: b.datetime,
+                            otherEntries: b.entries.filter(oe => oe.id !== e.id),
+                            accountId: accountId,
+                            description: e.description ?? b.description,
+                            checked: e.checked,
+                        } as EntryData;
+                    })
+                }
+            })
+            .filter(value => !onlyShowUnbooked || value.otherEntries.length == 0)
+            .toReversed()
+            ;
+    }, [accountId, bookings, balance, onlyShowUnbooked]);
+
     const thisAccount = accountId ? accounts.getById(accountId) : undefined;
     if (!thisAccount) return <Loading/>;
 
@@ -103,6 +148,7 @@ export const BookingForAccountViewer = () => {
         <PeriodSelectorV2/>
 
         <div className="Sums">
+
             <div className="Sum">
                 <div>Open balance</div>
                 <div><Amount amountInCents={balance}/></div>
@@ -112,22 +158,27 @@ export const BookingForAccountViewer = () => {
                 <div>Sum positive</div>
                 <div><Amount amountInCents={sumPositive}/></div>
             </div>
+
             <div className="Sum">
                 <div>Sum negative</div>
                 <div><Amount amountInCents={sumNegative}/></div>
             </div>
+
             <div className="Sum">
                 <div>Sum</div>
                 <div><Amount amountInCents={sum}/></div>
             </div>
+
             {editMode && <div className="Sum">
                 <div>Sum checked</div>
                 <div><Amount amountInCents={sumChecked}/></div>
             </div>}
+
             {editMode && <div className="Sum">
                 <div>Sum unchecked</div>
                 <div><Amount amountInCents={sumUnchecked}/></div>
             </div>}
+
             <div className="Sum">
                 <div>Close balance</div>
                 <div><Amount amountInCents={balance + sum}/></div>
@@ -136,30 +187,18 @@ export const BookingForAccountViewer = () => {
         </div>
 
         {accountId && <ul className="Bookings">
-            {bookings
-                .filter(value => !onlyShowUnbooked || value.entries.length == 0)
-                .flatMap(b => {
-
-                    if (b.entries.length > 0) {
-                        const entries = b.entries.filter(e => e.accountId === accountId);
-                        return entries.map(e =>
-                            <BookingViewer key={`${b.id}-${e.id}`}
-                                           booking={b as Booking}
-                                           entry={e as BookingEntry}
-                                           showChecked={editMode}
-                            />
-                        );
+            {bookingsWithBalance
+                .map(b => {
+                    if (b.otherEntries.length === 0) {
+                        return <UnbookedTxViewer key={b.bookingId}
+                                                 entryData={b}
+                                                 editMode={editMode}
+                        />
                     } else {
-                        return [
-                            <UnbookedTxViewer key={b.id}
-                                              accountId={accountId}
-                                              unbookedAmountInCents={b.unbookedAmountInCents!}
-                                              id={b.id}
-                                              datetime={b.datetime}
-                                              description={b.description}
-                                              editMode={editMode}
-                            />
-                        ]
+                        return <BookingViewer key={`${b.bookingId}-${b.bookingEntryId}`}
+                                              entryData={b}
+                                              showChecked={editMode}
+                        />
                     }
                 })
             }
@@ -167,11 +206,24 @@ export const BookingForAccountViewer = () => {
     </Container>)
 }
 
+type EntryData = {
+    bookingId: number;
+    bookingEntryId: number;
+    amountInCents: number;
+    balance: number;
+    datetime: string;
+    otherEntries: BookingEntry[];
+    accountId: string;
+    description?: string;
+    checked: boolean;
+}
 
-const BookingViewer = ({booking, entry, showChecked}: {
-    booking: Booking;
-    entry: BookingEntry;
+const BookingViewer = ({
+                           showChecked,
+                           entryData,
+                       }: {
     showChecked: boolean;
+    entryData: EntryData;
 }) => {
     const {accounts} = useGlobalState();
     const navigate = useNavigate();
@@ -180,11 +232,11 @@ const BookingViewer = ({booking, entry, showChecked}: {
     const toggleChecked = useCallback(() => {
         WebsocketClient.rpc({
             type: "updateChecked",
-            bookingId: booking.id,
-            bookingEntryId: entry.id,
-            bookingEntryChecked: !entry.checked,
+            bookingId: entryData.bookingId,
+            bookingEntryId: entryData.bookingEntryId,
+            bookingEntryChecked: !entryData.checked,
         })
-    }, [entry]);
+    }, [entryData]);
 
     const deleteBooking = useCallback(() => {
         showConfirmationDialog({
@@ -194,70 +246,69 @@ const BookingViewer = ({booking, entry, showChecked}: {
             onConfirmed: () => {
                 WebsocketClient.rpc({
                     type: "deleteBooking",
-                    bookingId: booking.id
+                    bookingId: entryData.bookingId
                 })
             }
         });
-    }, [booking]);
+    }, [entryData]);
 
-    let otherEntries = booking.entries.filter(e => e.id !== entry.id);
     return (<li className="BookingEntryContainer">
         <div className="BookingEntryLeft">
             <div className="BookingEntrySummary">
                 <div style={{display: "flex", flexDirection: "row"}}>
                     <div
-                        onClick={() => navigate('/booking/' + booking.id)}
+                        onClick={() => navigate('/booking/' + entryData.bookingId)}
                         style={{marginRight: '10px'}}
-                    ><DateViewer date={booking.datetime}/></div>
-                    <div>{booking.description ?? entry.description}</div>
+                    ><DateViewer date={entryData.datetime}/></div>
+                    <div>{entryData.description}</div>
                 </div>
-                <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={entry.amountInCents}/>
+                <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
+                    <div style={{fontSize: "larger", fontWeight: "bold"}}>
+                        <Amount amountInCents={entryData.amountInCents}/>
+                    </div>
+                    <div style={{color: "#a4a4a4"}}>
+                        <Amount amountInCents={entryData.balance}/>
+                    </div>
                 </div>
             </div>
             <ul className="OtherEntries">
-                {otherEntries.map(e => (<li key={e.id} className="OtherEntry">
+                {entryData.otherEntries.map(e => (<li key={e.id} className="OtherEntry">
                     <div
                         onClick={() => navigate('/bookings/' + e.accountId)}>{accounts.generateParentsString(e.accountId)} - {accounts.getById(e.accountId)!.name}</div>
-                    {otherEntries.length > 1 && <Amount amountInCents={e.amountInCents}/>}
+                    {entryData.otherEntries.length > 1 && <Amount amountInCents={e.amountInCents}/>}
                 </li>))}
             </ul>
         </div>
         {showChecked && <div className="BookingEntryRight">
-            <Checkbox checked={entry.checked} onClick={() => toggleChecked()}/>
+            <Checkbox checked={entryData.checked} onClick={() => toggleChecked()}/>
             <IconButton onClick={() => deleteBooking()}><DeleteIcon/></IconButton>
         </div>}
     </li>)
 }
 
-const UnbookedTxViewer = ({id, accountId, unbookedAmountInCents, description, datetime, editMode}: {
-    accountId: string;
-    unbookedAmountInCents: number;
-    id: number;
-    datetime: string;
-    description?: string;
+const UnbookedTxViewer = ({entryData, editMode}: {
+    entryData: EntryData;
     editMode: boolean;
 }) => {
     const navigate = useNavigate();
     const {showConfirmationDialog} = useDialogs();
 
     const book = (txId: number) => {
-        navigate('/matchers/' + accountId + '/' + txId);
+        navigate('/matchers/' + entryData.accountId + '/' + txId);
     }
 
     const deleteUnbookedTx = (txId: number) => {
-        if (accountId) {
-            showConfirmationDialog({
-                header: "Delete unbooked transaction?",
-                content: "Are you sure? This cannot be undone",
-                onConfirmed: () => {
-                    WebsocketClient.rpc({
-                        type: "deleteUnbookedTransaction",
-                        accountId,
-                        deleteUnbookedBankTransactionId: txId
-                    })
-                }
-            })
-        }
+        showConfirmationDialog({
+            header: "Delete unbooked transaction?",
+            content: "Are you sure? This cannot be undone",
+            onConfirmed: () => {
+                WebsocketClient.rpc({
+                    type: "deleteUnbookedTransaction",
+                    accountId: entryData.accountId,
+                    deleteUnbookedBankTransactionId: txId
+                })
+            }
+        })
     }
 
     return (<li className="UnbookedEntryContainer">
@@ -265,16 +316,23 @@ const UnbookedTxViewer = ({id, accountId, unbookedAmountInCents, description, da
             <div className="UnbookedSummary">
                 <div style={{display: "flex", flexDirection: "row"}}>
                     <div style={{marginRight: '10px'}}
-                    ><DateViewer date={datetime}/></div>
-                    <div>{description}</div>
+                    ><DateViewer date={entryData.datetime}/></div>
+                    <div>{entryData.description}</div>
                 </div>
-                <div style={{fontSize: "larger", fontWeight: "bold"}}><Amount amountInCents={unbookedAmountInCents}/>
+                <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
+                    <div style={{fontSize: "larger", fontWeight: "bold"}}>
+                        <Amount amountInCents={entryData.amountInCents}/>
+                    </div>
+                    <div style={{color: "#a4a4a4"}}>
+                        <Amount amountInCents={entryData.balance}/>
+                    </div>
                 </div>
+
             </div>
         </div>
         {editMode && <div className="UnbookedRight">
-            <IconButton onClick={() => deleteUnbookedTx(id)}><DeleteIcon/></IconButton>
-            <IconButton onClick={() => book(id)}><InputIcon/></IconButton>
+            <IconButton onClick={() => deleteUnbookedTx(entryData.bookingId)}><DeleteIcon/></IconButton>
+            <IconButton onClick={() => book(entryData.bookingId)}><InputIcon/></IconButton>
         </div>}
     </li>)
 }

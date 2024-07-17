@@ -1,7 +1,6 @@
 Bugs:
 - "+ Add booking" only works once, not a second time straight away
 - hangs after adding a new matcher
-- show balance on Bookings-view on each entry + open balance + close balance
 - when viewing an account/bookings and click on Add-booking, then use the accountId as a starting entry
 
 - Docker
