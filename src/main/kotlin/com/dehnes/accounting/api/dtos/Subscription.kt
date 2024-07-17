@@ -1,10 +1,7 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.api.*
-import com.dehnes.accounting.database.AllAccounts
-import com.dehnes.accounting.database.BankAccount
-import com.dehnes.accounting.database.Booking
-import com.dehnes.accounting.database.UnbookedTransaction
+import com.dehnes.accounting.database.*
 import com.dehnes.accounting.services.*
 import kotlin.reflect.KClass
 
@@ -47,6 +44,8 @@ enum class ReadRequestType(
     getBooking(listOf(BookingsChanged::class, UserStateUpdated::class)),
     getBankAccount(listOf(BankAccountChanged::class, UserStateUpdated::class)),
 
+    getBudgetRules(listOf(BudgetChanged::class)),
+
     listBackups(listOf(DatabaseBackupChanged::class)),
 
     ;
@@ -73,6 +72,7 @@ data class ReadResponse(
     val bankAccount: BankAccount? = null,
     val allUsers: AllUsersInfo? = null,
     val backups: List<String>? = null,
+    val budgetRules: List<BudgetDbRecord>? = null,
 )
 
 data class GlobalState(

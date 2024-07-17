@@ -10,6 +10,7 @@ import {Booking} from "./bookings";
 import {User} from "./User";
 import {InformationElement} from "./InformationElement";
 import {GlobalState} from "./globalstate";
+import {BudgetRule} from "./budget";
 
 export type Subscribe = {
     subscriptionId: string;
@@ -38,6 +39,7 @@ export type ReadRequestType =
     | 'getBooking'
     | 'getBankAccount'
     | 'listBackups'
+    | 'getBudgetRules'
     ;
 
 export type ReadRequest = {
@@ -61,6 +63,7 @@ export type ReadResponse = {
     bankAccount?: BankAccount;
     allUsers?: AllUsersInfo;
     backups?: string[];
+    budgetRules?: BudgetRule[];
 }
 
 export type AllUsersInfo = {

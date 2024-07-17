@@ -83,8 +83,9 @@ object Configuration {
 
         val budgetRepository = BudgetRepository(
             changelog,
-            datasource
         )
+
+        val budgetHistoryRepository = BudgetHistoryRepository(datasource, changelog)
 
         val accountService = AccountService(
             authorizationService,
@@ -93,14 +94,22 @@ object Configuration {
             unbookedBankTransactionMatcherRepository,
             changelog,
             budgetRepository,
-            BudgetHistoryRepository(datasource, changelog)
+            budgetHistoryRepository
         )
 
         val userStateService = UserStateService(datasource, userStateRepository, userService, changelog)
         val databaseBackupService = DatabaseBackupService(datasource, changelog)
-        val realmService =
-            RealmService(realmRepository, datasource, authorizationService, changelog, unbookedTransactionRepository)
+        val realmService = RealmService(
+            realmRepository,
+            datasource,
+            authorizationService,
+            changelog,
+            unbookedTransactionRepository,
+            budgetRepository,
+            budgetHistoryRepository
+        )
 
+        val budgetService = BudgetService(budgetRepository, authorizationService, datasource, changelog)
         val readService = ReadService(
             executorService,
             userStateService,
@@ -114,7 +123,8 @@ object Configuration {
             bookingService,
             changelog,
             databaseBackupService,
-            userRepository
+            userRepository,
+            budgetService
         )
 
 
@@ -129,6 +139,7 @@ object Configuration {
         beans[AccountService::class] = accountService
         beans[DatabaseBackupService::class] = databaseBackupService
         beans[RealmService::class] = realmService
+        beans[BudgetService::class] = budgetService
 
         bookingRepository.start()
     }

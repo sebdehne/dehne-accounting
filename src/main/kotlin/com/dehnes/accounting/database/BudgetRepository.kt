@@ -2,16 +2,12 @@ package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.BudgetChanged
 import java.sql.Connection
-import javax.sql.DataSource
 
 class BudgetRepository(
     private val changelog: Changelog,
-    private val dataSource: DataSource,
 ) {
 
-    fun getAll(realmId: String) = dataSource.connection.use { connection ->
-        connection.autoCommit = false
-
+    fun getAll(connection: Connection, realmId: String): List<BudgetDbRecord> =
         connection.prepareStatement("SELECT * FROM budget WHERE realm_id = ?").use { statement ->
             statement.setString(1, realmId)
             statement.executeQuery().use { resultSet ->
@@ -29,7 +25,6 @@ class BudgetRepository(
                 r
             }
         }
-    }
 
     fun insertOrUpdate(connection: Connection, budget: BudgetDbRecord) {
         connection.prepareStatement(
@@ -39,7 +34,7 @@ class BudgetRepository(
                     account_id,
                     month,
                     amount_in_cents
-                ) VALUES (?,?,?,?) ON CONFLICT (account_id,month) DO UPDATE SET 
+                ) VALUES (?,?,?,?) ON CONFLICT (realm_id, account_id,month) DO UPDATE SET 
                     amount_in_cents = excluded.amount_in_cents
             """.trimIndent()
         ).use { preparedStatement ->
@@ -54,28 +49,20 @@ class BudgetRepository(
         changelog.add(BudgetChanged)
     }
 
-    fun insertOrUpdate(budget: BudgetDbRecord) {
-        changelog.writeTx { connection ->
-            insertOrUpdate(connection, budget)
-        }
-    }
-
-    fun delete(realmId: String, accountId: String, month: Int) {
-        changelog.writeTx { connection ->
-            connection.prepareStatement("DELETE FROM budget WHERE realm_id = ? AND account_id = ? AND month = ?")
-                .use { statement ->
-                    statement.setString(1, realmId)
-                    statement.setString(2, accountId)
-                    statement.setInt(3, month)
-                    statement.executeUpdate()
-                }
-            changelog.add(BudgetChanged)
-        }
+    fun delete(connection: Connection, realmId: String, accountId: String, month: Int) {
+        connection.prepareStatement("DELETE FROM budget WHERE realm_id = ? AND account_id = ? AND month = ?")
+            .use { statement ->
+                statement.setString(1, realmId)
+                statement.setString(2, accountId)
+                statement.setInt(3, month)
+                statement.executeUpdate()
+            }
+        changelog.add(BudgetChanged)
     }
 
     fun mergeAccount(connection: Connection, realmId: String, sourceAccountId: String, targetAccountId: String) {
 
-        val all = getAll(realmId)
+        val all = getAll(connection, realmId)
 
         (1..12).forEach { month ->
             val source = all.firstOrNull { it.accountId == sourceAccountId && it.month == month }

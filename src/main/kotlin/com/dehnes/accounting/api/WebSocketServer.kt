@@ -33,6 +33,7 @@ class WebSocketServer : Endpoint() {
     private val accountService = Configuration.getBean<AccountService>()
     private val batabaseBackupService = Configuration.getBean<DatabaseBackupService>()
     private val bankTransactionImportService = Configuration.getBean<BankTransactionImportService>()
+    private val budgetService = Configuration.getBean<BudgetService>()
     private val unbookedBankTransactionMatcherService = Configuration.getBean<UnbookedBankTransactionMatcherService>()
     private val realmService = Configuration.getBean<RealmService>()
     private val logger = KotlinLogging.logger { }
@@ -270,6 +271,17 @@ class WebSocketServer : Endpoint() {
                         )
                     )
                 }
+
+                updateBudgetRulesForAccount -> {
+                    budgetService.updateBudgetRulesForAccount(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.accountId!!,
+                        rpcRequest.updateBudgetRulesForAccount!!
+                    )
+                    RpcResponse()
+                }
+
             }
         }
 

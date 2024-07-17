@@ -31,6 +31,7 @@ export type RequestType = "subscribe"
     | 'createNewBackup'
     | 'restoreBackup'
     | 'dropBackup'
+    | 'updateBudgetRulesForAccount'
     ;
 
 export type RpcRequest = {
@@ -56,6 +57,7 @@ export type RpcRequest = {
     user?: User;
     deleteUserId?: string;
     backupName?: string;
+    updateBudgetRulesForAccount: { [key: string]: number };
 }
 
 export type RpcResponse = {

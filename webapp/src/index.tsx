@@ -26,6 +26,8 @@ import {AddOrReplaceBankAccount} from "./Components/BanksAndAccounts/AddOrReplac
 import {UserManagement} from "./Components/Users/UserManagement";
 import {Backups} from "./Components/Backups/Backups";
 import {theme} from "./theme";
+import {BudgetRules} from "./Components/BudgetRules/BudgetRules";
+import {BudgetRulesForAccount} from "./Components/BudgetRules/BudgetRulesForAccount";
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -66,6 +68,9 @@ root.render(
 
                                 <Route path="/users" element={<UserManagement/>}/>
                                 <Route path="/backups" element={<Backups/>}/>
+
+                                <Route path="/budget" element={<BudgetRules/>}/>
+                                <Route path="/budget/:accountId" element={<BudgetRulesForAccount/>}/>
                             </Routes>
                         </BrowserRouter>
                     </LocalizationProvider>

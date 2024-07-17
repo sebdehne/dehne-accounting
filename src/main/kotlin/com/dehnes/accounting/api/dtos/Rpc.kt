@@ -1,10 +1,7 @@
 package com.dehnes.accounting.api.dtos
 
 import com.dehnes.accounting.bank.importers.ImportResult
-import com.dehnes.accounting.database.AccountDto
-import com.dehnes.accounting.database.BankAccount
-import com.dehnes.accounting.database.Booking
-import com.dehnes.accounting.database.UnbookedBankTransactionMatcher
+import com.dehnes.accounting.database.*
 
 
 enum class RequestType {
@@ -34,6 +31,8 @@ enum class RequestType {
 
     closeNextMonth,
     reopenPreviousMonth,
+
+    updateBudgetRulesForAccount,
 
     // admin commands
     addOrReplaceUser,
@@ -65,6 +64,7 @@ data class RpcRequest(
     val user: User?,
     val deleteUserId: String?,
     val backupName: String?,
+    val updateBudgetRulesForAccount: Map<String, Long>?,
 )
 
 data class RpcResponse(

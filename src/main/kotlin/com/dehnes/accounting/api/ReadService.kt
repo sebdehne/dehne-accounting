@@ -6,6 +6,7 @@ import com.dehnes.accounting.api.dtos.RealmInfo.Companion.map
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
+import com.dehnes.accounting.utils.DateTimeUtils
 import com.dehnes.accounting.utils.wrap
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*
@@ -29,6 +30,7 @@ class ReadService(
     private val changelog: Changelog,
     private val databaseBackupService: DatabaseBackupService,
     private val userRepository: UserRepository,
+    private val budgetService: BudgetService,
 ) {
 
     private val logger = KotlinLogging.logger { }
@@ -61,7 +63,7 @@ class ReadService(
     }
 
     fun addSubscription(sub: WebSocketServer.Subscription) {
-        logger.info { "Added subscription id=${sub.subscriptionId}" }
+        logger.info { "Added subscription id=${sub.subscriptionId} type=${sub.readRequest.type}" }
 
         val listener = Listener(
             id = sub.subscriptionId,
@@ -251,7 +253,13 @@ class ReadService(
                 )
             )
 
-
+            getBudgetRules -> ReadResponse(
+                budgetRules = budgetService.getBudgetRules(
+                    userId = userId,
+                    realmId = userStateV2.selectedRealm!!,
+                    accountId = readRequest.accountId!!
+                )
+            )
         }
 }
 
