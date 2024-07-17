@@ -21,16 +21,18 @@ import {Amount} from "../Amount";
 import {useGlobalState} from "../../utils/globalstate";
 import dayjs from "dayjs";
 
+const initialBookingState = {
+    entries: [],
+    datetime: formatIso(dayjs()),
+    id: 0,
+    realmId: ""
+}
+
 export const BookingViewerEditor = () => {
     const {bookingId} = useParams();
     const [editMode, setEditMode] = useState(!bookingId);
     const [originalBooking, setOriginalBooking] = useState<Booking>();
-    const [booking, setBooking] = useState<Booking>({
-        entries: [],
-        datetime: formatIso(dayjs()),
-        id: 0,
-        realmId: ""
-    });
+    const [booking, setBooking] = useState<Booking>(initialBookingState);
     const {showConfirmationDialog} = useDialogs();
     const navigate = useNavigate();
 
@@ -59,9 +61,15 @@ export const BookingViewerEditor = () => {
                     setOriginalBooking(clone(readResponse.booking!));
                 }
             );
+            setEditMode(false);
             return () => WebsocketClient.unsubscribe(subscribe);
+        } else {
+            setOriginalBooking(undefined);
+            setBooking(initialBookingState);
+            setEditMode(true);
+            return () => {};
         }
-    }, [bookingId, setBooking]);
+    }, [bookingId, setBooking, setOriginalBooking]);
 
 
     const removeEntry = useCallback((index: number) => () => {
