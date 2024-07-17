@@ -194,18 +194,11 @@ class ReadService(
                 )
             )
 
-            getBookings -> ReadResponse(
-                bookings = bookingService.getBookings(
-                    userId = userId,
-                    realmId = userStateV2.selectedRealm!!,
-                    bookingsFilters = listOf(
-                        userStateV2.rangeFilter!!,
-                        AccountIdFilter(
-                            accountId = readRequest.accountId!!,
-                            realmId = userStateV2.selectedRealm
-                        )
-                    )
-                )
+            getBookings -> bookingService.getBookings(
+                userId = userId,
+                realmId = userStateV2.selectedRealm!!,
+                rangeFilter = userStateV2.rangeFilter!!,
+                accountId = readRequest.accountId!!
             )
 
             getTotalUnbookedTransactions -> ReadResponse(

@@ -1,6 +1,7 @@
 package com.dehnes.accounting
 
 import com.dehnes.accounting.database.*
+import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.domain.StandardAccount
 import java.util.concurrent.Executors
 
@@ -18,7 +19,7 @@ object DbMigrator {
         val bookingRepository = BookingRepository(
             realmRepository,
             changelog,
-            datasource
+            datasource,
         )
 
         val realmList = changelog.writeTx {
@@ -30,8 +31,10 @@ object DbMigrator {
             val allAccounts = datasource.connection.use {
                 accountsRepository.getAll(it, realm.id)
             }
-            val accountPayable = allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.AccountPayable }
-            val accountReceivable = allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.AccountReceivable }
+            val accountPayable =
+                allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.AccountPayable }
+            val accountReceivable =
+                allAccounts.standardAccounts.single { it.standardAccount == StandardAccount.AccountReceivable }
 
             fun getPath(aId: String, path: List<AccountDto> = emptyList()): List<AccountDto> {
                 val a = allAccounts.allAccounts.single { it.id == aId }
@@ -43,68 +46,71 @@ object DbMigrator {
 
             val candidates = mutableListOf<List<Booking>>()
 
-            bookingRepository.getBookings(
-                realm.id,
-                Int.MAX_VALUE,
-                emptyList()
-            ).groupBy { it.datetime }.entries.map {
-                it.key to it.value
-            }.sortedBy { it.first }.forEach { (_, bookings) ->
-
-                bookings.mapNotNull { b ->
-                    val entries = b.entries.filter { e ->
-                        val path = getPath(e.accountId)
-                        path.any { it.id == accountPayable.id }
-                    }
-                    if (entries.size == 1 && entries.single().amountInCents > 0) {
-                        b to entries.single()
-                    } else null
-                }.forEach { (c, e) ->
-                    val otherSide = bookings
-                        .filterNot { it.id == c.id }
-                        .singleOrNull { b ->
-                            val entries = b.entries.filter { e ->
-                                val path = getPath(e.accountId)
-                                path.any { it.id == accountPayable.id }
-                            }
-                            entries.size == 1 && entries.single().amountInCents < 0 && (entries.single().amountInCents * -1 == e.amountInCents)
-                        }
-
-                    if (otherSide != null) {
-                        candidates.add(listOf(
-                            c,
-                            otherSide
-                        ))
-                    }
-                }
-
-                bookings.mapNotNull { b ->
-                    val entries = b.entries.filter { e ->
-                        val path = getPath(e.accountId)
-                        path.any { it.id == accountReceivable.id }
-                    }
-                    if (entries.size == 1 && entries.single().amountInCents < 0) {
-                        b to entries.single()
-                    } else null
-                }.forEach { (c, e) ->
-                    val otherSide = bookings
-                        .filterNot { it.id == c.id }
-                        .singleOrNull { b ->
-                            val entries = b.entries.filter { e ->
-                                val path = getPath(e.accountId)
-                                path.any { it.id == accountReceivable.id }
-                            }
-                            entries.size == 1 && entries.single().amountInCents > 0 && (entries.single().amountInCents * -1 == e.amountInCents)
-                        }
-
-                    if (otherSide != null) {
-                        candidates.add(listOf(
-                            c,
-                            otherSide
-                        ))
-                    }
-                }
+            datasource.readTx { conn ->
+                bookingRepository.getAllBookings(realm.id)
             }
+                .groupBy { it.datetime }.entries.map {
+                    it.key to it.value
+                }.sortedBy { it.first }.forEach { (_, bookings) ->
+
+                    bookings.mapNotNull { b ->
+                        val entries = b.entries.filter { e ->
+                            val path = getPath(e.accountId)
+                            path.any { it.id == accountPayable.id }
+                        }
+                        if (entries.size == 1 && entries.single().amountInCents > 0) {
+                            b to entries.single()
+                        } else null
+                    }.forEach { (c, e) ->
+                        val otherSide = bookings
+                            .filterNot { it.id == c.id }
+                            .singleOrNull { b ->
+                                val entries = b.entries.filter { e ->
+                                    val path = getPath(e.accountId)
+                                    path.any { it.id == accountPayable.id }
+                                }
+                                entries.size == 1 && entries.single().amountInCents < 0 && (entries.single().amountInCents * -1 == e.amountInCents)
+                            }
+
+                        if (otherSide != null) {
+                            candidates.add(
+                                listOf(
+                                    c,
+                                    otherSide
+                                )
+                            )
+                        }
+                    }
+
+                    bookings.mapNotNull { b ->
+                        val entries = b.entries.filter { e ->
+                            val path = getPath(e.accountId)
+                            path.any { it.id == accountReceivable.id }
+                        }
+                        if (entries.size == 1 && entries.single().amountInCents < 0) {
+                            b to entries.single()
+                        } else null
+                    }.forEach { (c, e) ->
+                        val otherSide = bookings
+                            .filterNot { it.id == c.id }
+                            .singleOrNull { b ->
+                                val entries = b.entries.filter { e ->
+                                    val path = getPath(e.accountId)
+                                    path.any { it.id == accountReceivable.id }
+                                }
+                                entries.size == 1 && entries.single().amountInCents > 0 && (entries.single().amountInCents * -1 == e.amountInCents)
+                            }
+
+                        if (otherSide != null) {
+                            candidates.add(
+                                listOf(
+                                    c,
+                                    otherSide
+                                )
+                            )
+                        }
+                    }
+                }
 
             candidates.forEach { toBeMerged ->
                 datasource.connection.use { c ->

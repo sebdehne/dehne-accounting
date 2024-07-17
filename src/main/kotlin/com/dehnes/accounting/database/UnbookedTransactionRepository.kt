@@ -251,8 +251,8 @@ interface BookingsFilter : QueryFilter
 interface BankAccountTransactionsFilter : QueryFilter
 
 data class DateRangeFilter(
-    val from: Instant = Instant.MIN,
-    val toExclusive: Instant = Instant.MAX,
+    val from: Instant = Instant.ofEpochMilli(0),
+    val toExclusive: Instant = Instant.parse("2999-01-01T00:00:00.00Z"),
 ) : BookingsFilter {
     override fun whereAndParams(): Pair<String, List<Any>> {
         return "b.datetime >= ? AND b.datetime < ?" to listOf(
@@ -260,6 +260,8 @@ data class DateRangeFilter(
             toExclusive
         )
     }
+
+    fun contains(time: Instant) = time >= from && time < toExclusive
 }
 
 class AccountIdFilter(

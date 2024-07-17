@@ -124,10 +124,9 @@ class BankAccountService(
                         ba.openDate,
                         ba.closeDate,
                         bookingRepository.getSum(
-                            ba.accountId,
-                            realmId,
-                            DateRangeFilter()
-                        ) + unbookedTransactionRepository.getSum(
+                            realmId = realmId,
+                            accountId = ba.accountId,
+                        ).first + unbookedTransactionRepository.getSum(
                             conn,
                             ba.accountId,
                             BankTxDateRangeFilter()
@@ -163,7 +162,6 @@ class BankAccountService(
             )
         }
     }
-
 
 
 }

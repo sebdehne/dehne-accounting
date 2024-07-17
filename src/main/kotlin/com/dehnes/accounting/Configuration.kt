@@ -73,7 +73,13 @@ object Configuration {
             changelog,
             bookingRepository
         )
-        val bookingService = BookingService(datasource, bookingRepository, authorizationService, unbookedTransactionRepository, changelog)
+        val bookingService = BookingService(
+            datasource,
+            bookingRepository,
+            authorizationService,
+            unbookedTransactionRepository,
+            changelog
+        )
 
         val budgetRepository = BudgetRepository(
             changelog,
@@ -92,7 +98,8 @@ object Configuration {
 
         val userStateService = UserStateService(datasource, userStateRepository, userService, changelog)
         val databaseBackupService = DatabaseBackupService(datasource, changelog)
-        val realmService = RealmService(realmRepository, datasource, authorizationService, changelog, unbookedTransactionRepository)
+        val realmService =
+            RealmService(realmRepository, datasource, authorizationService, changelog, unbookedTransactionRepository)
 
         val readService = ReadService(
             executorService,
@@ -122,6 +129,8 @@ object Configuration {
         beans[AccountService::class] = accountService
         beans[DatabaseBackupService::class] = databaseBackupService
         beans[RealmService::class] = realmService
+
+        bookingRepository.start()
     }
 
     inline fun <reified T> getBeanNull(): T? {

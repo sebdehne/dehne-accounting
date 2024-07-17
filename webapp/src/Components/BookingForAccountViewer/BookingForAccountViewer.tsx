@@ -18,9 +18,8 @@ import {Loading} from "../loading";
 export const BookingForAccountViewer = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const {accountId} = useParams();
-    const {accounts} = useGlobalState();
+    const {accounts, userStateV2, setUserStateV2} = useGlobalState();
     const [onlyShowUnbooked, setOnlyShowUnbooked] = useState(false);
-    const [editMode, setEditMode] = useState(false);
 
     useEffect(() => {
         if (accountId) {
@@ -74,6 +73,8 @@ export const BookingForAccountViewer = () => {
         })
     }
 
+    const editMode = !!userStateV2?.frontendState?.bookingsEditMode;
+
     const thisAccount = accountId ? accounts.getById(accountId) : undefined;
     if (!thisAccount) return <Loading/>;
 
@@ -85,7 +86,13 @@ export const BookingForAccountViewer = () => {
                 ['Import transactions', onImport],
                 ['Delete all unbooked', onDeleteAll],
                 [onlyShowUnbooked ? 'Show all' : 'Only show unbooked', () => setOnlyShowUnbooked(!onlyShowUnbooked)],
-                [editMode ? 'Exit edit' : 'Edit mode', () => setEditMode(!editMode)]
+                [editMode ? 'Exit edit' : 'Edit mode', () => setUserStateV2(prev => ({
+                    ...prev,
+                    frontendState: {
+                        ...prev.frontendState,
+                        bookingsEditMode: !editMode
+                    }
+                }))]
             ]}
         />
 
@@ -149,6 +156,7 @@ const BookingViewer = ({booking, entry, showChecked}: {
 }) => {
     const {accounts} = useGlobalState();
     const navigate = useNavigate();
+    const {showConfirmationDialog} = useDialogs();
 
     const toggleChecked = useCallback(() => {
         WebsocketClient.rpc({
@@ -158,6 +166,20 @@ const BookingViewer = ({booking, entry, showChecked}: {
             bookingEntryChecked: !entry.checked,
         })
     }, [entry]);
+
+    const deleteBooking = useCallback(() => {
+        showConfirmationDialog({
+            header: "Delete booking?",
+            content: "Are you sure, this cannot be undone",
+            confirmButtonText: "Delete",
+            onConfirmed: () => {
+                WebsocketClient.rpc({
+                    type: "deleteBooking",
+                    bookingId: booking.id
+                })
+            }
+        });
+    }, [booking]);
 
     let otherEntries = booking.entries.filter(e => e.id !== entry.id);
     return (<li className="BookingEntryContainer">
@@ -183,6 +205,7 @@ const BookingViewer = ({booking, entry, showChecked}: {
         </div>
         {showChecked && <div className="BookingEntryRight">
             <Checkbox checked={entry.checked} onClick={() => toggleChecked()}/>
+            <IconButton onClick={() => deleteBooking()}><DeleteIcon/></IconButton>
         </div>}
     </li>)
 }

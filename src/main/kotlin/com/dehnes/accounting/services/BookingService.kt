@@ -1,5 +1,6 @@
 package com.dehnes.accounting.services
 
+import com.dehnes.accounting.api.dtos.ReadResponse
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import javax.sql.DataSource
@@ -15,8 +16,10 @@ class BookingService(
     fun getBookings(
         userId: String,
         realmId: String,
-        bookingsFilters: List<BookingsFilter>,
-    ): List<Booking> = dataSource.readTx { conn ->
+        rangeFilter: DateRangeFilter,
+        accountId: String,
+    ) = dataSource.readTx { conn ->
+
         authorizationService.assertAuthorization(
             conn,
             userId,
@@ -24,35 +27,41 @@ class BookingService(
             AccessRequest.read,
         )
 
-        val bookings = bookingRepository.getBookings(
+
+        val bookings = bookingRepository.getBookingsForRange(
             realmId,
-            Int.MAX_VALUE,
-            bookingsFilters
-        ).toMutableList()
+            rangeFilter,
+        ).filter { it.entries.any { it.accountId == accountId } }.toMutableList()
 
-        if (bookingsFilters.any { it is AccountIdFilter } && bookingsFilters.any { it is DateRangeFilter }) {
-            val accountId = bookingsFilters.filterIsInstance<AccountIdFilter>().single().accountId
-            val rangeFilter = bookingsFilters.filterIsInstance<DateRangeFilter>().single()
+        val balance = bookingRepository.getSum(
+            realmId = realmId,
+            accountId = accountId,
+            dateRangeFilter = rangeFilter
+        ).first
 
-            val unbookedTransactions = unbookedTransactionRepository.getUnbookedTransactions(
-                conn,
-                realmId,
-                accountId,
-                rangeFilter
-            )
+        val unbookedTransactions = unbookedTransactionRepository.getUnbookedTransactions(
+            conn,
+            realmId,
+            accountId,
+            rangeFilter
+        )
+        val sumUnbooked = unbookedTransactionRepository.getSum(
+            conn,
+            accountId,
+            BankTxDateRangeFilter(toExclusive = rangeFilter.from)
+        )
 
-            unbookedTransactions.forEach {
-                bookings.add(
-                    Booking(
-                        realmId,
-                        it.id,
-                        it.memo,
-                        it.datetime,
-                        emptyList(),
-                        it.amountInCents
-                    )
+        unbookedTransactions.forEach {
+            bookings.add(
+                Booking(
+                    realmId,
+                    it.id,
+                    it.memo,
+                    it.datetime,
+                    emptyList(),
+                    it.amountInCents
                 )
-            }
+            )
         }
 
         bookings.sortedWith(
@@ -65,6 +74,11 @@ class BookingService(
                 }
             }
         )
+
+        ReadResponse(
+            bookings = bookings,
+            bookingsBalance = balance + sumUnbooked
+        )
     }
 
     fun getBooking(userId: String, realmId: String, bookingId: Long) = dataSource.readTx { conn ->
@@ -75,11 +89,10 @@ class BookingService(
             AccessRequest.read,
         )
 
-        bookingRepository.getBookings(
+        bookingRepository.getBooking(
             realmId,
-            Int.MAX_VALUE,
-            listOf(SingleBookingFilter(bookingId))
-        ).single()
+            bookingId
+        )
     }
 
     fun updateChecked(
@@ -108,11 +121,10 @@ class BookingService(
     }
 
     fun createOrUpdateBooking(userId: String, realmId: String, booking: Booking) = changelog.writeTx { conn ->
-        val existingBooking = bookingRepository.getBookings(
+        val existingBooking = bookingRepository.getBooking(
             realmId,
-            Int.MAX_VALUE,
-            listOf(SingleBookingFilter(booking.id))
-        ).singleOrNull()
+            booking.id
+        )
 
         authorizationService.assertAuthorization(
             conn,
@@ -153,19 +165,18 @@ class BookingService(
     fun deleteBooking(userId: String, realmId: String, bookingId: Long) {
         changelog.writeTx { conn ->
 
-            val bookings = bookingRepository.getBookings(
+            val booking = bookingRepository.getBooking(
                 realmId,
-                1,
-                listOf(SingleBookingFilter(bookingId))
+                bookingId
             )
 
-            if (bookings.isNotEmpty()) {
+            if (booking != null) {
                 authorizationService.assertAuthorization(
                     conn,
                     userId,
                     realmId,
                     AccessRequest.write,
-                    bookings.single().datetime
+                    booking.datetime
                 )
 
                 bookingRepository.deleteBooking(

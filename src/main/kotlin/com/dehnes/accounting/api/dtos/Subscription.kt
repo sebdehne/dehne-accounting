@@ -68,6 +68,7 @@ data class ReadResponse(
     val unbookedTransaction: UnbookedTransaction? = null,
     val totalUnbookedTransactions: Long? = null,
     val bookings: List<Booking>? = null,
+    val bookingsBalance: Long? = null,
     val booking: Booking? = null,
     val bankAccount: BankAccount? = null,
     val allUsers: AllUsersInfo? = null,

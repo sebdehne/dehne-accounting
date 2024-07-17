@@ -6,7 +6,7 @@ import com.dehnes.accounting.database.BookingRepository
 import com.dehnes.accounting.database.DateRangeFilter
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.domain.StandardAccount
-import java.time.Instant
+import com.dehnes.accounting.utils.Metrics.logTimed
 import javax.sql.DataSource
 
 
@@ -20,43 +20,33 @@ class OverviewRapportService(
         dataSource.readTx { conn ->
             val allAccounts = accountsRepository.getAll(conn, realmId)
 
-            val openingBalanceBookings = bookingRepository.getBookings(
-                realmId,
-                Int.MAX_VALUE,
-                listOf(DateRangeFilter(toExclusive = rangeFilter.from))
-            )
-
-            val thisPeriodBookings = bookingRepository.getBookings(
-                realmId,
-                Int.MAX_VALUE,
-                listOf(rangeFilter)
-            )
-
             fun getForAccount(a: AccountDto): OverviewRapportAccount {
                 val children = allAccounts.allAccounts
                     .filter { it.parentAccountId == a.id }
                     .map { getForAccount(it) }
 
-                val openingBalance = openingBalanceBookings
-                    .flatMap { it.entries.filter { it.accountId == a.id } }
-                    .sumOf { it.amountInCents } + children.sumOf { it.openBalance }
+                val openingBalance = bookingRepository.getSum(
+                    accountId = a.id,
+                    realmId = realmId,
+                    dateRangeFilter = DateRangeFilter(toExclusive = rangeFilter.from)
+                ).first + children.sumOf { it.openBalance }
 
-                val entries = thisPeriodBookings.flatMap { booking ->
-                    booking.entries.filter { it.accountId == a.id }.map { entry ->
-                        entry.amountInCents
-                    }
-                }
+                val sum = bookingRepository.getSum(
+                    accountId = a.id,
+                    realmId = realmId,
+                    dateRangeFilter = rangeFilter
+                )
 
-                val thisPeriod = entries.sum() + children.sumOf { it.thisPeriod }
+                val thisPeriod = sum.first + children.sumOf { it.thisPeriod }
 
                 return OverviewRapportAccount(
-                    a.id,
-                    a.name,
-                    openingBalance,
-                    thisPeriod,
-                    openingBalance + thisPeriod,
-                    children,
-                    children.sumOf { it.deepEntrySize } + entries.size
+                    accountId = a.id,
+                    name = a.name,
+                    openBalance = openingBalance,
+                    thisPeriod = thisPeriod,
+                    closeBalance = openingBalance + thisPeriod,
+                    children = children,
+                    deepEntrySize = children.sumOf { it.deepEntrySize } + sum.second
                 )
             }
 

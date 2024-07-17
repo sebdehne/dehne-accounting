@@ -15,4 +15,5 @@ export type DateRangeFilter = {
 
 export type FrontendState = {
     hideBookedBankTransactions?: boolean;
+    bookingsEditMode?: boolean;
 }
