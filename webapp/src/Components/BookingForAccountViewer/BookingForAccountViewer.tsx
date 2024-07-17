@@ -17,6 +17,7 @@ import {Loading} from "../loading";
 
 export const BookingForAccountViewer = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
+    const [balance, setBalance] = useState(0);
     const {accountId} = useParams();
     const {accounts, userStateV2, setUserStateV2} = useGlobalState();
     const [onlyShowUnbooked, setOnlyShowUnbooked] = useState(false);
@@ -25,7 +26,10 @@ export const BookingForAccountViewer = () => {
         if (accountId) {
             const sub = WebsocketClient.subscribe(
                 {type: "getBookings", accountId},
-                readResponse => setBookings(readResponse.bookings!)
+                readResponse => {
+                    setBookings(readResponse.bookings!);
+                    setBalance(readResponse.bookingsBalance!)
+                }
             );
             return () => WebsocketClient.unsubscribe(sub);
         }
@@ -100,6 +104,11 @@ export const BookingForAccountViewer = () => {
 
         <div className="Sums">
             <div className="Sum">
+                <div>Open balance</div>
+                <div><Amount amountInCents={balance}/></div>
+            </div>
+
+            <div className="Sum">
                 <div>Sum positive</div>
                 <div><Amount amountInCents={sumPositive}/></div>
             </div>
@@ -119,6 +128,10 @@ export const BookingForAccountViewer = () => {
                 <div>Sum unchecked</div>
                 <div><Amount amountInCents={sumUnchecked}/></div>
             </div>}
+            <div className="Sum">
+                <div>Close balance</div>
+                <div><Amount amountInCents={balance + sum}/></div>
+            </div>
 
         </div>
 
@@ -130,14 +143,20 @@ export const BookingForAccountViewer = () => {
                     if (b.entries.length > 0) {
                         const entries = b.entries.filter(e => e.accountId === accountId);
                         return entries.map(e =>
-                            <BookingViewer key={`${b.id}-${e.id}`} booking={b as Booking} entry={e as BookingEntry}
-                                           showChecked={editMode}/>
+                            <BookingViewer key={`${b.id}-${e.id}`}
+                                           booking={b as Booking}
+                                           entry={e as BookingEntry}
+                                           showChecked={editMode}
+                            />
                         );
                     } else {
                         return [
-                            <UnbookedTxViewer key={b.id} accountId={accountId}
+                            <UnbookedTxViewer key={b.id}
+                                              accountId={accountId}
                                               unbookedAmountInCents={b.unbookedAmountInCents!}
-                                              id={b.id} datetime={b.datetime} description={b.description}
+                                              id={b.id}
+                                              datetime={b.datetime}
+                                              description={b.description}
                                               editMode={editMode}
                             />
                         ]

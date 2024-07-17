@@ -36,7 +36,7 @@ class BookingService(
         val balance = bookingRepository.getSum(
             realmId = realmId,
             accountId = accountId,
-            dateRangeFilter = rangeFilter
+            dateRangeFilter = DateRangeFilter(toExclusive = rangeFilter.from)
         ).first
 
         val unbookedTransactions = unbookedTransactionRepository.getUnbookedTransactions(
@@ -64,19 +64,17 @@ class BookingService(
             )
         }
 
-        bookings.sortedWith(
-            object : Comparator<Booking> {
-                override fun compare(o1: Booking, o2: Booking): Int {
-                    if (o1.datetime != o2.datetime) {
-                        return o2.datetime.compareTo(o1.datetime)
-                    }
-                    return o2.id.compareTo(o1.id)
-                }
-            }
-        )
-
         ReadResponse(
-            bookings = bookings,
+            bookings = bookings.sortedWith(
+                object : Comparator<Booking> {
+                    override fun compare(o1: Booking, o2: Booking): Int {
+                        if (o1.datetime != o2.datetime) {
+                            return o2.datetime.compareTo(o1.datetime)
+                        }
+                        return o2.id.compareTo(o1.id)
+                    }
+                }
+            ),
             bookingsBalance = balance + sumUnbooked
         )
     }

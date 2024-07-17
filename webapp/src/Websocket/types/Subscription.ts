@@ -56,6 +56,7 @@ export type ReadResponse = {
     unbookedTransaction?: UnbookedTransaction;
     totalUnbookedTransactions?: number;
     bookings?: Booking[];
+    bookingsBalance?: number;
     booking?: Booking;
     bankAccount?: BankAccount;
     allUsers?: AllUsersInfo;
