@@ -37,7 +37,7 @@ export const Account = () => {
 
     if (!accountsHasData) return <Loading/>;
 
-    const isValid = !!account.name && !!account.parentAccountId
+    const isValid = !!account.name
 
     const submit = () => {
         if (isValid) {
