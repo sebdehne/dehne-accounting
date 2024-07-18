@@ -1,5 +1,6 @@
 import {InformationElement} from "./InformationElement";
 import {Accounts} from "../../utils/accounts";
+import {BudgetType} from "./budget";
 
 
 export interface AccountDto extends InformationElement {
@@ -7,6 +8,7 @@ export interface AccountDto extends InformationElement {
     partyId?: string;
     builtIn: boolean;
     realmId: string;
+    budgetType?: BudgetType;
 }
 
 export const isAccountPayable = (accounts: Accounts, path: AccountDto[]): boolean => matchedPath(path, [
@@ -46,8 +48,4 @@ export type StandardAccountView = {
     id: string;
     originalName: string;
     parentAccountId?: string;
-}
-
-export type Party = InformationElement & {
-    realmId: string;
 }

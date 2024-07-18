@@ -1,6 +1,5 @@
 package com.dehnes.accounting.domain
 
-import com.dehnes.accounting.database.AccountDto
 import java.util.*
 
 enum class StandardAccount(
@@ -20,13 +19,5 @@ enum class StandardAccount(
     ;
 
     fun toAccountId(realmId: String) = UUID.nameUUIDFromBytes("$realmId-%$this".toByteArray()).toString()
-    fun toAccountDto(realmId: String) = AccountDto(
-        toAccountId(realmId),
-        this.name,
-        null,
-        realmId,
-        parent?.toAccountId(realmId),
-        true
-    )
 
 }

@@ -276,8 +276,7 @@ class WebSocketServer : Endpoint() {
                     budgetService.updateBudgetRulesForAccount(
                         user.id,
                         userStateV2.selectedRealm!!,
-                        rpcRequest.accountId!!,
-                        rpcRequest.updateBudgetRulesForAccount!!
+                        rpcRequest.updateBudget!!,
                     )
                     RpcResponse()
                 }

@@ -116,7 +116,15 @@ object Configuration {
             realmService,
             userService,
             datasource,
-            OverviewRapportService(datasource, bookingRepository, accountsRepository),
+            OverviewRapportService(
+                datasource,
+                bookingRepository,
+                accountsRepository,
+                realmRepository,
+                authorizationService,
+                budgetRepository,
+                budgetHistoryRepository
+            ),
             bankAccountService,
             accountsRepository,
             unbookedBankTransactionMatcherService,

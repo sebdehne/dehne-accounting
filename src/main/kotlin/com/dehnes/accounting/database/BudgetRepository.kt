@@ -15,10 +15,10 @@ class BudgetRepository(
                 while (resultSet.next()) {
                     r.add(
                         BudgetDbRecord(
-                            realmId,
-                            resultSet.getString("account_id"),
-                            resultSet.getInt("month"),
-                            resultSet.getLong("amount_in_cents"),
+                            realmId = realmId,
+                            accountId = resultSet.getString("account_id"),
+                            month = resultSet.getInt("month"),
+                            amountInCents = resultSet.getLong("amount_in_cents"),
                         )
                     )
                 }
@@ -67,8 +67,8 @@ class BudgetRepository(
         (1..12).forEach { month ->
             val source = all.firstOrNull { it.accountId == sourceAccountId && it.month == month }
             if (source != null) {
-                val targetAmountInCents =
-                    all.firstOrNull { it.accountId == targetAccountId && it.month == month }?.amountInCents ?: 0L
+                val existingTarget = all.firstOrNull { it.accountId == targetAccountId && it.month == month }
+                val targetAmountInCents = existingTarget?.amountInCents ?: 0L
                 insertOrUpdate(
                     connection,
                     BudgetDbRecord(
@@ -96,3 +96,8 @@ data class BudgetDbRecord(
     val month: Int,
     val amountInCents: Long,
 )
+
+enum class BudgetType {
+    min,
+    max,
+}

@@ -86,28 +86,31 @@ class BudgetHistoryRepository(
 
     fun merge(connection: Connection, realmId: String, sourceAccountId: String, targetAccountId: String) {
         val sourceRecords = mutableListOf<Pair<LocalDate, Long>>()
-        connection.prepareStatement("SELECT * FROM budget_history WHERE realm_id = ? AND account_id = ?").use { preparedStatement ->
-            preparedStatement.setString(1, realmId)
-            preparedStatement.setString(2, sourceAccountId)
-            preparedStatement.executeQuery().use { rs ->
-                while (rs.next()) {
-                    sourceRecords.add(
-                        LocalDate.of(
-                            rs.getInt("year"),
-                            rs.getInt("month"),
-                            1
-                        ) to rs.getLong("amount_in_cents")
-                    )
+        connection.prepareStatement("SELECT * FROM budget_history WHERE realm_id = ? AND account_id = ?")
+            .use { preparedStatement ->
+                preparedStatement.setString(1, realmId)
+                preparedStatement.setString(2, sourceAccountId)
+                preparedStatement.executeQuery().use { rs ->
+                    while (rs.next()) {
+                        sourceRecords.add(
+                            LocalDate.of(
+                                rs.getInt("year"),
+                                rs.getInt("month"),
+                                1
+                            ) to rs.getLong("amount_in_cents")
+                        )
+                    }
                 }
             }
-        }
 
         sourceRecords.forEach { (date, amount) ->
-            connection.prepareStatement("""
+            connection.prepareStatement(
+                """
                 UPDATE budget_history set 
                 amount_in_cents = amount_in_cents + ?
                 WHERE realm_id = ? AND year = ? AND month = ? AND account_id = ?
-            """.trimIndent()).use { preparedStatement ->
+            """.trimIndent()
+            ).use { preparedStatement ->
                 preparedStatement.setLong(1, amount)
                 preparedStatement.setString(2, realmId)
                 preparedStatement.setInt(3, date.year)
@@ -117,11 +120,12 @@ class BudgetHistoryRepository(
             }
         }
 
-        connection.prepareStatement("DELETE FROM budget_history WHERE realm_id = ? AND account_id = ?").use { statement ->
-            statement.setString(1, realmId)
-            statement.setString(2, sourceAccountId)
-            statement.executeUpdate()
-        }
+        connection.prepareStatement("DELETE FROM budget_history WHERE realm_id = ? AND account_id = ?")
+            .use { statement ->
+                statement.setString(1, realmId)
+                statement.setString(2, sourceAccountId)
+                statement.executeUpdate()
+            }
 
     }
 

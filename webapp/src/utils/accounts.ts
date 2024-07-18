@@ -1,4 +1,5 @@
 import {AccountDto, AllAccounts, StandardAccountView} from "../Websocket/types/accounts";
+import {BudgetType} from "../Websocket/types/budget";
 
 
 export class Accounts {
@@ -34,6 +35,21 @@ export class Accounts {
         }
         return accountExpanded?.account;
     }
+
+    getBudgetType(id: string): BudgetType | undefined {
+        let current = this.getById(id);
+        if (!current) {
+            return undefined
+        }
+        if (current.budgetType) {
+            return current.budgetType;
+        }
+        if (current.parentAccountId) {
+            return this.getBudgetType(current.parentAccountId);
+        }
+        return undefined;
+    }
+
     getByIdExpanded(id: string): AccountExpanded {
         return this.byId[id];
     }

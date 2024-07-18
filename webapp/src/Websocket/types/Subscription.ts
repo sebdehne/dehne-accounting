@@ -39,7 +39,8 @@ export type ReadRequestType =
     | 'getBooking'
     | 'getBankAccount'
     | 'listBackups'
-    | 'getBudgetRules'
+    | 'getBudgetRulesForAccount'
+    | 'getBudgetAccounts'
     ;
 
 export type ReadRequest = {
@@ -64,6 +65,7 @@ export type ReadResponse = {
     allUsers?: AllUsersInfo;
     backups?: string[];
     budgetRules?: BudgetRule[];
+    budgetAccounts?: string[];
 }
 
 export type AllUsersInfo = {

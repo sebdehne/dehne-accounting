@@ -6,6 +6,7 @@ import {Booking} from "./bookings";
 import {AccountDto} from "./accounts";
 import {BankAccount} from "./bankaccount";
 import {User} from "./User";
+import {UpdateBudget} from "./budget";
 
 export type RequestType = "subscribe"
     | "unsubscribe"
@@ -57,7 +58,7 @@ export type RpcRequest = {
     user?: User;
     deleteUserId?: string;
     backupName?: string;
-    updateBudgetRulesForAccount: { [key: string]: number };
+    updateBudget?: UpdateBudget;
 }
 
 export type RpcResponse = {

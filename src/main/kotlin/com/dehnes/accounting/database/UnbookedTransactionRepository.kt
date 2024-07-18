@@ -1,6 +1,7 @@
 package com.dehnes.accounting.database
 
 import com.dehnes.accounting.api.UnbookedTransactionsChanged
+import com.dehnes.accounting.utils.DateTimeUtils
 import com.dehnes.accounting.utils.NullString
 import com.dehnes.accounting.utils.SqlUtils
 import java.sql.Connection
@@ -262,6 +263,7 @@ data class DateRangeFilter(
     }
 
     fun contains(time: Instant) = time >= from && time < toExclusive
+    fun isMonth() = from.atZone(DateTimeUtils.zoneId).plusMonths(1).toInstant() == toExclusive
 }
 
 class AccountIdFilter(

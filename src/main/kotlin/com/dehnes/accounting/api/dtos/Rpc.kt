@@ -64,7 +64,12 @@ data class RpcRequest(
     val user: User?,
     val deleteUserId: String?,
     val backupName: String?,
-    val updateBudgetRulesForAccount: Map<String, Long>?,
+    val updateBudget: UpdateBudget?,
+)
+
+data class UpdateBudget(
+    val accountId: String,
+    val budget: Map<String, Long>,
 )
 
 data class RpcResponse(

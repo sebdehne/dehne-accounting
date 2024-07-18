@@ -1,5 +1,6 @@
 package com.dehnes.accounting.services
 
+import com.dehnes.accounting.api.dtos.UpdateBudget
 import com.dehnes.accounting.database.BudgetDbRecord
 import com.dehnes.accounting.database.BudgetRepository
 import com.dehnes.accounting.database.Changelog
@@ -47,8 +48,7 @@ class BudgetService(
     fun updateBudgetRulesForAccount(
         userId: String,
         realmId: String,
-        accountId: String,
-        updateBudgetRulesForAccount: Map<String, Long>
+        updateBudget: UpdateBudget,
     ) {
         changelog.writeTx { conn ->
             authorizationService.assertAuthorization(
@@ -63,16 +63,16 @@ class BudgetService(
                 budgetRepository.delete(
                     connection = conn,
                     realmId = realmId,
-                    accountId = accountId,
+                    accountId = updateBudget.accountId,
                     month = m
                 )
 
-                updateBudgetRulesForAccount[m.toString()]?.let {
+                updateBudget.budget[m.toString()]?.let {
                     budgetRepository.insertOrUpdate(
                         conn,
                         BudgetDbRecord(
                             realmId = realmId,
-                            accountId = accountId,
+                            accountId = updateBudget.accountId,
                             month = m,
                             amountInCents = it
                         )
@@ -81,6 +81,19 @@ class BudgetService(
             }
 
         }
+    }
+
+    fun getBudgetAccounts(userId: String, realmId: String): List<String> = dataSource.readTx { conn ->
+        authorizationService.assertAuthorization(
+            conn,
+            userId,
+            realmId,
+            AccessRequest.read
+        )
+
+        budgetRepository.getAll(conn, realmId)
+            .map { it.accountId }
+            .distinct()
     }
 
 }

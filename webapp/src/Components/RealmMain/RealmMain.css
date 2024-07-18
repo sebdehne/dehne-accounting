@@ -21,19 +21,22 @@
     font-size: 0;
 }
 
+.OverviewRapportViewerAccountSummaryMainContainer {
+    display: flex;
+    flex-direction: column;
+    background-color: #252525;
+    border-radius: 15px;
+    margin: 5px 0 5px 0;
+    padding: 10px;
+    width: 100%;
+}
+
 .OverviewRapportViewerAccountSummaryMain {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    background-color: #252525;
-    border-radius: 15px;
-    margin: 10px 0 10px 0;
-    padding: 10px;
-    width: 100%;
-
 }
-
 
 .OverviewRapportViewerAccountSummaryLeft {
     font-size: larger;

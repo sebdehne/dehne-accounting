@@ -21,12 +21,13 @@ class AccountsRepository(private val changelog: Changelog) {
                     val accountId = rs.getString("id")
                     l.add(
                         AccountDto(
-                            accountId,
-                            rs.getString("name"),
-                            rs.getString("description"),
-                            realmId,
-                            rs.getString("parent_account_id"),
-                            StandardAccount.entries.any { it.toAccountId(realmId) == accountId }
+                            id = accountId,
+                            name = rs.getString("name"),
+                            description = rs.getString("description"),
+                            realmId = realmId,
+                            parentAccountId = rs.getString("parent_account_id"),
+                            builtIn = StandardAccount.entries.any { it.toAccountId(realmId) == accountId },
+                            budgetType = rs.getString("budget_type")?.let { BudgetType.valueOf(it) },
                         )
                     )
                 }
@@ -61,8 +62,9 @@ class AccountsRepository(private val changelog: Changelog) {
                     id,
                     name,
                     description,
-                    parent_account_id
-                ) VALUES (?,?,?,?,?)
+                    parent_account_id,
+                    budget_type
+                ) VALUES (?,?,?,?,?,?)
             """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setString(1, accountDto.realmId)
@@ -70,6 +72,7 @@ class AccountsRepository(private val changelog: Changelog) {
             preparedStatement.setString(3, accountDto.name)
             preparedStatement.setString(4, accountDto.description)
             preparedStatement.setString(5, accountDto.parentAccountId)
+            preparedStatement.setString(6, accountDto.budgetType?.name?.ifBlank { null })
             preparedStatement.executeUpdate()
             logger.info { "Inserted account $accountDto" }
         }
@@ -80,13 +83,14 @@ class AccountsRepository(private val changelog: Changelog) {
     fun updateAccount(conn: Connection, accountDto: AccountDto) {
         conn.prepareStatement(
             """
-            UPDATE account set parent_account_id = ?, name = ?, description = ? WHERE id = ?
+            UPDATE account set parent_account_id = ?, name = ?, description = ?, budget_type = ? WHERE id = ?
         """.trimIndent()
         ).use { preparedStatement ->
             preparedStatement.setString(1, accountDto.parentAccountId)
             preparedStatement.setString(2, accountDto.name)
             preparedStatement.setString(3, accountDto.description)
-            preparedStatement.setString(4, accountDto.id)
+            preparedStatement.setString(4, accountDto.budgetType?.name?.ifBlank { null })
+            preparedStatement.setString(5, accountDto.id)
             preparedStatement.executeUpdate()
         }
 
@@ -110,6 +114,7 @@ data class AccountDto(
     val realmId: String,
     val parentAccountId: String?,
     val builtIn: Boolean,
+    val budgetType: BudgetType?,
 ) : InformationElement()
 
 data class AllAccounts(

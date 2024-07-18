@@ -44,7 +44,8 @@ enum class ReadRequestType(
     getBooking(listOf(BookingsChanged::class, UserStateUpdated::class)),
     getBankAccount(listOf(BankAccountChanged::class, UserStateUpdated::class)),
 
-    getBudgetRules(listOf(BudgetChanged::class)),
+    getBudgetRulesForAccount(listOf(BudgetChanged::class)),
+    getBudgetAccounts(listOf(BudgetChanged::class)),
 
     listBackups(listOf(DatabaseBackupChanged::class)),
 
@@ -73,6 +74,7 @@ data class ReadResponse(
     val allUsers: AllUsersInfo? = null,
     val backups: List<String>? = null,
     val budgetRules: List<BudgetDbRecord>? = null,
+    val budgetAccounts: List<String>? = null,
 )
 
 data class GlobalState(

@@ -14,6 +14,7 @@ import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {Check} from "@mui/icons-material";
 import {Loading} from "../loading";
+import {LinearProgressWithLabel, LinearProgressWithLabelType} from "./ProgressBar";
 
 export const RealmMain = () => {
     const {userStateV2, setUserStateV2, realm, userInfo} = useGlobalState();
@@ -109,7 +110,7 @@ const OverviewRapportViewer = ({overviewRapport}: OverviewRapportViewerProps) =>
 
         <ul className="OverviewRapportViewerAccounts">
             {overviewRapport.filter(filter).map((a, index) => (<OverviewRapportViewerAccount
-                key={a.name}
+                key={a.accountId}
                 account={a}
                 level={0}
                 isLast={index === overviewRapport.length - 1}
@@ -193,13 +194,12 @@ const HideSettingsMenu = ({hideSettings, setHideSettings}: HideSettingsMenuProps
 }
 
 
-type OverviewRapportViewerAccountProps = {
+const OverviewRapportViewerAccount = ({account, level, isLast, filter}: {
     account: OverviewRapportAccount;
     level: number;
     isLast: boolean;
     filter: (a: OverviewRapportAccount) => boolean;
-}
-const OverviewRapportViewerAccount = ({account, level, isLast, filter}: OverviewRapportViewerAccountProps) => {
+}) => {
     const {localState, setLocalState, accounts} = useGlobalState();
     const navigate = useNavigate();
 
@@ -209,45 +209,84 @@ const OverviewRapportViewerAccount = ({account, level, isLast, filter}: Overview
         return null;
     }
 
+    let progress: number | undefined = undefined;
+    let progressType: LinearProgressWithLabelType = 'errorAbove';
+    const budgetType = accounts.getBudgetType(account.accountId);
+    if (typeof (account.budget) === "number" && budgetType) {
+        const value = account.thisPeriod;
+        const budget = account.budget;
+
+        if (budgetType === "min") {
+            progressType = "warningBelow";
+            if (budget === 0) {
+                if (value > 0) {
+                    progress = 100
+                } else {
+                    progress = 0
+                }
+            } else {
+                progress = Math.round(value * 100 / budget)
+            }
+        } else if (budgetType === "max") {
+            if (budget === 0) {
+                if (value > 0) {
+                    progress = 200
+                } else {
+                    progress = 0
+                }
+            } else {
+                progress = Math.round(value * 100 / budget)
+            }
+        }
+    }
+
     return (<li className="OverviewRapportViewerAccount" style={{marginLeft: (level * 5) + 'px'}}>
 
-        <div
-            className="OverviewRapportViewerAccountSummary"
-        >
-            <div className="OverviewRapportViewerAccountSummaryLevel">{!isLast && <MiddleLine/>}{isLast &&
-                <LastLine/>}</div>
-            <div className="OverviewRapportViewerAccountSummaryMain">
-                <div className="OverviewRapportViewerAccountSummaryLeft">
-                    {overviewRapportAccounts.length > 0 &&
-                        <IconButton size={"small"} onClick={() => setLocalState(prev => ({
-                            ...prev,
-                            accountTree: prev.accountTree.toggle(account.accountId)
-                        }))}>
-                            {localState.accountTree.isExpanded(account.accountId) &&
-                                <ArrowDropDownIcon fontSize={"small"}/>}
-                            {!localState.accountTree.isExpanded(account.accountId) &&
-                                <ArrowRightIcon fontSize={"small"}/>}
-                        </IconButton>
-                    }
-                    {overviewRapportAccounts.length === 0 && <div style={{margin: '12px'}}></div>}
-                    <div onClick={() => navigate('/bookings/' + account.accountId)}>
-                        {accounts.getById(account.accountId)!.name}
+        <div className="OverviewRapportViewerAccountSummary"> {/* row */}
+            <div className="OverviewRapportViewerAccountSummaryLevel">
+                {!isLast && <MiddleLine/>}
+                {isLast && <LastLine/>}
+            </div>
+            <div className="OverviewRapportViewerAccountSummaryMainContainer">
+                <div className="OverviewRapportViewerAccountSummaryMain">
+                    <div className="OverviewRapportViewerAccountSummaryLeft">
+                        {overviewRapportAccounts.length > 0 &&
+                            <IconButton size={"small"} onClick={() => setLocalState(prev => ({
+                                ...prev,
+                                accountTree: prev.accountTree.toggle(account.accountId)
+                            }))}>
+                                {localState.accountTree.isExpanded(account.accountId) &&
+                                    <ArrowDropDownIcon fontSize={"small"}/>}
+                                {!localState.accountTree.isExpanded(account.accountId) &&
+                                    <ArrowRightIcon fontSize={"small"}/>}
+                            </IconButton>
+                        }
+                        {overviewRapportAccounts.length === 0 && <div style={{margin: '12px'}}></div>}
+                        <div onClick={() => navigate('/bookings/' + account.accountId)}>
+                            {accounts.getById(account.accountId)!.name}
+                        </div>
+                    </div>
+                    <div className="OverviewRapportViewerAccountSummaryRight">
+                        <div style={{fontSize: "larger"}}><Amount amountInCents={account.thisPeriod}/></div>
                     </div>
                 </div>
-                <div className="OverviewRapportViewerAccountSummaryRight">
-                    <div style={{fontSize: "small", color: "#a8a8a8"}}><Amount
-                        amountInCents={account.openBalance}/></div>
-                    <div style={{fontSize: "larger"}}><Amount amountInCents={account.thisPeriod}/></div>
-                    <div style={{fontSize: "small", color: "#a8a8a8"}}><Amount
-                        amountInCents={account.closeBalance}/></div>
+                <div style={{fontSize: "small", color: "#a8a8a8", textAlign: "right"}}>
+                    <Amount amountInCents={account.openBalance}/> &#8594; <Amount amountInCents={account.closeBalance}/>
                 </div>
+                {typeof (progress) === "number" && <LinearProgressWithLabel
+                    value={progress}
+                    type={progressType}
+                    onClick={() => navigate('/budget/' + account.accountId)}
+                    budget={account.budget!}
+                />}
             </div>
         </div>
+
 
         {localState.accountTree.isExpanded(account.accountId) && <ul className="OverviewRapportViewerAccounts">
             {overviewRapportAccounts
                 .map((c, index) => (<OverviewRapportViewerAccount
-                    key={c.name}
+                    key={c.accountId}
                     account={c}
                     level={level + 1}
                     isLast={index === overviewRapportAccounts.length - 1}
@@ -257,7 +296,7 @@ const OverviewRapportViewerAccount = ({account, level, isLast, filter}: Overview
     </li>)
 }
 
-const lineHeight = 110;
+const lineHeight = 100;
 const lineWidth = 14;
 const lineColor = "#696969"
 

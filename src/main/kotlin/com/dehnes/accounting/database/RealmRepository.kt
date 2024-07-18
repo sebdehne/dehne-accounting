@@ -46,6 +46,7 @@ class RealmRepository(
                         realm.id,
                         sa.parent?.toAccountId(realm.id),
                         false,
+                        BudgetType.min
                     )
                 )
             }

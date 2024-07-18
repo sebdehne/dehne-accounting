@@ -6,7 +6,6 @@ import com.dehnes.accounting.api.dtos.RealmInfo.Companion.map
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.services.*
-import com.dehnes.accounting.utils.DateTimeUtils
 import com.dehnes.accounting.utils.wrap
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*
@@ -237,8 +236,9 @@ class ReadService(
                 val readResponse = ReadResponse(
                     overViewRapport = if (userStateV2.rangeFilter != null && userStateV2.selectedRealm != null) {
                         overviewRapportService.createRapport(
-                            userStateV2.selectedRealm,
-                            userStateV2.rangeFilter
+                            userId = userId,
+                            realmId = userStateV2.selectedRealm,
+                            rangeFilter = userStateV2.rangeFilter
                         )
                     } else emptyList()
                 )
@@ -253,11 +253,17 @@ class ReadService(
                 )
             )
 
-            getBudgetRules -> ReadResponse(
+            getBudgetRulesForAccount -> ReadResponse(
                 budgetRules = budgetService.getBudgetRules(
                     userId = userId,
                     realmId = userStateV2.selectedRealm!!,
                     accountId = readRequest.accountId!!
+                )
+            )
+            getBudgetAccounts -> ReadResponse(
+                budgetAccounts = budgetService.getBudgetAccounts(
+                    userId = userId,
+                    realmId = userStateV2.selectedRealm!!,
                 )
             )
         }

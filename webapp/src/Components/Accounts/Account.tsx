@@ -1,4 +1,4 @@
-import {Button, Container, TextField} from "@mui/material";
+import {Button, Container, FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import Header from "../Header";
 import {useGlobalState} from "../../utils/globalstate";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
@@ -9,6 +9,7 @@ import {v4 as uuidv4} from "uuid";
 import {AccountSearchBox} from "../AccountSearchBox/AccountSearchBox";
 import WebsocketClient from "../../Websocket/websocketClient";
 import {Loading} from "../loading";
+import {BudgetType} from "../../Websocket/types/budget";
 
 export const Account = () => {
     const {accountId} = useParams();
@@ -20,7 +21,8 @@ export const Account = () => {
         name: "",
         partyId: undefined,
         id: accountId ?? uuidv4(),
-        realmId: ""
+        realmId: "",
+        budgetType: "min",
     });
 
     const accountsHasData = accounts.hasData();
@@ -58,6 +60,38 @@ export const Account = () => {
             label={"Name"}
             fullWidth={true}
         />
+
+        <div style={{margin: "10px"}}></div>
+
+        <FormControl fullWidth>
+            <InputLabel id="budgetType-select-label">Budget type</InputLabel>
+            <Select
+                labelId="budgetType-select-label"
+                id="budgetType-select"
+                value={account.budgetType ?? ''}
+                label="Budget type"
+                onChange={event => {
+                    const v = event.target.value;
+                    if (v) {
+                        setAccount(prevState => ({
+                            ...prevState,
+                            budgetType: v as BudgetType
+                        }));
+                    } else {
+                        setAccount(prevState => ({
+                            ...prevState,
+                            budgetType: undefined
+                        }));
+                    }
+                }}
+            >
+                <MenuItem value={''}>None</MenuItem>
+                <MenuItem value={'min'}>Reach at least</MenuItem>
+                <MenuItem value={'max'}>Stay below</MenuItem>
+            </Select>
+        </FormControl>
+
+        <div style={{margin: "10px"}}></div>
 
         {!account.builtIn && <AccountSearchBox
             onSelectedAccountId={accountId1 => {

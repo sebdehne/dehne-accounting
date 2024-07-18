@@ -23,7 +23,7 @@ export const BudgetRulesForAccount = () => {
             navigate('/budget')
         } else {
             WebsocketClient.subscribe({
-                type: "getBudgetRules",
+                type: "getBudgetRulesForAccount",
                 accountId,
             }, readResponse => {
                 setBudgetRules(readResponse.budgetRules!);
@@ -64,9 +64,11 @@ export const BudgetRulesForAccount = () => {
     const save = () => {
         WebsocketClient.rpc({
             type: "updateBudgetRulesForAccount",
-            accountId,
-            updateBudgetRulesForAccount: Object.fromEntries(budgetRules.map(r => ([r.month, r.amountInCents]))),
-        })
+            updateBudget: {
+                accountId: accountId,
+                budget: Object.fromEntries(budgetRules.map(r => ([r.month, r.amountInCents])))
+            },
+        });
     }
 
     return (
