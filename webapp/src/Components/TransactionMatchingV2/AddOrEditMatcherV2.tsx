@@ -350,7 +350,7 @@ const AccountActionEditor = ({accounts, value, setValue, title, type}: AccountAc
                 value={addingSplitAccountId}
             />
             <Spacer/>
-            <AmountTextField initialValue={addingSplitAmount} setValue={newValue => setAddingSplitAmount(newValue)}/>
+            <AmountTextField initialValue={addingSplitAmount} setValue={newValue => setAddingSplitAmount(newValue!)}/>
             <Spacer/>
             <Button disabled={!canAddSplit} onClick={addSplit}><AddIcon/>Add</Button>
         </div>}
@@ -413,11 +413,11 @@ const FilterEditor = ({filter, setFilter, titlePostfix = ""}: FilterEditorProps)
         ...prevState,
         value: text
     } as ContainsFilter))
-    const setFromAmount = (amount: number) => setFilter(prevState => ({
+    const setFromAmount = (amount: number | undefined) => setFilter(prevState => ({
         ...prevState,
         from: amount
     } as AmountBetween))
-    const setToExcludingAmount = (amount: number) => setFilter(prevState => ({
+    const setToExcludingAmount = (amount: number | undefined) => setFilter(prevState => ({
         ...prevState,
         toExcluding: amount
     } as AmountBetween))

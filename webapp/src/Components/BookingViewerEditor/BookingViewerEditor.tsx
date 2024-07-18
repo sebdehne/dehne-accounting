@@ -251,7 +251,7 @@ const EntryEditor = ({entry, setEntry, deleteEntry}: EntryEditorProps) => {
                     initialValue={entry.amountInCents}
                     setValue={newValue => setEntry(prev => ({
                         ...prev,
-                        amountInCents: newValue
+                        amountInCents: newValue!
                     }))}
                     fullWidth={false}
                 />

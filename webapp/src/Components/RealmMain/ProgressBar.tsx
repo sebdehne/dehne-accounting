@@ -1,6 +1,8 @@
 import {Box, Typography} from "@mui/material";
 import LinearProgress, {LinearProgressProps} from "@mui/material/LinearProgress";
 import {Amount} from "../Amount";
+import {OverridableStringUnion} from "@mui/types";
+import {LinearProgressPropsColorOverrides} from "@mui/material/LinearProgress/LinearProgress";
 
 export type LinearProgressWithLabelType = 'warningBelow' | 'errorAbove';
 
@@ -21,7 +23,10 @@ export const LinearProgressWithLabel = (props: LinearProgressProps & LinearProgr
     // success - green
     // warning - yellow
     // error - red
-    let color = 'primary'
+    let color: OverridableStringUnion<
+        'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit',
+        LinearProgressPropsColorOverrides
+    >;
     if (props.type === "warningBelow") {
         if (props.value < 100) {
             color = 'warning';
