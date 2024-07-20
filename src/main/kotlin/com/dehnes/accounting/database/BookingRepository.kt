@@ -3,6 +3,7 @@ package com.dehnes.accounting.database
 import com.dehnes.accounting.api.BookingsChanged
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.utils.Metrics.logTimed
+import java.awt.print.Book
 import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
@@ -241,8 +242,30 @@ class BookingRepository(
                 preparedStatement.executeUpdate()
             }
 
+        updateCache(realmId, bookingId) {
+            it?.copy(
+                entries = it.entries.map {
+                    if (it.id == bookingEntryId) {
+                        it.copy(checked = checked)
+                    } else {
+                        it
+                    }
+                }
+            )
+        }
+
         changelog.add(BookingsChanged(realmId))
 
+    }
+
+    private fun updateCache(realmId: String, bookingId: Long, fn: (existing: Booking?) -> Booking?) {
+        if (cache == null) {
+            refreshCache()
+        }
+        val mutableMap = cache!!.get(realmId) ?: error("Realm not found $realmId")
+        fn(mutableMap.getOrDefault(bookingId, null))?.let { b ->
+            mutableMap[b.id] = b
+        }
     }
 
     fun editBooking(
@@ -314,6 +337,7 @@ class BookingRepository(
                 preparedStatement.executeUpdate()
             }
 
+        refreshCache()
         changelog.add(BookingsChanged(realmId))
     }
 }

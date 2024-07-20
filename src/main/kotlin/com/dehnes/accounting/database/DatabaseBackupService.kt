@@ -43,6 +43,7 @@ class DatabaseBackupService(
                 it.executeUpdate("restore from ${dbFile.absoluteFile}")
             }
         }
+        SchemaHandler.initSchema(dataSource)
         changelog.handleChanges(setOf(ChangeEvent(DatabaseRestored)))
     }
 
