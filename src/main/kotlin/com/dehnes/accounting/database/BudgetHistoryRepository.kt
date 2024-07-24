@@ -37,10 +37,9 @@ class BudgetHistoryRepository(
             }
     }
 
-    fun insertOrUpdate(budgetHistory: BudgetHistory) {
-        changelog.writeTx { connection ->
-            connection.prepareStatement(
-                """
+    fun insertOrUpdate(connection: Connection, budgetHistory: BudgetHistory) {
+        connection.prepareStatement(
+            """
                 INSERT INTO budget_history (
                     realm_id,
                     year,
@@ -50,15 +49,14 @@ class BudgetHistoryRepository(
                 ) VALUES (?,?,?,?,?) ON CONFLICT (realm_id, year, month, account_id) DO UPDATE SET 
                     amount_in_cents = excluded.amount_in_cents
             """.trimIndent()
-            ).use { preparedStatement ->
+        ).use { preparedStatement ->
 
-                preparedStatement.setString(1, budgetHistory.realmId)
-                preparedStatement.setInt(2, budgetHistory.year)
-                preparedStatement.setInt(3, budgetHistory.month)
-                preparedStatement.setString(4, budgetHistory.accountId)
-                preparedStatement.setLong(5, budgetHistory.amountInCents)
-                preparedStatement.executeUpdate()
-            }
+            preparedStatement.setString(1, budgetHistory.realmId)
+            preparedStatement.setInt(2, budgetHistory.year)
+            preparedStatement.setInt(3, budgetHistory.month)
+            preparedStatement.setString(4, budgetHistory.accountId)
+            preparedStatement.setLong(5, budgetHistory.amountInCents)
+            preparedStatement.executeUpdate()
         }
     }
 

@@ -69,15 +69,19 @@ class RealmService(
                 ) { "There are unbooked transactions in this periode - cannot close" }
 
                 // copy current budget -> budget-history
-                budgetRepository.getAll(conn, realmId).filter { it.month == nextClosure.month.value }.forEach { budget ->
-                    budgetHistoryRepository.insertOrUpdate(BudgetHistory(
-                        realmId,
-                        nextClosure.year,
-                        nextClosure.month.value,
-                        budget.accountId,
-                        budget.amountInCents
-                    ))
-                }
+                budgetRepository.getAll(conn, realmId).filter { it.month == nextClosure.month.value }
+                    .forEach { budget ->
+                        budgetHistoryRepository.insertOrUpdate(
+                            conn,
+                            BudgetHistory(
+                                realmId,
+                                nextClosure.year,
+                                nextClosure.month.value,
+                                budget.accountId,
+                                budget.amountInCents
+                            )
+                        )
+                    }
             }
 
             realmRepository.updateClosure(conn, realmId, direction)
