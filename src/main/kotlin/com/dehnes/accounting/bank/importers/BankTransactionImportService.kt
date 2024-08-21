@@ -4,6 +4,7 @@ import com.dehnes.accounting.database.*
 import com.dehnes.accounting.services.AccessRequest
 import com.dehnes.accounting.services.AuthorizationService
 import java.io.InputStream
+import java.time.temporal.ChronoUnit
 
 class BankTransactionImportService(
     private val authorizationService: AuthorizationService,
@@ -11,6 +12,7 @@ class BankTransactionImportService(
     private val unbookedTransactionRepository: UnbookedTransactionRepository,
     private val bankRepository: BankRepository,
     private val changelog: Changelog,
+    private val bookingRepository: BookingRepository
 ) {
     fun doImport(
         userId: String,
@@ -35,6 +37,7 @@ class BankTransactionImportService(
         val importInstance = importer.java.constructors.first().newInstance() as Importer
 
         var imported = 0L
+        var skipped = 0L
 
         importInstance.import(
             data,
@@ -49,24 +52,41 @@ class BankTransactionImportService(
                 record.datetime
             )
 
-            unbookedTransactionRepository.insert(
-                conn,
-                UnbookedTransaction(
-                    accountId,
-                    realmId,
-                    0,
-                    record.description,
-                    record.datetime,
-                    record.amountInCents,
-                    record.otherAccountNumber
+            // check duplicates
+            val hasDuplicate = bookingRepository.getBookingsForRange(
+                realmId,
+                DateRangeFilter(
+                    record.datetime.minus(1, ChronoUnit.DAYS),
+                    record.datetime.plus(1, ChronoUnit.DAYS),
                 )
-            )
-            imported++
+            ).any {
+                val thisAccountEntries = it.entries.filter { it.accountId == accountId }
+                thisAccountEntries.sumOf { it.amountInCents } == record.amountInCents
+            }
+
+            if (hasDuplicate) {
+                skipped++
+            } else {
+                unbookedTransactionRepository.insert(
+                    conn,
+                    UnbookedTransaction(
+                        accountId,
+                        realmId,
+                        0,
+                        record.description,
+                        record.datetime,
+                        record.amountInCents,
+                        record.otherAccountNumber
+                    )
+                )
+                imported++
+            }
+
         }
 
         ImportResult(
             imported,
-            0,
+            skipped,
         )
     }
 }

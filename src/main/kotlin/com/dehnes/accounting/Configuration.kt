@@ -62,7 +62,8 @@ object Configuration {
             bankAccountRepository,
             unbookedTransactionRepository,
             bankRepository,
-            changelog
+            changelog,
+            bookingRepository
         )
         val unbookedBankTransactionMatcherRepository = UnbookedBankTransactionMatcherRepository(objectMapper, changelog)
         val unbookedBankTransactionMatcherService = UnbookedBankTransactionMatcherService(
