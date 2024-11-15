@@ -20,7 +20,6 @@ export const BookingForAccountViewer = () => {
     const [balance, setBalance] = useState(0);
     const {accountId} = useParams();
     const {accounts, userStateV2, setUserStateV2} = useGlobalState();
-    const [onlyShowUnbooked, setOnlyShowUnbooked] = useState(false);
 
     useEffect(() => {
         if (accountId) {
@@ -78,6 +77,7 @@ export const BookingForAccountViewer = () => {
     }
 
     const editMode = !!userStateV2?.frontendState?.bookingsEditMode;
+    const onlyShowUnbooked = userStateV2?.frontendState?.onlyShowUnbooked ?? false;
 
     const bookingsWithBalance: EntryData[] = useMemo(() => {
 
@@ -134,7 +134,13 @@ export const BookingForAccountViewer = () => {
             extraMenuOptions={[
                 ['Import transactions', onImport],
                 ['Delete all unbooked', onDeleteAll],
-                [onlyShowUnbooked ? 'Show all' : 'Only show unbooked', () => setOnlyShowUnbooked(!onlyShowUnbooked)],
+                [onlyShowUnbooked ? 'Show all' : 'Only show unbooked', () => setUserStateV2(prev => ({
+                    ...prev,
+                    frontendState: {
+                        ...prev.frontendState,
+                        onlyShowUnbooked: !onlyShowUnbooked
+                    }
+                }))],
                 [editMode ? 'Exit edit' : 'Edit mode', () => setUserStateV2(prev => ({
                     ...prev,
                     frontendState: {

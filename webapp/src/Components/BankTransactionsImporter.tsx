@@ -68,7 +68,7 @@ export const BankTransactionsImporter = () => {
     return (
         <Container maxWidth="xs" className="App">
             <Header
-                title={'Import  for: ' + account?.name ?? "..."}
+                title={'Import  for: ' + (account?.name ?? "...")}
             />
 
             <div>
