@@ -28,10 +28,9 @@ class Changelog(
 
     private val threadLocalChangeLog = ThreadLocal<Queue<ChangeEvent>>()
 
-    fun <T> writeTx(fn: (conn: Connection) -> T): T {
+    fun <T> writeTx(fn: (conn: Connection) -> T): T = Transactions.countDb {
         threadLocalChangeLog.set(LinkedList())
-        val result: T?
-
+        val result: T
         try {
             dataSource.connection.use { conn ->
                 conn.autoCommit = false
@@ -39,6 +38,7 @@ class Changelog(
                     result = fn(conn)
                     conn.commit()
                     handleChanges(threadLocalChangeLog.get())
+                    result
                 } finally {
                     conn.rollback()
                 }
@@ -46,8 +46,6 @@ class Changelog(
         } finally {
             threadLocalChangeLog.remove()
         }
-
-        return result!!
     }
 
     fun handleChanges(events: Collection<ChangeEvent>) {

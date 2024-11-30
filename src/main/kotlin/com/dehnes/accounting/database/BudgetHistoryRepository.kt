@@ -1,5 +1,6 @@
 package com.dehnes.accounting.database
 
+import com.dehnes.accounting.database.Transactions.readTx
 import java.sql.Connection
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -9,7 +10,7 @@ class BudgetHistoryRepository(
     private val changelog: Changelog,
 ) {
 
-    fun getAll(realmId: String, year: Int, month: Int): List<BudgetHistory> = dataSource.connection.use { c ->
+    fun getAll(realmId: String, year: Int, month: Int): List<BudgetHistory> = dataSource.readTx { c ->
         c.autoCommit = false
 
         c.prepareStatement("SELECT * FROM budget_history WHERE realm_id = ? AND year = ? AND month = ?")

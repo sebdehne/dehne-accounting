@@ -9,26 +9,27 @@ object Transactions {
 
     var dbConnectionCounter = AtomicLong(0)
 
-    val logger = KotlinLogging.logger {  }
+    val logger = KotlinLogging.logger { }
 
-    fun <T> DataSource.readTx(fn: (conn: Connection) -> T): T {
-        var t: T? = null
+    fun <T> countDb(fn: () -> T) = try {
+        val cnt = dbConnectionCounter.incrementAndGet()
+        logger.debug { "Opened connection. new cnt=$cnt" }
+        fn()
+    } finally {
+        val cnt2 = dbConnectionCounter.decrementAndGet()
+        logger.debug { "Closed connection. new cnt=$cnt2" }
+    }
+
+    fun <T> DataSource.readTx(fn: (conn: Connection) -> T): T = countDb {
         this.connection.use { connection ->
-            val cnt = dbConnectionCounter.incrementAndGet()
-            logger.debug { "Opened connection. new cnt=$cnt" }
             connection.autoCommit = false
 
             try {
-                t = fn(connection)
+                fn(connection)
             } finally {
-                val cnt2 = dbConnectionCounter.decrementAndGet()
-                logger.debug { "Closed connection. new cnt=$cnt2" }
                 connection.rollback()
             }
         }
-
-        return t!!
     }
-
 
 }

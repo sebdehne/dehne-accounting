@@ -3,6 +3,7 @@ package com.dehnes.accounting.services
 import com.dehnes.accounting.api.RealmChanged
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.RealmRepository.CloseDirection
+import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.utils.DateTimeUtils
 import java.time.LocalDate
 import java.util.*
@@ -33,7 +34,7 @@ class RealmService(
         var c = cache
         if (c != null) return c
 
-        c = dataSource.connection.use {
+        c = dataSource.readTx {
             it.autoCommit = false
             realmRepository.getAll(it)
         }

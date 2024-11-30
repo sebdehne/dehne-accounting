@@ -157,7 +157,7 @@ class ReadService(
         userStateV2: UserStateV2,
     ): ReadResponse =
         when (readRequest.type) {
-            getGlobalState -> dataSource.connection.use { connection ->
+            getGlobalState -> dataSource.readTx { connection ->
                 ReadResponse(
                     globalState = GlobalState(
                         userRepository.getUser(connection, userId),

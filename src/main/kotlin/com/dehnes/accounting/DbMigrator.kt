@@ -28,7 +28,7 @@ object DbMigrator {
 
         realmList.forEach { realm ->
 
-            val allAccounts = datasource.connection.use {
+            val allAccounts = datasource.readTx {
                 accountsRepository.getAll(it, realm.id)
             }
             val accountPayable =
@@ -113,7 +113,7 @@ object DbMigrator {
                 }
 
             candidates.forEach { toBeMerged ->
-                datasource.connection.use { c ->
+                datasource.readTx { c ->
                     c.autoCommit = false
 
                     val desc = toBeMerged.mapNotNull { it.description }.distinct()
