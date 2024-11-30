@@ -2,10 +2,16 @@ package com.dehnes.accounting.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.sql.Connection
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import javax.sql.DataSource
 
 object Transactions {
+
+    private val lock = ReentrantReadWriteLock()
+    private val readLock = lock.readLock()
+    private val writeLock = lock.writeLock()
 
     var dbConnectionCounter = AtomicLong(0)
 
@@ -21,14 +27,38 @@ object Transactions {
     }
 
     fun <T> DataSource.readTx(fn: (conn: Connection) -> T): T = countDb {
-        this.connection.use { connection ->
-            connection.autoCommit = false
+        check(readLock.tryLock(10, TimeUnit.SECONDS)) {"Could not get DB read lock"}
+        try {
+            this.connection.use { connection ->
+                connection.autoCommit = false
 
-            try {
-                fn(connection)
-            } finally {
-                connection.rollback()
+                try {
+                    fn(connection)
+                } finally {
+                    connection.rollback()
+                }
             }
+        } finally {
+            readLock.unlock()
+        }
+    }
+
+    fun <T> DataSource.writeTx(fn: (conn: Connection) -> T): T = countDb {
+        check(writeLock.tryLock(10, TimeUnit.SECONDS)) {"Could not get DB write lock"}
+        try {
+            this.connection.use { connection ->
+                connection.autoCommit = false
+
+                try {
+                    val r = fn(connection)
+                    connection.commit()
+                    r
+                } finally {
+                    connection.rollback()
+                }
+            }
+        } finally {
+            writeLock.unlock()
         }
     }
 

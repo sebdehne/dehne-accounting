@@ -3,6 +3,8 @@ package com.dehnes.accounting.database
 import com.dehnes.accounting.api.ChangeEvent
 import com.dehnes.accounting.api.DatabaseBackupChanged
 import com.dehnes.accounting.api.DatabaseRestored
+import com.dehnes.accounting.database.Transactions.readTx
+import com.dehnes.accounting.database.Transactions.writeTx
 import java.io.File
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -25,7 +27,7 @@ class DatabaseBackupService(
     fun listBackups(): List<String> = backupDir.listFiles()!!.map { it.name }.sorted()
 
     fun createBackup() {
-        dataSource.connection.use {
+        dataSource.readTx {
             it.createStatement().use {
                 it.executeUpdate("backup to ${File(backupDir, newBackup()).absoluteFile}")
             }
@@ -38,7 +40,8 @@ class DatabaseBackupService(
         val dbFile = File(backupDir, name)
         check(dbFile.exists()) { "Cannot restore backup $name, file not found" }
 
-        dataSource.connection.use {
+        dataSource.writeTx {
+            it.autoCommit = true
             it.createStatement().use {
                 it.executeUpdate("restore from ${dbFile.absoluteFile}")
             }
