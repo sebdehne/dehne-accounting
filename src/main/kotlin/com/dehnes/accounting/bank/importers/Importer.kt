@@ -19,6 +19,8 @@ enum class SupportedImporters(
     DanskeBankCsvExportImporter(com.dehnes.accounting.bank.importers.DanskeBankCsvExportImporter::class),
     SBanken(DnbCsvImporter::class),
     BulderImporter(BulderCsvImporter::class),
+    HandelsbankenImporter(HandelsbankenCsvImporter::class),
+    NordeaImporter(NordeaCsvImporter::class),
 }
 
 data class BankTransactionImportRecord(
