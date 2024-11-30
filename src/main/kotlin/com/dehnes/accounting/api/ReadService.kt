@@ -67,7 +67,7 @@ class ReadService(
         val listener = Listener(
             id = sub.subscriptionId,
             filter = { changeEvent ->
-                when {
+                val filter = when {
                     changeEvent.changeLogEventTypeV2 == null -> true
                     changeEvent.changeLogEventTypeV2 is DatabaseRestored -> true
                     changeEvent.changeLogEventTypeV2::class in sub.readRequest.type.listensOnV2 && changeEvent.changeLogEventTypeV2.additionalFilter(
@@ -77,6 +77,10 @@ class ReadService(
 
                     else -> false
                 }
+                if (filter) {
+                    logger.debug { "Sub ${sub.subscriptionId} type=${sub.readRequest.type} got event $changeEvent" }
+                }
+                filter
             },
             onEvent = { _ ->
                 executorService.submit(wrap(logger) {
