@@ -51,25 +51,6 @@ fun main() {
                         }?.value?.firstOrNull()
                         sec.userProperties!!["userEmail"] = userEmail
 
-                        if (userEmail != null) {
-                            val existingCookie = request.headers.entries
-                                .filter { it.key.lowercase() == "cookie" }
-                                .flatMap { it.value }
-                                .firstOrNull { it.startsWith("dehne-accounting=") }
-                                ?.split("=")
-                                ?.get(1)
-                                ?.trim()
-
-                            val sessionId = userStateService.getLatestSessionIdOrCreateNew(
-                                userEmail,
-                                existingCookie
-                            )
-
-                            response!!.headers["Set-Cookie"] =
-                                listOf("dehne-accounting=$sessionId; Secure;HttpOnly;SameSite=Strict")
-                            sec.userProperties!!["sessionId"] = sessionId
-                        }
-
                         super.modifyHandshake(sec, request, response)
                     }
                 })

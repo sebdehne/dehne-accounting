@@ -98,7 +98,7 @@ object Configuration {
             budgetHistoryRepository
         )
 
-        val userStateService = UserStateService(datasource, userStateRepository, userService, changelog)
+        val userStateService = UserStateService(datasource, userStateRepository, changelog)
         val databaseBackupService = DatabaseBackupService(datasource, changelog)
         val realmService = RealmService(
             realmRepository,

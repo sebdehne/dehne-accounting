@@ -70,10 +70,7 @@ class ReadService(
                 val filter = when {
                     changeEvent.changeLogEventTypeV2 == null -> true
                     changeEvent.changeLogEventTypeV2 is DatabaseRestored -> true
-                    changeEvent.changeLogEventTypeV2::class in sub.readRequest.type.listensOnV2 && changeEvent.changeLogEventTypeV2.additionalFilter(
-                        sub.readRequest,
-                        sub.sessionId
-                    ) -> true
+                    changeEvent.changeLogEventTypeV2::class in sub.readRequest.type.listensOnV2 -> true
 
                     else -> false
                 }
@@ -87,7 +84,6 @@ class ReadService(
                     val readResponse = handleRequest(
                         sub.userId,
                         sub.readRequest,
-                        sub.sessionId,
                     ) {
                         sub.onEvent(
                             Notify(
@@ -123,11 +119,10 @@ class ReadService(
     fun handleRequest(
         userId: String,
         readRequest: ReadRequest,
-        sessionId: String,
         sendWorkingNotify: () -> Unit
     ): ReadResponse {
 
-        val userState = userStateService.getUserStateV2(sessionId)
+        val userState = userStateService.getUserStateV2(userId)
         val cacheKey = "$userId $readRequest $userState"
 
         val cacheItem = readCacheLock.withLock {
@@ -278,14 +273,9 @@ data class ChangeEvent(
 )
 
 sealed class ChangeLogEventTypeV2 {
-    open fun additionalFilter(readRequest: ReadRequest, sessionId: String): Boolean = true
 }
 
-data class UserStateUpdated(
-    val affectedSessionsId: List<String>
-) : ChangeLogEventTypeV2() {
-    override fun additionalFilter(readRequest: ReadRequest, sessionId: String) = sessionId in affectedSessionsId
-}
+data object UserStateUpdated : ChangeLogEventTypeV2()
 
 object UserUpdated : ChangeLogEventTypeV2()
 

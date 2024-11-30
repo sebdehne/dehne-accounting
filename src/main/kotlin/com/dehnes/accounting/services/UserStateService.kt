@@ -5,17 +5,15 @@ import com.dehnes.accounting.api.dtos.UserStateV2
 import com.dehnes.accounting.database.Changelog
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.database.UserStateRepository
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import javax.sql.DataSource
 import kotlin.concurrent.read
-import kotlin.concurrent.withLock
 import kotlin.concurrent.write
 
 class UserStateService(
     private val dataSource: DataSource,
     private val userStateRepository: UserStateRepository,
-    private val userService: UserService,
     private val changelog: Changelog,
 ) {
 
@@ -34,13 +32,13 @@ class UserStateService(
         }
     }
 
-    fun getUserStateV2(sessionId: String): UserStateV2 = userStateCacheLock.read {
-        userStateCache[sessionId]
+    fun getUserStateV2(userId: String): UserStateV2 = userStateCacheLock.read {
+        userStateCache[userId]
     } ?: run {
         userStateCacheLock.write {
-            userStateCache.getOrPut(sessionId) {
+            userStateCache.getOrPut(userId) {
                 dataSource.readTx { conn ->
-                    userStateRepository.getUserStateViaSessionId(conn, sessionId)
+                    userStateRepository.getUserState(conn, userId)
                 }
             }
         }
@@ -53,16 +51,6 @@ class UserStateService(
                 userStateCache.clear()
             }
         }
-    }
-
-    fun getLatestSessionIdOrCreateNew(userEmail: String, existingCookie: String?) = changelog.writeTx { conn ->
-        val user = userService.getOrCreateUserByEmail(conn, userEmail)
-        check(user.active) { "User $userEmail not active" }
-        userStateRepository.getOrCreateUserStateId(
-            conn,
-            user.id,
-            existingCookie
-        )
     }
 
 }

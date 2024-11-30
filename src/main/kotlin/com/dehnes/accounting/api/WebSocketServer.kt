@@ -56,9 +56,8 @@ class WebSocketServer : Endpoint() {
 
     fun onWebSocketText(argSession: Session, argMessage: String) {
         val userEmail = (argSession.userProperties["userEmail"] as String?) ?: error("user missing")
-        val sessionId = (argSession.userProperties["sessionId"] as String?) ?: error("sessionId missing")
         val user = userService.getUserByEmail(userEmail) ?: error("No user found with $userEmail")
-        val userStateV2 = userStateService.getUserStateV2(sessionId)
+        val userStateV2 = userStateService.getUserStateV2(user.id)
 
         val websocketMessage: WebsocketMessage = objectMapper.readValue(argMessage)
 
@@ -77,7 +76,7 @@ class WebSocketServer : Endpoint() {
 
                     synchronized(subscriptions) {
                         subscriptions[subscriptionId]?.close()
-                        val sub = Subscription(subscriptionId, argSession, user.id, subscribe.readRequest, sessionId)
+                        val sub = Subscription(subscriptionId, argSession, user.id, subscribe.readRequest)
                         subscriptions[subscriptionId] = sub
                         readService.addSubscription(sub)
                     }
@@ -306,7 +305,6 @@ class WebSocketServer : Endpoint() {
         val sess: Session,
         val userId: String,
         val readRequest: ReadRequest,
-        val sessionId: String,
     ) : Closeable {
         fun onEvent(n: Notify) {
             sess.basicRemote.sendText(
