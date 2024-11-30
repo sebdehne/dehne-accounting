@@ -13,11 +13,11 @@ object Transactions {
 
     fun <T> countDb(fn: () -> T) = try {
         val cnt = dbConnectionCounter.incrementAndGet()
-        logger.debug { "Opened connection. new cnt=$cnt" }
+        logger.debug { "Opened connection. new cnt=$cnt stack=${stackTraceShort()}" }
         fn()
     } finally {
         val cnt2 = dbConnectionCounter.decrementAndGet()
-        logger.debug { "Closed connection. new cnt=$cnt2" }
+        logger.debug { "Closed connection. new cnt=$cnt2 stack=${stackTraceShort()}" }
     }
 
     fun <T> DataSource.readTx(fn: (conn: Connection) -> T): T = countDb {
@@ -31,5 +31,11 @@ object Transactions {
             }
         }
     }
+
+    private fun stackTraceShort() = Thread.currentThread().stackTrace.mapNotNull {
+        if (it.className.startsWith("com.dehnes")) {
+            it.className.split(".").last() + "." + it.methodName + ":" + it.lineNumber
+        } else null
+    }.joinToString(", ")
 
 }
