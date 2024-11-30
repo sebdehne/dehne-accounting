@@ -136,7 +136,7 @@ class ReadService(
 
         return cacheItem.lock.withLock {
             cacheItem.result ?: run {
-                cacheItem.result = dataSource.readTx { conn ->
+                cacheItem.result = run {
                     sendWorkingNotify()
 
                     handleRequestInternal(
