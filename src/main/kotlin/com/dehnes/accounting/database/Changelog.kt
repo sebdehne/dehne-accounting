@@ -8,6 +8,8 @@ import java.sql.Connection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 
@@ -28,20 +30,33 @@ class Changelog(
 
     private val threadLocalChangeLog = ThreadLocal<Queue<ChangeEvent>>()
 
+    /*
+     * We get error sometimes:
+     *  [SQLITE_BUSY] The database file is locked (database is locked)
+     *
+     * https://www.reddit.com/r/sqlite/comments/x76sxj/need_help_with_sqlite_busy_database_is_locked/
+     */
+    private val writeSemaphore = Semaphore(1)
+
     fun <T> writeTx(fn: (conn: Connection) -> T): T = Transactions.countDb {
         threadLocalChangeLog.set(LinkedList())
         val result: T
         try {
-            dataSource.connection.use { conn ->
-                conn.autoCommit = false
-                try {
-                    result = fn(conn)
-                    conn.commit()
-                    handleChanges(threadLocalChangeLog.get())
-                    result
-                } finally {
-                    conn.rollback()
+            check(writeSemaphore.tryAcquire(10, TimeUnit.SECONDS)) { "Timeout getting write access" }
+            try {
+                dataSource.connection.use { conn ->
+                    conn.autoCommit = false
+                    try {
+                        result = fn(conn)
+                        conn.commit()
+                        handleChanges(threadLocalChangeLog.get())
+                        result
+                    } finally {
+                        conn.rollback()
+                    }
                 }
+            } finally {
+                writeSemaphore.release()
             }
         } finally {
             threadLocalChangeLog.remove()
