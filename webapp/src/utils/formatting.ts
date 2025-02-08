@@ -56,9 +56,9 @@ export const amountInCentsToString = (amountInCentsToString: number, locale: str
     })
         .format((amountInCentsToString) / 100)
 
-    // remove the currency symbol
-    const symbol = formated.split(" ", 1)[0];
-    return formated.replace(symbol + " ", "");
+    const parts = formated.split(" ");
+    const symbol = parts[parts.length - 1];
+    return formated.replace(" " + symbol, "");
 }
 
 export function toColor(num: number) {
