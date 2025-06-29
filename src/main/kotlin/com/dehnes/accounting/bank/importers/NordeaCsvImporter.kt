@@ -20,7 +20,6 @@ class NordeaCsvImporter: Importer {
             "Navn",
             "Tittel",
             "Valuta",
-            "Betalingstype",
         ),
     )
 
