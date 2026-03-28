@@ -130,7 +130,10 @@ function reconnect() {
     setConnectionStatusChanged(ConnectionStatus.connecting);
     // @ts-ignore
     const urlTemplate: string = import.meta.env.VITE_WEBSOCKET_ENDPOINT;
-    const wsUrl = urlTemplate.replace("HOST", window.location.host);
+    let wsUrl = urlTemplate.replace("HOST", window.location.host);
+    if (window.location.protocol === 'https:') {
+        wsUrl = wsUrl.replace("ws://", "wss://");
+    }
     console.log("Connecting to: " + wsUrl);
     setConnectionStatusChanged(ConnectionStatus.connecting);
 
