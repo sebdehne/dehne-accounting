@@ -1,3 +1,5 @@
+import {UnbookedTransaction} from "./unbookedTransactions";
+
 export type Booking = {
     realmId: string;
     id: number;
@@ -5,6 +7,7 @@ export type Booking = {
     datetime: string;
     entries: BookingEntry[];
     unbookedAmountInCents?: number;
+    originalUnbookedTransaction?: UnbookedTransaction
 }
 
 export type  BookingEntry = {

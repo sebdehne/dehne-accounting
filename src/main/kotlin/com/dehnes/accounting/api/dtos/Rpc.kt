@@ -18,6 +18,7 @@ enum class RequestType {
     removeUnbookedTransactionMatcher,
 
     executeMatcherUnbookedTransactionMatcher,
+    convertBackToUnbookedTransaction,
 
     createOrUpdateBooking,
     deleteBooking,

@@ -3,7 +3,8 @@ package com.dehnes.accounting.database
 import com.dehnes.accounting.api.BookingsChanged
 import com.dehnes.accounting.database.Transactions.readTx
 import com.dehnes.accounting.utils.Metrics.logTimed
-import java.awt.print.Book
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
@@ -14,6 +15,7 @@ class BookingRepository(
     private val realmRepository: RealmRepository,
     private val changelog: Changelog,
     private val dataSource: DataSource,
+    private val objectMapper: ObjectMapper,
 ) {
 
     fun start() {
@@ -56,11 +58,11 @@ class BookingRepository(
                             val m2 = m1.getOrPut(rs.getLong("booking_id")) { mutableListOf() }
                             m2.add(
                                 BookingEntry(
-                                    rs.getLong("id"),
-                                    rs.getString("description"),
-                                    rs.getString("account_id"),
-                                    rs.getLong("amount_in_cents"),
-                                    rs.getInt("checked") > 0,
+                                    id = rs.getLong("id"),
+                                    description = rs.getString("description"),
+                                    accountId = rs.getString("account_id"),
+                                    amountInCents = rs.getLong("amount_in_cents"),
+                                    checked = rs.getInt("checked") > 0,
                                 )
                             )
                         }
@@ -81,7 +83,12 @@ class BookingRepository(
                                 rs.getString("description"),
                                 rs.getTimestamp("datetime").toInstant(),
                                 map[rs.getString("realm_id")]!!.getOrDefault(rs.getLong("id"), emptyList()),
-                                0
+                                0,
+                                originalUnbookedTransaction = rs.getString("original_unbooked_transaction_json")
+                                    ?.let {
+                                        objectMapper.readValue(it)
+                                    }
+
                             )
                         }
                     }
@@ -109,23 +116,6 @@ class BookingRepository(
         .filter { it.entries.any { it.accountId == accountId } }
         .maxByOrNull { it.datetime }
         ?.datetime
-
-    private val bookingsBaseQuery = """
-        select
-            b.id as booking_id,
-            be.id as booking_entry_id,
-            b.description as booking_description,
-            be.description as booking_entry_description,
-            b.datetime,
-            be.account_id,
-            be.amount_in_cents,
-            be.checked
-        from booking b
-            left join booking_entry be on be.booking_id = b.id
-        where b.realm_id = ?
-    """.trimIndent()
-
-    fun getAllBookings(realmId: String) = getBookings(realmId)
 
     fun getBooking(realmId: String, id: Long) = getBookings(realmId).firstOrNull { it.id == id }
 
@@ -180,10 +170,11 @@ class BookingRepository(
                         e.description,
                         e.accountId,
                         e.amountInCents,
-                        false
+                        false,
                     )
                 },
-                0
+                0,
+                addBooking.originalUnbookedTransaction
             )
         )
 
@@ -350,19 +341,11 @@ data class Booking(
     val datetime: Instant,
     val entries: List<BookingEntry>,
     val unbookedAmountInCents: Long?,
+    val originalUnbookedTransaction: UnbookedTransaction?,
 )
 
 data class BookingEntry(
     val id: Long,
-    val description: String?,
-    val accountId: String,
-    val amountInCents: Long,
-    val checked: Boolean,
-)
-
-data class BookingEntryRaw(
-    val id: Long,
-    val bookingId: Long,
     val description: String?,
     val accountId: String,
     val amountInCents: Long,
@@ -374,6 +357,7 @@ data class AddBooking(
     val description: String?,
     val datetime: Instant,
     val entries: List<AddBookingEntry>,
+    val originalUnbookedTransaction: UnbookedTransaction?,
 )
 
 data class AddBookingEntry(

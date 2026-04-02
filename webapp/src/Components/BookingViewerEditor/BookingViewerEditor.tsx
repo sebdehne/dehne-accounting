@@ -6,6 +6,7 @@ import {formatIso, formatLocalDayMonthYear} from "../../utils/formatting";
 import WebsocketClient from "../../Websocket/websocketClient";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
+import UndoIcon from "@mui/icons-material/Undo";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import Header from "../Header";
@@ -100,7 +101,8 @@ export const BookingViewerEditor = () => {
                     amountInCents: sum * -1,
                     id: prevState.entries.length,
                     accountId: "",
-                    checked: false
+                    checked: false,
+                    originalUnbookedData: {}
                 }
             ]
         }))
@@ -122,12 +124,23 @@ export const BookingViewerEditor = () => {
         }
     }, [booking, isValid, editMode, bookingId, navigate]);
 
+    const undoBooking = useCallback(() => {
+        WebsocketClient.rpc({
+            type: "convertBackToUnbookedTransaction",
+            bookingId: booking.id
+        }).then(() => {
+            navigate('/bookings/' + booking.originalUnbookedTransaction!.accountId, {replace: true})
+        });
+    }, [booking.id]);
+
     return (<Container maxWidth="xs" className="App">
         <Header/>
 
         <div className="Buttons">
             {editMode && <IconButton disabled={!isValid} onClick={save}><SaveIcon/></IconButton>}
             {!editMode && <IconButton onClick={() => setEditMode(true)}><EditIcon/></IconButton>}
+            {!editMode && !!booking.originalUnbookedTransaction &&
+                <IconButton onClick={undoBooking}><UndoIcon/></IconButton>}
             {bookingId && !editMode && <IconButton onClick={deleteBooking}><DeleteIcon/></IconButton>}
             {bookingId && editMode && <IconButton onClick={() => {
                 if (originalBooking) {
@@ -148,7 +161,7 @@ export const BookingViewerEditor = () => {
                 }))}
             />}
             {!editMode && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                <div> Description:</div>
+                <div>Description:</div>
                 <div>{booking.description}</div>
             </div>}
 

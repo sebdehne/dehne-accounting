@@ -215,6 +215,15 @@ class WebSocketServer : Endpoint() {
                     RpcResponse()
                 }
 
+                convertBackToUnbookedTransaction -> {
+                    bookingService.convertBackToUnbookedTransaction(
+                        user.id,
+                        userStateV2.selectedRealm!!,
+                        rpcRequest.bookingId!!
+                    )
+                    RpcResponse()
+                }
+
                 removeUnbookedTransactionMatcher -> {
                     unbookedBankTransactionMatcherService.removeMatcher(
                         user.id,

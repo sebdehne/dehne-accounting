@@ -17,6 +17,7 @@ export type RequestType = "subscribe"
     | 'addOrReplaceUnbookedTransactionMatcher'
     | 'removeUnbookedTransactionMatcher'
     | 'executeMatcherUnbookedTransactionMatcher'
+    | 'convertBackToUnbookedTransaction'
     | 'createOrUpdateBooking'
     | 'deleteBooking'
     | 'updateChecked'

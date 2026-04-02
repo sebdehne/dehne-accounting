@@ -1,5 +1,7 @@
 package com.dehnes.accounting.services
 
+import com.dehnes.accounting.api.BookingsChanged
+import com.dehnes.accounting.api.UnbookedTransactionsChanged
 import com.dehnes.accounting.api.dtos.ReadResponse
 import com.dehnes.accounting.database.*
 import com.dehnes.accounting.database.Transactions.readTx
@@ -12,6 +14,40 @@ class BookingService(
     private val unbookedTransactionRepository: UnbookedTransactionRepository,
     private val changelog: Changelog,
 ) {
+
+    fun convertBackToUnbookedTransaction(
+        userId: String,
+        realmId: String,
+        bookingId: Long
+    ) {
+        changelog.writeTx { conn ->
+            authorizationService.assertAuthorization(
+                connection = conn,
+                userId = userId,
+                realmId = realmId,
+                accessRequest = AccessRequest.write,
+            )
+
+            val unbookedTransaction = bookingRepository
+                .getBooking(realmId, bookingId)
+                ?.originalUnbookedTransaction ?: return@writeTx
+
+            unbookedTransactionRepository.insert(
+                conn = conn,
+                unbookedTransaction = unbookedTransaction
+            )
+
+            bookingRepository.deleteBooking(
+                conn = conn,
+                realmId = realmId,
+                bookingId = bookingId,
+            )
+
+            changelog.add(UnbookedTransactionsChanged)
+            changelog.add(BookingsChanged(realmId))
+
+        }
+    }
 
     fun getBookings(
         userId: String,
@@ -59,7 +95,8 @@ class BookingService(
                     it.memo,
                     it.datetime,
                     emptyList(),
-                    it.amountInCents
+                    it.amountInCents,
+                    null,
                 )
             )
         }
@@ -147,14 +184,15 @@ class BookingService(
                             amountInCents = it.amountInCents,
                             checked = it.checked,
                         )
-                    }
+                    },
+                    originalUnbookedTransaction = booking.originalUnbookedTransaction
                 )
             )
         } else {
             bookingRepository.editBooking(
-                conn,
-                realmId,
-                booking
+                connection = conn,
+                realmId = realmId,
+                booking = booking
             )
             booking.id
         }

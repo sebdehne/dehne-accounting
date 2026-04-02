@@ -65,23 +65,24 @@ class UnbookedBankTransactionMatcherService(
                 is TransferAction -> {
                     listOf(
                         AddBooking(
-                            realmId,
-                            memo,
-                            unbookedTransaction.datetime,
-                            listOf(
+                            realmId = realmId,
+                            description = memo,
+                            datetime = unbookedTransaction.datetime,
+                            entries = listOf(
                                 AddBookingEntry(
-                                    null,
-                                    unbookedTransaction.accountId,
-                                    unbookedTransaction.amountInCents,
-                                    false,
+                                    description = null,
+                                    accountId = unbookedTransaction.accountId,
+                                    amountInCents = unbookedTransaction.amountInCents,
+                                    checked = false,
                                 ),
                                 AddBookingEntry(
-                                    null,
-                                    transactionMatcher.actionAccountId,
-                                    unbookedTransaction.amountInCents * -1,
-                                    false
+                                    description = null,
+                                    accountId = transactionMatcher.actionAccountId,
+                                    amountInCents = unbookedTransaction.amountInCents * -1,
+                                    checked = false,
                                 )
-                            )
+                            ),
+                            originalUnbookedTransaction = unbookedTransaction
                         )
                     )
                 }
@@ -90,23 +91,24 @@ class UnbookedBankTransactionMatcherService(
 
                     val splits = mutableListOf<AddBookingEntry>()
                     val remaining =
-                        transactionMatcher.action.additionalSplits.entries.fold(unbookedTransaction.amountInCents * -1) { acc, entry ->
-                            splits.add(
-                                AddBookingEntry(
-                                    null,
-                                    entry.key,
-                                    entry.value,
-                                    false
+                        transactionMatcher.action.additionalSplits.entries
+                            .fold(unbookedTransaction.amountInCents * -1) { acc, entry ->
+                                splits.add(
+                                    AddBookingEntry(
+                                        description = null,
+                                        accountId = entry.key,
+                                        amountInCents = entry.value,
+                                        checked = false,
+                                    )
                                 )
-                            )
-                            acc - entry.value
-                        }
+                                acc - entry.value
+                            }
                     splits.add(
                         AddBookingEntry(
-                            null,
-                            transactionMatcher.action.mainAccountId,
-                            remaining,
-                            false
+                            description = null,
+                            accountId = transactionMatcher.action.mainAccountId,
+                            amountInCents = remaining,
+                            checked = false,
                         )
                     )
 
@@ -119,26 +121,27 @@ class UnbookedBankTransactionMatcherService(
 
                                 // payable/receivable
                                 AddBookingEntry(
-                                    null,
-                                    unbookedTransaction.accountId,
-                                    unbookedTransaction.amountInCents,
-                                    false
+                                    description = null,
+                                    accountId = unbookedTransaction.accountId,
+                                    amountInCents = unbookedTransaction.amountInCents,
+                                    checked = false,
                                 ),
                                 AddBookingEntry(
-                                    null,
-                                    transactionMatcher.actionAccountId,
-                                    unbookedTransaction.amountInCents * -1,
-                                    false
+                                    description = null,
+                                    accountId = transactionMatcher.actionAccountId,
+                                    amountInCents = unbookedTransaction.amountInCents * -1,
+                                    checked = false,
                                 ),
 
                                 // income/expense
                                 AddBookingEntry(
-                                    null,
-                                    transactionMatcher.actionAccountId,
-                                    unbookedTransaction.amountInCents,
-                                    false
+                                    description = null,
+                                    accountId = transactionMatcher.actionAccountId,
+                                    amountInCents = unbookedTransaction.amountInCents,
+                                    checked = false,
                                 ),
-                            ) + splits
+                            ) + splits,
+                            unbookedTransaction
                         ),
                     )
                 }

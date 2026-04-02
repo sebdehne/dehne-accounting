@@ -1,0 +1,1 @@
+alter table booking add column original_unbooked_transaction_json text;

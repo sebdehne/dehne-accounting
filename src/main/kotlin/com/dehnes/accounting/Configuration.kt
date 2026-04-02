@@ -43,7 +43,7 @@ object Configuration {
         val authorizationService = AuthorizationService(userRepository, realmRepository)
         val userService = UserService(datasource, userRepository, authorizationService, changelog)
         val userStateRepository = UserStateRepository(objectMapper, changelog)
-        val bookingRepository = BookingRepository(realmRepository, changelog, datasource)
+        val bookingRepository = BookingRepository(realmRepository, changelog, datasource, objectMapper)
         val bankRepository = BankRepository(datasource, changelog)
         val bankAccountRepository = BankAccountRepository(changelog)
         val unbookedTransactionRepository = UnbookedTransactionRepository(changelog)
